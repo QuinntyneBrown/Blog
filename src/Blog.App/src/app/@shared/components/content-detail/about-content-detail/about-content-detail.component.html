@@ -1,0 +1,29 @@
+<div class="b-heading-group">
+  <div  class="b-panel-heading-container">
+    <mat-icon class="b-back" (click)="backButtonClick.emit()">chevron_left</mat-icon>
+    <h1 *ngIf="!form.value?.contentId" class="b-panel-heading">Create Content</h1>
+    <h1 *ngIf="form.value .contentId"class="b-panel-heading">Edit Content</h1>
+  </div>
+</div>
+
+
+<form [formGroup]="form" class="b-form">
+  <div class="b-field">
+    <label class="b-label">Name</label>
+    <input type="text" formControlName="name" autocomplete="off" class="b-input">
+  </div>
+
+  <ng-container formGroupName="json">
+    <div class="b-field">
+      <label class="b-label">Body</label>
+      <ckeditor formControlName="body"></ckeditor>
+    </div>
+
+  </ng-container>
+</form>
+
+<div class="b-actions">
+  <button class="b-button" (click)="save.emit(form.value)">
+    Save
+  </button>
+</div>

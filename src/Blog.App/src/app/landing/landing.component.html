@@ -1,0 +1,7 @@
+<div class="b-content-area" *ngIf="vm$ | async as vm">
+
+  <b-post [post]="post" *ngFor="let post of vm.posts" (click)="handleClick(post)">
+
+  </b-post>
+
+</div>

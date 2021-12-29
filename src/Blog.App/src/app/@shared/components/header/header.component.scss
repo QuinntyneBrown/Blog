@@ -1,0 +1,7 @@
+:host {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  place-items: center start;
+  padding: 22px 40px;
+  box-sizing: border-box;
+}

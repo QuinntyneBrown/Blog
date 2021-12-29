@@ -1,0 +1,33 @@
+{
+  "projects": null,
+  "path": "C:\\Projects\\Blog",
+  "solutionName": "Blog.sln",
+  "rootNamespace": "Blog",
+  "domainNamespace": "Blog.Api",
+  "applicationNamespace": "Blog.Api",
+  "infrastructureNamespace": "Blog.Api",
+  "apiNamespace": "Blog.Api",
+  "domainDirectory": "C:\\Projects\\Blog\\src\\Blog.Api",
+  "applicationDirectory": "C:\\Projects\\Blog\\src\\Blog.Api",
+  "infrastructureDirectory": "C:\\Projects\\Blog\\src\\Blog.Api",
+  "apiDirectory": "C:\\Projects\\Blog\\src\\Blog.Api",
+  "appDirectories": null,
+  "buildingBlocksCoreNamespace": "BuildingBlocks.Core",
+  "buildingBlocksEventStoreNamespace": "BuildingBlocks.EventStore",
+  "store": null,
+  "namespace": null,
+  "domain": null,
+  "core": null,
+  "api": null,
+  "entityIdDataType": null,
+  "sourceFolder": "src",
+  "testFolder": "test",
+  "dbContext": "BlogDbContext",
+  "eventSourcing": false,
+  "resources": [
+    "Post",
+    "User",
+    "DigitalAsset",
+    "Content"
+  ]
+}

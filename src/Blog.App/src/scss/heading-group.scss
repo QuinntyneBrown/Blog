@@ -1,0 +1,9 @@
+.b-heading-group {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  margin-bottom: 30px;
+  .b-heading-group__actions-container {
+    display: grid;
+    place-items: center;
+  }
+}

@@ -1,0 +1,22 @@
+@use 'src/scss/breakpoints';
+
+.b-content-area.b-content-area--contain {
+  width: 100%;
+  display: grid;
+  grid-template-rows: 60px calc(100vh - 150px);
+  box-sizing: border-box;
+  height: 100vh;
+  padding:40px;
+}
+
+.b-content-area {
+  margin: 0px 40px;
+}
+
+@media screen and (min-width: breakpoints.$screen-lg) {
+  .b-content-area {
+    width: 66%;
+    margin: 0 auto;
+  }
+}
+

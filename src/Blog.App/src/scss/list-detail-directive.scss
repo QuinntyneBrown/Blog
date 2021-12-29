@@ -1,0 +1,54 @@
+@use 'src/scss/breakpoints';
+
+
+.b-list-detail-container,
+.b-list-detail-container--list-view.b-list-detail-container{
+  & > *:nth-child(1),
+  & > *:nth-child(2) {
+    display: grid;
+    padding: 40px 20px;
+  }
+
+  & > *:nth-child(1) {
+    background-color: rgb(240,240,240);
+  }
+}
+
+.b-list-detail-container {
+  display: block;
+  height: 100%;
+  & > *:nth-child(1) {
+    display: none;
+  }
+}
+
+.b-list-detail-container--list-view.b-list-detail-container {
+  & > *:nth-child(1) {
+    display: block;
+  }
+
+  & > *:nth-child(2) {
+    display: none;
+  }
+}
+
+@media screen and (min-width: breakpoints.$screen-lg-min) {
+  .b-list-detail-container,
+  .b-list-detail-container--list-view.b-list-detail-container{
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 20px;
+
+    & > *:nth-child(1),
+    & > *:nth-child(2) {
+      display: block;
+      overflow: auto;
+      padding: 40px 20px;
+      box-sizing: border-box;
+
+      mat-icon.b-back {
+        display: none;
+      }
+    }
+  }
+}

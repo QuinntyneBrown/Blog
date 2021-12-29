@@ -1,0 +1,9 @@
+<h1 class="b-title" routerLink="/">
+  ng-patterns
+</h1>
+
+<div class="left-rail__navigation-links">
+  <a class="left-rail__navigation-link" routerLink="workspace/posts" routerLinkActive="left-rail__navigation-link--active">Posts</a>
+  <a class="left-rail__navigation-link" routerLink="workspace/contents" routerLinkActive="left-rail__navigation-link--active">Content Management</a>
+  <a class="left-rail__navigation-link" (click)="logoutClick.emit()">Logout</a>
+</div>

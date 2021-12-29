@@ -1,0 +1,14 @@
+.b-root .b-panel-heading {
+  font-size: 16px;
+  text-transform: uppercase;
+  margin: 0;
+  padding:0;
+}
+
+
+.b-root .b-panel-heading-container {
+  display: flex;
+  flex-direction: row;
+  place-items: center;
+  gap:10px;
+}

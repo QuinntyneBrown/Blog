@@ -1,0 +1,4 @@
+<div bListDetail *ngIf="vm$ | async as vm">
+  <b-post-list [posts]="vm.posts" (select)="handleSelect($event)"></b-post-list>
+  <b-post-detail [post]="vm.selected" (save)="handleSave($event)"></b-post-detail>
+</div>

@@ -1,0 +1,15 @@
+@use 'src/scss/breakpoints';
+
+
+@media screen and (min-width: breakpoints.$screen-lg-min) {
+  :host {
+    display: grid;
+    grid-template-columns: 235px 1fr;
+
+    main {
+      box-sizing: border-box;
+      height: 100vh;
+      overflow-y: auto;
+    }
+  }
+}
