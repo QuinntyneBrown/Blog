@@ -1,0 +1,39 @@
+@startuml sequence_static_asset
+!theme plain
+
+title Static Asset Delivery Pipeline
+
+actor Browser
+participant "CompressionMiddleware" as Compress
+participant "StaticFileMiddleware" as StaticFiles
+participant "File System" as FS
+
+Browser -> Compress : GET /css/app.a1b2c3d4.css\nAccept-Encoding: br, gzip
+
+Compress -> StaticFiles : Pass request
+
+StaticFiles -> StaticFiles : Match content-hashed filename\nto physical file
+
+StaticFiles -> StaticFiles : Check Accept-Encoding header\nfor supported compression
+
+alt Brotli supported
+    StaticFiles -> FS : Read /wwwroot/css/app.a1b2c3d4.css.br
+    FS --> StaticFiles : Pre-compressed Brotli file\n(compressed at build time, level 11)
+    StaticFiles --> Compress : 200 OK\n+ Content-Encoding: br\n+ Cache-Control: max-age=31536000, immutable\n+ Content-Type: text/css
+else Gzip supported
+    StaticFiles -> FS : Read /wwwroot/css/app.a1b2c3d4.css.gz
+    FS --> StaticFiles : Pre-compressed Gzip file
+    StaticFiles --> Compress : 200 OK\n+ Content-Encoding: gzip\n+ Cache-Control: max-age=31536000, immutable\n+ Content-Type: text/css
+else No compression supported
+    StaticFiles -> FS : Read /wwwroot/css/app.a1b2c3d4.css
+    FS --> StaticFiles : Uncompressed file
+    StaticFiles --> Compress : 200 OK\n+ Cache-Control: max-age=31536000, immutable\n+ Content-Type: text/css
+end
+
+note over Compress : Skips compression\n(already pre-compressed\nor client doesn't support it)
+
+Compress --> Browser : Response with immutable cache headers
+
+note over Browser : Browser caches for 1 year.\nCache busted only when\nfilename hash changes\non redeployment.
+
+@enduml

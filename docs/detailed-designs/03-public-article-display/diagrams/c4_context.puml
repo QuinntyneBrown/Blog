@@ -1,0 +1,18 @@
+@startuml c4_context
+!theme plain
+!include <C4/C4_Context>
+
+title Blog Platform - Public Article Display - System Context Diagram
+
+Person(reader, "Anonymous Reader", "Browses and reads published blog articles")
+Person(crawler, "Search Engine", "Crawls server-rendered HTML for indexing")
+
+System(blog, "Blog Platform", "Serves public blog content via SSR and provides back-office administration")
+
+SystemDb(db, "Database", "Stores articles, metadata, and digital assets")
+
+Rel(reader, blog, "Reads published articles", "HTTPS")
+Rel(crawler, blog, "Crawls public pages", "HTTPS")
+Rel(blog, db, "Reads/writes data", "SQL")
+
+@enduml

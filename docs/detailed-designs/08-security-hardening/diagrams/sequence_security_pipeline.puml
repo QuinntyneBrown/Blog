@@ -1,0 +1,58 @@
+@startuml sequence_security_pipeline
+!theme plain
+
+title Request Security Pipeline
+
+actor Client
+participant "HTTPS\nRedirection" as HTTPS
+participant "Security\nHeaders" as Headers
+participant "Rate Limit\nMiddleware" as RateLimit
+participant "CORS\nMiddleware" as CORS
+participant "Auth\nMiddleware" as Auth
+participant "Input\nValidator" as Validator
+participant "Html\nSanitizer" as Sanitizer
+participant "Request\nHandler" as Handler
+
+Client -> HTTPS : HTTP Request
+alt HTTP (not HTTPS)
+    HTTPS --> Client : 301 Redirect to HTTPS
+else HTTPS
+    HTTPS -> Headers : Forward request
+    Headers -> Headers : Register security headers\n(CSP, HSTS, X-Frame-Options, etc.)
+    Headers -> RateLimit : Continue pipeline
+
+    alt Rate limit exceeded
+        RateLimit --> Client : 429 Too Many Requests\n+ Retry-After header
+    else Within limits
+        RateLimit -> RateLimit : Increment counter
+        RateLimit -> CORS : Continue pipeline
+
+        alt Origin not allowed
+            CORS --> Client : Response without CORS headers\n(browser blocks)
+        else OPTIONS preflight
+            CORS --> Client : 204 + CORS headers
+        else Origin allowed
+            CORS -> Auth : Continue pipeline
+
+            alt Invalid/missing token
+                Auth --> Client : 401 Unauthorized
+            else Insufficient permissions
+                Auth --> Client : 403 Forbidden
+            else Authenticated
+                Auth -> Validator : Continue pipeline
+
+                alt Validation failed
+                    Validator --> Client : 400 Bad Request\n+ structured errors
+                else Validation passed
+                    Validator -> Sanitizer : Continue pipeline
+                    Sanitizer -> Sanitizer : Sanitize article body\n(if applicable)
+                    Sanitizer -> Handler : Clean request
+                    Handler -> Handler : Execute business logic
+                    Handler --> Client : 200/201/204 Response\n+ security headers
+                end
+            end
+        end
+    end
+end
+
+@enduml

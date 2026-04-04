@@ -1,0 +1,39 @@
+@startuml sequence_sitemap
+!theme plain
+
+title Sitemap Generation Flow
+
+actor "Crawler" as crawler
+participant "SitemapGenerator" as sitemap
+participant "API Server" as api
+database "Database" as db
+
+crawler -> sitemap : GET /sitemap.xml
+
+sitemap -> api : Query all published articles
+api -> db : SELECT Slug, ModifiedAt\nFROM Articles\nWHERE Status = Published\nORDER BY ModifiedAt DESC
+db --> api : Article rows
+api --> sitemap : List of published articles\n(slug, lastModified)
+
+sitemap -> sitemap : Build XML document
+note right
+  <?xml version="1.0" encoding="UTF-8"?>
+  <urlset xmlns="http://www.sitemaps.org/...">
+    <url>
+      <loc>https://example.com/</loc>
+      <changefreq>daily</changefreq>
+      <priority>1.0</priority>
+    </url>
+    <url>
+      <loc>https://example.com/articles/{slug}</loc>
+      <lastmod>2026-04-01</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+    </url>
+    ...
+  </urlset>
+end note
+
+sitemap --> crawler : 200 OK\nContent-Type: application/xml\nCache-Control: max-age=600
+
+@enduml

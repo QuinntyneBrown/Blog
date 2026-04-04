@@ -1,0 +1,32 @@
+@startuml c4_container
+!theme plain
+!include <C4/C4_Container>
+
+title C4 Container Diagram - Security Hardening
+
+Person(user, "User", "Admin or public reader")
+Person_Ext(attacker, "Attacker", "Malicious actor")
+
+System_Boundary(blogSystem, "Blog Platform") {
+    Container(browser, "Browser SPA", "Angular / React", "Back-office admin UI and public blog reader")
+    Container(apiServer, "API Server", ".NET 8, ASP.NET Core", "Hosts security middleware pipeline, business logic, and API endpoints")
+    ContainerDb(database, "Database", "SQL Server", "Stores articles, users, digital assets")
+}
+
+Rel(user, browser, "Uses", "HTTPS")
+Rel(attacker, apiServer, "Sends malicious requests", "HTTPS")
+Rel(browser, apiServer, "API calls", "HTTPS + JWT")
+Rel(apiServer, database, "Reads/writes data", "Parameterized queries via EF Core")
+
+note right of apiServer
+  Security layers (in order):
+  1. HTTPS Redirection
+  2. Security Headers
+  3. Rate Limiting
+  4. CORS Validation
+  5. Authentication
+  6. Input Validation
+  7. HTML Sanitization
+end note
+
+@enduml

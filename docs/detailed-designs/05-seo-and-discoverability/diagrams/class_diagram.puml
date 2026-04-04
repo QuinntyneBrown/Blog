@@ -1,0 +1,96 @@
+@startuml class_diagram
+!theme plain
+
+title SEO & Discoverability - Class Diagram
+
+class SeoMetadata <<record>> {
+    +Title : string
+    +Description : string
+    +CanonicalUrl : string
+    +OgType : string
+    +OgImage : string?
+    +ArticlePublishedTime : DateTime?
+    +ArticleModifiedTime : DateTime?
+    +ArticleAuthor : string?
+    +SiteName : string
+}
+
+class JsonLdArticle <<record>> {
+    +Context : string
+    +Type : string
+    +Headline : string
+    +DatePublished : string
+    +DateModified : string
+    +Author : JsonLdPerson
+    +Description : string
+    +Image : string?
+    +Publisher : JsonLdOrganization
+    +MainEntityOfPage : string
+}
+
+class JsonLdPerson <<record>> {
+    +Type : string
+    +Name : string
+}
+
+class JsonLdOrganization <<record>> {
+    +Type : string
+    +Name : string
+    +LogoUrl : string
+}
+
+class SitemapEntry <<record>> {
+    +Loc : string
+    +LastMod : DateTime
+    +ChangeFreq : string
+    +Priority : decimal
+}
+
+class FeedEntry <<record>> {
+    +Title : string
+    +Link : string
+    +PublishedDate : DateTime
+    +Abstract : string
+    +AuthorName : string
+    +Guid : string
+}
+
+class SiteConfiguration <<options>> {
+    +SiteName : string
+    +SiteUrl : string
+    +SiteDescription : string
+    +DefaultOgImage : string
+    +AuthorName : string
+    +PublisherName : string
+    +PublisherLogoUrl : string
+    +TwitterHandle : string?
+}
+
+class SeoMetaTagHelper <<TagHelper>> {
+    +Process(context, output) : void
+}
+
+class JsonLdGenerator <<Service>> {
+    +GenerateArticleJsonLd(article, config) : string
+    +GenerateBlogJsonLd(config) : string
+}
+
+class SitemapGenerator <<Endpoint>> {
+    +GenerateSitemap() : XDocument
+}
+
+class FeedGenerator <<Endpoint>> {
+    +GenerateRss(entries) : XDocument
+    +GenerateAtom(entries) : XDocument
+}
+
+SeoMetaTagHelper --> SeoMetadata : reads
+SeoMetaTagHelper --> SiteConfiguration : reads
+JsonLdGenerator --> JsonLdArticle : creates
+JsonLdGenerator --> SiteConfiguration : reads
+JsonLdArticle --> JsonLdPerson : contains
+JsonLdArticle --> JsonLdOrganization : contains
+SitemapGenerator --> SitemapEntry : creates
+FeedGenerator --> FeedEntry : creates
+
+@enduml

@@ -1,0 +1,94 @@
+@startuml class_diagram
+!theme plain
+
+title Class Diagram — Web Performance Data Model
+
+class CacheProfile {
+    + Name : string
+    + MaxAge : TimeSpan
+    + StaleWhileRevalidate : TimeSpan?
+    + Immutable : bool
+    + VaryByHeaders : string[]
+    --
+    + ToHeaderValue() : string
+}
+
+class PerformanceBudget {
+    + MaxJsBundleSizeGzipped : int
+    + MaxTtfbMs : int
+    + MaxLcpMs : int
+    + MaxCls : double
+    + MaxInpMs : int
+    + MinLighthouseScore : int
+    --
+    + Validate(metrics: PerformanceMetrics) : bool
+}
+
+class PerformanceMetrics {
+    + JsBundleSizeGzipped : int
+    + TtfbMs : int
+    + LcpMs : int
+    + Cls : double
+    + InpMs : int
+    + LighthouseScore : int
+}
+
+class ImageTransformOptions {
+    + Width : int
+    + Format : ImageFormat
+    + Quality : int
+    + Breakpoints : int[]
+    --
+    + GetVariantPath(originalPath: string) : string
+}
+
+enum ImageFormat {
+    Avif
+    WebP
+    Jpeg
+    Png
+}
+
+class ResourceHint {
+    + Rel : ResourceHintRel
+    + Href : string
+    + As : string?
+    + Type : string?
+    + CrossOrigin : bool
+    --
+    + ToLinkElement() : string
+}
+
+enum ResourceHintRel {
+    Preconnect
+    DnsPrefetch
+    Preload
+}
+
+interface IETagGenerator {
+    + Generate(content: byte[]) : string
+    + IsMatch(etag: string, ifNoneMatch: string) : bool
+}
+
+class Sha256ETagGenerator {
+    + Generate(content: byte[]) : string
+    + IsMatch(etag: string, ifNoneMatch: string) : bool
+}
+
+interface ICacheInvalidator {
+    + Invalidate(key: string) : void
+    + InvalidateByTag(tag: string) : void
+}
+
+class CriticalCssOptions {
+    + TemplateName : string
+    + CriticalCssContent : string
+    + FullCssPath : string
+}
+
+PerformanceBudget ..> PerformanceMetrics : validates
+ImageTransformOptions --> ImageFormat
+ResourceHint --> ResourceHintRel
+IETagGenerator <|.. Sha256ETagGenerator
+
+@enduml

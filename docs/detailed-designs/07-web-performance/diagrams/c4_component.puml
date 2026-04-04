@@ -1,0 +1,32 @@
+@startuml c4_component
+!theme plain
+!include <C4/C4_Component>
+
+title Component Diagram — Public Web App (Performance Components)
+
+Container_Boundary(webapp, "Public Web App") {
+    Component(compression, "CompressionMiddleware", "ASP.NET Middleware", "Compresses responses with Brotli (preferred) or Gzip based on Accept-Encoding")
+    Component(responsecache, "ResponseCachingMiddleware", "ASP.NET Middleware", "Caches rendered responses in memory; serves cache hits without re-rendering")
+    Component(staticfiles, "StaticFileMiddleware", "ASP.NET Middleware", "Serves static assets with content-hashed filenames, immutable cache headers, and pre-compressed variants")
+    Component(razor, "Razor SSR Engine", "ASP.NET Razor Pages", "Renders HTML pages server-side with tag helpers")
+    Component(criticalcss, "CriticalCssInliner", "Tag Helper / HTML Transform", "Inlines critical CSS in <head> and loads remaining CSS asynchronously")
+    Component(imagehelper, "ImageTagHelper", "ASP.NET Tag Helper", "Generates <picture> elements with AVIF/WebP srcset, lazy loading, and explicit dimensions")
+    Component(resourcehint, "ResourceHintTagHelper", "ASP.NET Tag Helper", "Emits preconnect, dns-prefetch, and preload link elements in <head>")
+    Component(etag, "ETagGenerator", "Service (IETagGenerator)", "Computes ETag from response body; returns 304 Not Modified on conditional requests")
+}
+
+ContainerDb(cache, "Response Cache Store", "IMemoryCache")
+ContainerDb(db, "Database", "SQL Server / PostgreSQL")
+
+Rel(compression, responsecache, "Passes request inward")
+Rel(responsecache, staticfiles, "Passes request if not cached HTML")
+Rel(responsecache, cache, "Reads/writes cached responses")
+Rel(staticfiles, razor, "Passes request if not a static file")
+Rel(razor, criticalcss, "Invokes during page rendering")
+Rel(razor, imagehelper, "Invokes for <img> tags")
+Rel(razor, resourcehint, "Invokes for resource hint tags")
+Rel(razor, db, "Queries content", "EF Core")
+Rel(razor, etag, "Computes ETag after rendering")
+
+SHOW_LEGEND()
+@enduml

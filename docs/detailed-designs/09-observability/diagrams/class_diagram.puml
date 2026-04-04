@@ -1,0 +1,74 @@
+@startuml class_diagram
+!theme plain
+
+title Observability Data Model
+
+class HealthCheckResponse {
+    +Status : string
+    +Checks : Dictionary<string, string>
+}
+
+note right of HealthCheckResponse::Status
+  "healthy" or "unhealthy"
+end note
+
+note right of HealthCheckResponse::Checks
+  Included only when unhealthy.
+  Maps check name to status,
+  e.g. {"database": "unhealthy"}
+end note
+
+class RequestLogEntry {
+    +Method : string
+    +Path : string
+    +StatusCode : int
+    +DurationMs : long
+    +CorrelationId : string
+    +Timestamp : DateTimeOffset
+}
+
+class BusinessEvent {
+    +EventType : string
+    +Timestamp : DateTimeOffset
+    +CorrelationId : string
+    +Details : Dictionary<string, object>
+}
+
+note right of BusinessEvent::EventType
+  e.g. "ArticlePublished",
+  "UserAuthenticated"
+end note
+
+interface IHealthCheck {
+    +CheckAsync(timeout : TimeSpan) : Task<string>
+}
+
+class DbHealthCheck {
+    -_connectionString : string
+    +CheckAsync(timeout : TimeSpan) : Task<string>
+}
+
+class HealthCheckService {
+    -_checks : List<IHealthCheck>
+    +CheckHealthAsync() : Task<HealthCheckResponse>
+}
+
+class LogSanitizer {
+    -_deniedProperties : HashSet<string>
+    +TryDestructure(value, result) : bool
+}
+
+class CorrelationIdMiddleware {
+    +InvokeAsync(context : HttpContext) : Task
+}
+
+class RequestLoggingMiddleware {
+    +InvokeAsync(context : HttpContext) : Task
+}
+
+IHealthCheck <|.. DbHealthCheck
+HealthCheckService --> "*" IHealthCheck : aggregates
+HealthCheckService --> HealthCheckResponse : produces
+RequestLoggingMiddleware --> RequestLogEntry : emits
+
+@enduml

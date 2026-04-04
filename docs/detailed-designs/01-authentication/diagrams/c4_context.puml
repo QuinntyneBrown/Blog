@@ -1,0 +1,20 @@
+@startuml c4_context
+!theme plain
+!include <C4/C4_Context>
+
+title Blog Platform - System Context Diagram
+
+Person(admin, "Admin User", "Manages blog content via the back-office")
+Person(reader, "Anonymous Reader", "Reads published blog posts")
+
+System(blog, "Blog Platform", "Serves public blog content and provides back-office administration")
+
+System_Ext(idp, "External Identity Provider", "Future OAuth/OIDC integration")
+SystemDb(db, "Database", "Stores users, content, and digital assets")
+
+Rel(admin, blog, "Authenticates and manages content", "HTTPS/JWT")
+Rel(reader, blog, "Reads blog posts", "HTTPS")
+Rel(blog, db, "Reads/writes data", "SQL")
+Rel(blog, idp, "Delegates auth (future)", "OIDC")
+
+@enduml

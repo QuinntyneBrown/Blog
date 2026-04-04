@@ -1,0 +1,24 @@
+@startuml c4_container
+!theme plain
+!include <C4/C4_Container>
+
+title Blog Platform - Public Article Display - Container Diagram
+
+Person(reader, "Anonymous Reader", "Browses published articles")
+Person(crawler, "Search Engine", "Indexes public pages")
+
+System_Boundary(blog, "Blog Platform") {
+    Container(ssr, "Public Web App", "ASP.NET Core Razor Pages (SSR)", "Server-renders article listing and detail pages as semantic HTML")
+    Container(api, "API Server", ".NET 8, ASP.NET Core", "REST API serving published article data")
+    ContainerDb(db, "Database", "PostgreSQL / SQL Server", "Stores articles, users, and digital assets")
+}
+
+System_Ext(cdn, "CDN", "Caches and serves static assets: images, CSS, fonts")
+
+Rel(reader, ssr, "Requests pages", "HTTPS")
+Rel(crawler, ssr, "Crawls pages", "HTTPS")
+Rel(ssr, api, "Fetches published articles", "HTTPS/JSON")
+Rel(api, db, "Queries published articles", "EF Core / SQL")
+Rel(ssr, cdn, "References static assets", "HTTPS")
+
+@enduml

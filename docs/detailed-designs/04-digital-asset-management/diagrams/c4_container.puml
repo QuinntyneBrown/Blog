@@ -1,0 +1,23 @@
+@startuml c4_container
+!theme plain
+!include <C4/C4_Container>
+
+title Blog Platform - Digital Asset Management - Container Diagram
+
+Person(admin, "Admin User", "Uploads digital assets")
+Person(reader, "Anonymous Reader", "Views optimized images")
+
+System_Boundary(blog, "Blog Platform") {
+    Container(spa, "Back-Office SPA", "Angular", "Dropzone UI for uploading and managing digital assets")
+    Container(api, "API Server", ".NET 8, ASP.NET Core", "Validates uploads, processes images, serves optimized assets")
+    ContainerDb(db, "Database", "PostgreSQL / SQL Server", "Stores DigitalAsset metadata records")
+    Container(storage, "File Storage", "Local Filesystem / Blob Storage", "Persists original image files")
+}
+
+Rel(admin, spa, "Drags and drops files", "HTTPS")
+Rel(reader, api, "Requests images with Accept header", "HTTPS")
+Rel(spa, api, "Uploads files, fetches asset metadata", "HTTPS/JSON + JWT, multipart/form-data")
+Rel(api, db, "Reads/writes asset metadata", "EF Core / SQL")
+Rel(api, storage, "Reads/writes image files", "File I/O or SDK")
+
+@enduml

@@ -1,0 +1,65 @@
+@startuml sequence_publish
+!theme plain
+
+title Publish / Unpublish Article - Sequence Diagram
+
+actor Admin
+participant "Back-Office SPA" as SPA
+participant "ArticleController" as Controller
+participant "ArticleService" as Service
+participant "ArticleRepository" as Repo
+database "Database" as DB
+
+== Publish Article ==
+
+Admin -> SPA : Click "Publish" button
+SPA -> Controller : PATCH /api/articles/{id}/publish\n{published: true}
+
+Controller -> Service : PublishArticleCommand(id, published=true)
+
+Service -> Repo : GetById(id)
+Repo -> DB : SELECT * FROM Articles\nWHERE ArticleId = @id
+DB --> Repo : article row
+
+alt Article not found
+    Repo --> Service : null
+    Service --> Controller : NotFoundException
+    Controller --> SPA : 404 Not Found
+else Article found
+end
+
+Service -> Service : Set Published = true\nSet DatePublished = DateTime.UtcNow\nSet UpdatedAt = DateTime.UtcNow
+
+Service -> Repo : Update(article)
+Repo -> DB : UPDATE Articles SET\nPublished = 1,\nDatePublished = @utcNow,\nUpdatedAt = @utcNow
+DB --> Repo : success
+Repo --> Service : updated article
+
+Service --> Controller : ArticleDto
+Controller --> SPA : 200 OK {ArticleDto}
+SPA --> Admin : Show success toast,\nupdate status badge to Published
+
+== Unpublish Article ==
+
+Admin -> SPA : Click "Unpublish" button
+SPA -> Controller : PATCH /api/articles/{id}/publish\n{published: false}
+
+Controller -> Service : PublishArticleCommand(id, published=false)
+
+Service -> Repo : GetById(id)
+Repo -> DB : SELECT * FROM Articles\nWHERE ArticleId = @id
+DB --> Repo : article row
+Repo --> Service : article
+
+Service -> Service : Set Published = false\nDatePublished remains unchanged\nSet UpdatedAt = DateTime.UtcNow
+
+Service -> Repo : Update(article)
+Repo -> DB : UPDATE Articles SET\nPublished = 0,\nUpdatedAt = @utcNow\n(DatePublished unchanged)
+DB --> Repo : success
+Repo --> Service : updated article
+
+Service --> Controller : ArticleDto
+Controller --> SPA : 200 OK {ArticleDto}
+SPA --> Admin : Show success toast,\nupdate status badge to Draft
+
+@enduml

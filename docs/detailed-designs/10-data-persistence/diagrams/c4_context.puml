@@ -1,0 +1,18 @@
+@startuml c4_context
+!theme plain
+!include <C4/C4_Context>
+
+title Blog Platform - Data Persistence Context Diagram
+
+Person(admin, "Admin User", "Manages blog content via the back-office")
+Person(reader, "Anonymous Reader", "Reads published blog posts")
+
+System(blog, "Blog Platform", "Serves public blog content and provides back-office administration")
+
+SystemDb(db, "Database Server", "Relational database storing users, articles, and digital assets with enforced referential integrity")
+
+Rel(admin, blog, "Creates and manages content", "HTTPS")
+Rel(reader, blog, "Reads published articles", "HTTPS")
+Rel(blog, db, "Persists and queries all application data", "SQL over TLS")
+
+@enduml

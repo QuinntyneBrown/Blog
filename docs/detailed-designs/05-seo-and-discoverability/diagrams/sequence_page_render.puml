@@ -1,0 +1,45 @@
+@startuml sequence_page_render
+!theme plain
+
+title Page Render with SEO Metadata Injection
+
+actor "Browser / Crawler" as client
+participant "SlugRedirectMiddleware" as slugmw
+participant "Razor Page Handler" as handler
+participant "API Server" as api
+database "Database" as db
+participant "SeoMetaTagHelper" as seohelper
+participant "JsonLdGenerator" as jsonld
+
+client -> slugmw : GET /articles/{slug}
+
+alt Slug contains uppercase or trailing slash
+    slugmw --> client : 301 Redirect to\nlowercase, no trailing slash
+else Slug is valid
+    slugmw -> handler : Forward request
+    handler -> api : Fetch article by slug
+    api -> db : SELECT article\nWHERE Slug = @slug\nAND Status = Published
+    db --> api : Article row
+    api --> handler : Article data
+
+    handler -> handler : Build SeoMetadata record\nfrom article + SiteConfiguration
+
+    handler -> seohelper : Render <head> tags\nwith SeoMetadata
+    seohelper -> seohelper : Emit <title>\n"{ArticleTitle} | {SiteName}"
+    seohelper -> seohelper : Emit <meta name="description">
+    seohelper -> seohelper : Emit <link rel="canonical">
+    seohelper -> seohelper : Emit Open Graph tags\n(og:title, og:description,\nog:image, og:url, og:type,\nog:site_name)
+    seohelper -> seohelper : Emit Twitter Card tags\n(twitter:card, twitter:title,\ntwitter:description, twitter:image)
+    seohelper --> handler : <head> HTML fragment
+
+    handler -> jsonld : Generate Article JSON-LD
+    jsonld -> jsonld : Build Schema.org/Article\n{headline, datePublished,\ndateModified, author,\ndescription, image,\npublisher, mainEntityOfPage}
+    jsonld -> jsonld : Serialize to JSON
+    jsonld --> handler : <script type="application/ld+json">
+
+    handler -> handler : Render semantic HTML body\n(<article>, <header>, <h1>,\n<time>, <figure>, <figcaption>)
+
+    handler --> client : 200 OK\nComplete HTML with all\nSEO tags and structured data
+end
+
+@enduml

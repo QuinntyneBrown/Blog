@@ -1,0 +1,46 @@
+@startuml sequence_health_check
+!theme plain
+
+title Health Check Flow
+
+actor Client
+participant "HealthController\n/health" as Controller
+participant "HealthCheckService" as Service
+participant "DbHealthCheck" as DbCheck
+database "Database" as DB
+
+Client -> Controller : GET /health
+
+Controller -> Service : CheckHealthAsync()
+activate Service
+
+Service -> DbCheck : CheckAsync(timeout: 5s)
+activate DbCheck
+
+DbCheck -> DB : Open connection\nSELECT 1
+activate DB
+
+alt Database is reachable
+    DB --> DbCheck : Success
+    deactivate DB
+    DbCheck --> Service : "healthy"
+    deactivate DbCheck
+
+    Service --> Controller : HealthCheckResponse\n{status: "healthy"}
+    deactivate Service
+
+    Controller --> Client : 200 OK\n{"status":"healthy"}
+
+else Database is unreachable or times out
+    DB --> DbCheck : Exception / Timeout
+    deactivate DB
+    DbCheck --> Service : "unhealthy"
+    deactivate DbCheck
+
+    Service --> Controller : HealthCheckResponse\n{status: "unhealthy",\nchecks: {database: "unhealthy"}}
+    deactivate Service
+
+    Controller --> Client : 503 Service Unavailable\n{"status":"unhealthy",\n"checks":{"database":"unhealthy"}}
+end
+
+@enduml

@@ -1,0 +1,46 @@
+@startuml sequence_login
+!theme plain
+
+title Login Flow
+
+actor "Admin User" as user
+participant "SPA" as spa
+participant "AuthController" as ctrl
+participant "AuthService" as svc
+participant "UserRepository" as repo
+database "Database" as db
+participant "PasswordHasher" as hasher
+participant "TokenService" as token
+
+user -> spa : Enter email & password
+spa -> ctrl : POST /api/auth/login\n{email, password}
+ctrl -> svc : Login(LoginRequest)
+svc -> repo : GetByEmail(email)
+repo -> db : SELECT * FROM Users\nWHERE Email = @email
+db --> repo : User row
+repo --> svc : User entity
+
+alt User not found
+    svc --> ctrl : 401 Unauthorized
+    ctrl --> spa : 401 "Invalid email or password"
+    spa --> user : Show error message
+else User found
+    svc -> hasher : VerifyPassword(password, user.PasswordHash)
+    alt Password invalid
+        hasher --> svc : false
+        svc --> ctrl : 401 Unauthorized
+        ctrl --> spa : 401 "Invalid email or password"
+        spa --> user : Show error message
+    else Password valid
+        hasher --> svc : true
+        svc -> token : GenerateToken(user)
+        token --> svc : JWT string
+        svc -> repo : Update LastLoginAt
+        repo -> db : UPDATE Users SET LastLoginAt
+        svc --> ctrl : LoginResponse{token, expiresAt}
+        ctrl --> spa : 200 {token, expiresAt}
+        spa --> user : Redirect to dashboard
+    end
+end
+
+@enduml

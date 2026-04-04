@@ -1,0 +1,26 @@
+@startuml c4_component
+!theme plain
+!include <C4/C4_Component>
+
+title Public Web App - SEO & Discoverability Components
+
+Container_Boundary(webapp, "Public Web App") {
+    Component(slugmw, "SlugRedirectMiddleware", "Middleware", "Enforces lowercase, no-trailing-slash URLs with 301 redirects (L2-015)")
+    Component(robotsmw, "RobotsTxtMiddleware", "Middleware", "Serves /robots.txt with crawler directives and Sitemap URL (L2-013)")
+    Component(llmsmw, "LlmsTxtMiddleware", "Middleware", "Serves /llms.txt machine-readable site summary for AI agents (L2-016)")
+    Component(seohelper, "SeoMetaTagHelper", "Razor Tag Helper", "Generates <title>, <meta>, <link rel=canonical>, Open Graph, and Twitter Card tags (L2-009, L2-010, L2-012)")
+    Component(jsonld, "JsonLdGenerator", "Service", "Produces Schema.org JSON-LD for Article and Blog types (L2-008)")
+    Component(sitemap, "SitemapGenerator", "Endpoint", "Dynamically generates /sitemap.xml from published articles (L2-011)")
+    Component(feed, "FeedGenerator", "Endpoint", "Generates /feed.xml (RSS 2.0) and /atom.xml (Atom) with 20 most recent articles (L2-014)")
+}
+
+Container(api, "API Server", ".NET 8, ASP.NET Core")
+ContainerDb(db, "Database", "PostgreSQL / SQL Server")
+
+Rel(slugmw, seohelper, "Request proceeds to page render")
+Rel(seohelper, jsonld, "Invokes to generate JSON-LD block")
+Rel(sitemap, api, "Queries published articles")
+Rel(feed, api, "Queries recent articles")
+Rel(api, db, "Reads articles", "EF Core")
+
+@enduml

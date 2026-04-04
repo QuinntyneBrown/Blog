@@ -1,0 +1,26 @@
+@startuml c4_component
+!theme plain
+!include <C4/C4_Component>
+
+title C4 Component Diagram - API Server Security Components
+
+Container_Boundary(api, "API Server") {
+    Component(httpsRedirect, "HttpsRedirectionMiddleware", "ASP.NET Core Middleware", "Redirects HTTP to HTTPS (301). Enforces HSTS with max-age >= 31536000.")
+    Component(securityHeaders, "SecurityHeadersMiddleware", "Custom Middleware", "Injects CSP, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy headers.")
+    Component(rateLimiting, "RateLimitingMiddleware", "System.Threading.RateLimiting", "Auth endpoints: 10 req/min per IP. Write endpoints: 60 req/min per user. Returns 429 + Retry-After.")
+    Component(cors, "CorsMiddleware", "ASP.NET Core CORS", "Validates Origin against allowed list. Handles preflight OPTIONS. Blocks unlisted origins.")
+    Component(auth, "AuthMiddleware", "ASP.NET Core Authentication", "Validates JWT bearer tokens. Sets ClaimsPrincipal. Returns 401/403.")
+    Component(inputValidator, "InputValidator", "FluentValidation + MediatR", "Validates all request payloads. Returns 400 with structured field-level errors.")
+    Component(htmlSanitizer, "HtmlSanitizer", "Ganss.Xss.HtmlSanitizer", "Strips script tags, event handlers, and dangerous elements from article body content.")
+    Component(handlers, "Request Handlers", "MediatR Handlers", "Business logic for articles, users, digital assets.")
+}
+
+Rel(httpsRedirect, securityHeaders, "Passes HTTPS requests")
+Rel(securityHeaders, rateLimiting, "Registers headers, continues")
+Rel(rateLimiting, cors, "If within limits")
+Rel(cors, auth, "If origin allowed")
+Rel(auth, inputValidator, "If authenticated")
+Rel(inputValidator, htmlSanitizer, "If valid")
+Rel(htmlSanitizer, handlers, "Sanitized request")
+
+@enduml

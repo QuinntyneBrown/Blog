@@ -1,0 +1,25 @@
+@startuml c4_component
+!theme plain
+!include <C4/C4_Component>
+
+title API Server - Authentication Components
+
+Container_Boundary(api, "API Server") {
+    Component(ctrl, "AuthController", "ASP.NET Controller", "Exposes /api/auth/login and /api/auth/refresh endpoints")
+    Component(svc, "AuthService", "Service", "Orchestrates login: user lookup, password verification, token generation")
+    Component(token, "TokenService", "Service", "Generates and validates JWT tokens")
+    Component(hasher, "PasswordHasher", "Service", "Hashes and verifies passwords using PBKDF2 (100k+ iterations)")
+    Component(repo, "UserRepository", "Repository", "Reads and writes User entities")
+    Component(mw, "JwtMiddleware", "Middleware", "Extracts and validates JWT from Authorization header")
+}
+
+ContainerDb(db, "Database", "PostgreSQL / SQL Server")
+
+Rel(ctrl, svc, "Delegates login/refresh")
+Rel(svc, repo, "Fetches user by email")
+Rel(svc, hasher, "Verifies password")
+Rel(svc, token, "Generates JWT")
+Rel(mw, token, "Validates JWT")
+Rel(repo, db, "Queries/updates", "EF Core")
+
+@enduml

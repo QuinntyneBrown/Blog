@@ -1,0 +1,20 @@
+@startuml c4_context
+!theme plain
+!include <C4/C4_Context>
+
+title Blog Platform - Digital Asset Management - System Context Diagram
+
+Person(admin, "Admin User", "Uploads and manages digital assets via the back-office")
+Person(reader, "Anonymous Reader", "Views articles with embedded images")
+
+System(blog, "Blog Platform", "Handles asset upload, processing, storage, and optimized delivery")
+
+SystemDb(storage, "File Storage", "Stores original and processed image files")
+SystemDb(db, "Database", "Stores asset metadata")
+
+Rel(admin, blog, "Uploads images", "HTTPS/JWT, multipart")
+Rel(reader, blog, "Requests optimized images", "HTTPS")
+Rel(blog, storage, "Reads/writes image files")
+Rel(blog, db, "Reads/writes asset metadata", "SQL")
+
+@enduml

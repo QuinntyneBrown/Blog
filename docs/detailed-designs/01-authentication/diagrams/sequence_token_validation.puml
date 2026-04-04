@@ -1,0 +1,37 @@
+@startuml sequence_token_validation
+!theme plain
+
+title Token Validation Flow
+
+actor "Client" as client
+participant "API Pipeline" as api
+participant "JwtMiddleware" as mw
+participant "TokenService" as token
+participant "Controller" as ctrl
+
+client -> api : Request with\nAuthorization: Bearer <JWT>
+api -> mw : Invoke middleware
+
+mw -> mw : Extract token from\nAuthorization header
+
+alt Token missing
+    mw -> api : Continue (no identity set)
+    api -> ctrl : Invoke controller
+    ctrl --> client : 401 Unauthorized\n([Authorize] rejects)
+else Token present
+    mw -> token : ValidateToken(jwt)
+    alt Token invalid or expired
+        token --> mw : Validation failure
+        mw -> api : Continue (no identity set)
+        api -> ctrl : Invoke controller
+        ctrl --> client : 401 Unauthorized
+    else Token valid
+        token --> mw : ClaimsPrincipal
+        mw -> mw : Set HttpContext.User\n= ClaimsPrincipal
+        mw -> api : Continue
+        api -> ctrl : Invoke controller
+        ctrl --> client : 200 OK (response data)
+    end
+end
+
+@enduml

@@ -1,0 +1,59 @@
+@startuml sequence_create_article
+!theme plain
+
+title Create Article - Sequence Diagram
+
+actor Admin
+participant "Back-Office SPA" as SPA
+participant "ArticleController" as Controller
+participant "ValidationBehavior" as Validation
+participant "ArticleService" as Service
+participant "SlugGenerator" as Slug
+participant "ReadingTimeCalculator" as Reading
+participant "ArticleRepository" as Repo
+database "Database" as DB
+
+Admin -> SPA : Fill in title, body, abstract,\noptional featured image
+SPA -> Controller : POST /api/articles\n{title, body, abstract, featuredImageId?}
+
+Controller -> Validation : Dispatch CreateArticleCommand
+
+Validation -> Validation : Validate required fields\n(title, body, abstract)
+
+alt Validation fails
+    Validation --> Controller : ValidationException
+    Controller --> SPA : 400 Bad Request\n{field-level errors}
+else Validation passes
+    Validation -> Service : Forward command
+end
+
+Service -> Slug : GenerateSlug(title)
+Slug --> Service : slug
+
+Service -> Repo : SlugExists(slug)
+Repo -> DB : SELECT COUNT(*) WHERE Slug = @slug
+DB --> Repo : count
+Repo --> Service : exists (bool)
+
+alt Slug already exists
+    Service --> Controller : ConflictException
+    Controller --> SPA : 409 Conflict
+else Slug is unique
+end
+
+Service -> Reading : Calculate(body)
+Reading -> Reading : Strip HTML/Markdown tags\nCount words\nDivide by 238 wpm\nRound up (min 1)
+Reading --> Service : readingTimeMinutes
+
+Service -> Service : Create Article entity\nPublished = false\nCreatedAt = UtcNow\nUpdatedAt = UtcNow
+
+Service -> Repo : Add(article)
+Repo -> DB : INSERT INTO Articles
+DB --> Repo : success
+Repo --> Service : persisted article
+
+Service --> Controller : ArticleDto
+Controller --> SPA : 201 Created\nLocation: /api/articles/{id}
+SPA --> Admin : Show success toast,\nnavigate to editor
+
+@enduml

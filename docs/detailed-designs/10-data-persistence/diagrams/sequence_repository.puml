@@ -1,0 +1,50 @@
+@startuml sequence_repository
+!theme plain
+
+title Repository Query Pattern
+
+participant "Service Layer" as svc
+participant "ArticleRepository" as repo
+participant "BlogDbContext" as ctx
+participant "DbSet<Article>" as dbset
+participant "EF Core Query Pipeline" as ef
+database "Database" as db
+
+svc -> repo : GetPublishedAsync(page, pageSize)
+activate repo
+
+repo -> ctx : Access Articles DbSet
+activate ctx
+ctx --> repo : DbSet<Article>
+
+repo -> dbset : .Where(a => a.Published)\n.OrderByDescending(a => a.DatePublished)\n.Skip((page - 1) * pageSize)\n.Take(pageSize)\n.Include(a => a.FeaturedImage)
+activate dbset
+
+dbset -> ef : Translate IQueryable expression tree
+activate ef
+
+ef -> ef : Parse expression tree
+ef -> ef : Generate parameterized SQL
+
+ef -> db : SELECT a.*, d.*\nFROM Articles a\nLEFT JOIN DigitalAssets d\n  ON a.FeaturedImageId = d.DigitalAssetId\nWHERE a.Published = true\nORDER BY a.DatePublished DESC\nOFFSET @skip ROWS\nFETCH NEXT @take ROWS ONLY
+activate db
+
+db -> db : Execute query plan\n(uses IX_Articles_Published_DatePublished)
+db --> ef : Result rows
+
+deactivate db
+
+ef -> ef : Materialize entities\nfrom result rows
+ef -> ef : Attach to change tracker\n(tracking mode)
+ef --> dbset : List<Article>
+
+deactivate ef
+deactivate dbset
+
+dbset --> repo : IReadOnlyList<Article>
+deactivate ctx
+
+repo --> svc : IReadOnlyList<Article>
+deactivate repo
+
+@enduml

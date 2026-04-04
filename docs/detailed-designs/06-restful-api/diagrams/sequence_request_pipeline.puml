@@ -1,0 +1,70 @@
+@startuml sequence_request_pipeline
+!theme plain
+
+title Request Pipeline - Success and Error Paths
+
+actor "Client" as client
+participant "ExceptionHandling\nMiddleware" as exMw
+participant "Auth\nMiddleware" as authMw
+participant "ResponseEnvelope\nMiddleware" as envMw
+participant "Controller" as ctrl
+participant "MediatR" as mediatr
+participant "Validation\nBehavior" as val
+participant "Logging\nBehavior" as log
+participant "Handler" as handler
+participant "Repository" as repo
+database "Database" as db
+
+== Success Path ==
+
+client -> exMw : HTTP Request
+exMw -> authMw : Forward request
+authMw -> authMw : Validate JWT token\nSet HttpContext.User
+authMw -> envMw : Forward request
+envMw -> ctrl : Forward request
+ctrl -> mediatr : Send(command/query)
+mediatr -> val : Pipeline step 1
+val -> val : Run FluentValidation\nvalidators
+val -> log : Validation passed
+log -> log : Log request details
+log -> handler : Forward to handler
+handler -> repo : Query/persist data
+repo -> db : SQL query
+db --> repo : Result set
+repo --> handler : Entity/DTO
+handler --> log : Response
+log -> log : Log response details
+log --> val : Response
+val --> mediatr : Response
+mediatr --> ctrl : Response
+ctrl --> envMw : IActionResult
+envMw -> envMw : Wrap in ApiResponse<T>
+envMw --> authMw : 200 JSON response
+authMw --> exMw : Pass through
+exMw --> client : 200 ApiResponse<T>
+
+== Validation Error Path ==
+
+client -> exMw : HTTP Request
+exMw -> authMw : Forward request
+authMw -> envMw : Forward request
+envMw -> ctrl : Forward request
+ctrl -> mediatr : Send(command)
+mediatr -> val : Pipeline step 1
+val -> val : Run validators
+val --> exMw : throw ValidationException
+exMw -> exMw : Catch exception\nCreate ProblemDetails
+exMw --> client : 400 ProblemDetails\n{errors: {field: [messages]}}
+
+== Authentication Error Path ==
+
+client -> exMw : HTTP Request (no/invalid token)
+exMw -> authMw : Forward request
+authMw -> authMw : Token missing or invalid\nUser unauthenticated
+authMw -> envMw : Forward request
+envMw -> ctrl : Forward request
+ctrl -> ctrl : [Authorize] check fails
+ctrl --> exMw : 401
+exMw --> client : 401 ProblemDetails\n{title: "Unauthorized"}
+
+@enduml

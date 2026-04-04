@@ -1,0 +1,20 @@
+@startuml c4_context
+!theme plain
+!include <C4/C4_Context>
+
+title System Context Diagram - Blog Platform Observability
+
+Person(ops, "Operations Team", "Monitors system health, investigates issues, manages deployments")
+
+System(blog, "Blog Platform", "Serves blog content, manages articles and users with built-in observability")
+
+System_Ext(logAggregator, "Log Aggregator", "Optional: Centralized log storage and search (Seq, ELK, Datadog)")
+System_Ext(monitoringDashboard, "Monitoring Dashboard", "Optional: Visualizes health status and operational metrics")
+
+Rel(ops, blog, "Checks health, reviews logs")
+Rel(ops, monitoringDashboard, "Views dashboards and alerts")
+Rel(ops, logAggregator, "Searches and queries logs")
+Rel(blog, logAggregator, "Sends structured JSON logs", "HTTP/TCP")
+Rel(monitoringDashboard, blog, "Polls health endpoint", "HTTP GET /health")
+
+@enduml

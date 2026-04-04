@@ -1,0 +1,27 @@
+@startuml c4_component
+!theme plain
+!include <C4/C4_Component>
+
+title Component Diagram - API Server (Article Management)
+
+Container(spa, "Back-Office SPA", "Angular/React", "Admin interface")
+ContainerDb(db, "Database", "SQL Server", "Article storage")
+
+Container_Boundary(api, "API Server") {
+    Component(controller, "ArticleController", "ASP.NET Core Controller", "Handles HTTP requests for /api/articles endpoints")
+    Component(validation, "ValidationBehavior", "MediatR Pipeline", "Runs FluentValidation rules before handler execution")
+    Component(service, "ArticleService", "MediatR Handlers", "Orchestrates article business logic: create, update, publish, delete")
+    Component(slugGen, "SlugGenerator", "Utility", "Converts titles to URL-safe slugs")
+    Component(readingTime, "ReadingTimeCalculator", "Utility", "Estimates reading time from body content at 238 wpm")
+    Component(repo, "ArticleRepository", "EF Core", "Data access for Article entity")
+}
+
+Rel(spa, controller, "Sends requests", "HTTPS/JSON")
+Rel(controller, validation, "Dispatches commands/queries via MediatR")
+Rel(validation, service, "Forwards validated requests")
+Rel(service, slugGen, "Generates slug from title")
+Rel(service, readingTime, "Computes reading time from body")
+Rel(service, repo, "Persists and retrieves articles")
+Rel(repo, db, "Reads/writes", "EF Core / SQL")
+
+@enduml

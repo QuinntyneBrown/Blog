@@ -1,0 +1,37 @@
+@startuml c4_component
+!theme plain
+!include <C4/C4_Component>
+
+title API Server - Data Persistence Components
+
+Container_Boundary(api, "API Server") {
+    Component(ctx, "BlogDbContext", "EF Core DbContext", "Central data access context exposing DbSets for User, Article, DigitalAsset")
+    Component(uow, "UnitOfWork", "Service", "Coordinates transactional boundaries across repositories")
+
+    Component(articleConfig, "ArticleConfiguration", "IEntityTypeConfiguration<Article>", "Defines Article table mapping, indexes on Slug and Published+DatePublished")
+    Component(userConfig, "UserConfiguration", "IEntityTypeConfiguration<User>", "Defines User table mapping, unique index on Email")
+    Component(assetConfig, "DigitalAssetConfiguration", "IEntityTypeConfiguration<DigitalAsset>", "Defines DigitalAsset table mapping, FK to User")
+
+    Component(articleRepo, "ArticleRepository", "Repository", "Queries and persists Article entities with slug lookup and published listing")
+    Component(userRepo, "UserRepository", "Repository", "Queries and persists User entities with email lookup")
+    Component(assetRepo, "DigitalAssetRepository", "Repository", "Queries and persists DigitalAsset entities")
+}
+
+ContainerDb(db, "Database", "PostgreSQL / SQL Server")
+
+Rel(uow, ctx, "Wraps SaveChangesAsync\nand transactions")
+Rel(uow, articleRepo, "Exposes")
+Rel(uow, userRepo, "Exposes")
+Rel(uow, assetRepo, "Exposes")
+
+Rel(articleRepo, ctx, "Uses DbSet<Article>")
+Rel(userRepo, ctx, "Uses DbSet<User>")
+Rel(assetRepo, ctx, "Uses DbSet<DigitalAsset>")
+
+Rel(ctx, articleConfig, "Applies on model creating")
+Rel(ctx, userConfig, "Applies on model creating")
+Rel(ctx, assetConfig, "Applies on model creating")
+
+Rel(ctx, db, "Translates LINQ to SQL", "EF Core Provider")
+
+@enduml

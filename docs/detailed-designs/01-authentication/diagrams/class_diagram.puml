@@ -1,0 +1,53 @@
+@startuml class_diagram
+!theme plain
+
+title Authentication - Class Diagram
+
+class User {
+    +UserId : Guid
+    +Email : string
+    +PasswordHash : string
+    +Salt : string
+    +DisplayName : string
+    +CreatedAt : DateTime
+    +LastLoginAt : DateTime?
+}
+
+class LoginRequest <<DTO>> {
+    +Email : string
+    +Password : string
+}
+
+class LoginResponse <<DTO>> {
+    +Token : string
+    +ExpiresAt : DateTime
+}
+
+class AuthService {
+    +Login(request: LoginRequest) : LoginResponse
+}
+
+class TokenService {
+    +GenerateToken(user: User) : string
+    +ValidateToken(token: string) : ClaimsPrincipal
+}
+
+class PasswordHasher {
+    +HashPassword(password: string) : string
+    +VerifyPassword(password: string, storedHash: string) : bool
+}
+
+AuthService --> UserRepository : fetches user
+AuthService --> PasswordHasher : verifies password
+AuthService --> TokenService : generates token
+AuthService ..> LoginRequest : receives
+AuthService ..> LoginResponse : returns
+
+interface UserRepository {
+    +GetByEmail(email: string) : User?
+    +Update(user: User) : void
+}
+
+UserRepository --> User : manages
+
+@enduml

@@ -1,0 +1,23 @@
+@startuml c4_container
+!theme plain
+!include <C4/C4_Container>
+
+title Container Diagram - Blog Platform Observability
+
+Person(ops, "Operations Team", "Monitors and troubleshoots the system")
+
+System_Boundary(blog, "Blog Platform") {
+    Container(api, "API Server", ".NET 8, ASP.NET Core", "Handles HTTP requests, emits structured logs, exposes health endpoint")
+    ContainerDb(db, "Database", "SQL Server / PostgreSQL", "Stores blog content, user data")
+    Container(logStorage, "Log Storage", "File System / Seq / ELK", "Persists structured JSON log entries")
+}
+
+System_Ext(healthConsumers, "Health Check Consumers", "Load balancer, Kubernetes liveness/readiness probes")
+
+Rel(healthConsumers, api, "Polls health status", "HTTP GET /health")
+Rel(api, db, "Reads/writes data, checks connectivity", "EF Core / ADO.NET")
+Rel(api, logStorage, "Writes structured logs", "Serilog sinks")
+Rel(ops, logStorage, "Queries and searches logs")
+Rel(ops, api, "Reviews diagnostic endpoints")
+
+@enduml

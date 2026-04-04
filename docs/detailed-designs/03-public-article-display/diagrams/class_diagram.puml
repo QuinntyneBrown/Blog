@@ -1,0 +1,46 @@
+@startuml class_diagram
+!theme plain
+
+title Public Article Display - Class Diagram
+
+class PublicArticleDto {
+    + Slug : string
+    + Title : string
+    + Abstract : string
+    + Body : string?
+    + FeaturedImageUrl : string?
+    + DatePublished : DateTime
+    + ReadingTimeMinutes : int
+}
+
+class ArticleListResponse {
+    + Articles : List<PublicArticleDto>
+    + TotalCount : int
+    + Page : int
+    + PageSize : int
+}
+
+class PaginationModel {
+    + CurrentPage : int
+    + TotalPages : int
+    + HasPreviousPage : bool
+    + HasNextPage : bool
+    + PageNumbers : List<int>
+}
+
+class PublicArticleService {
+    + GetArticlesAsync(page: int, pageSize: int) : Task<ArticleListResponse>
+    + GetArticleBySlugAsync(slug: string) : Task<PublicArticleDto?>
+}
+
+class PublicArticleController {
+    + GetArticles(page: int, pageSize: int) : Task<ActionResult<ArticleListResponse>>
+    + GetArticleBySlug(slug: string) : Task<ActionResult<PublicArticleDto>>
+}
+
+ArticleListResponse o-- "0..*" PublicArticleDto : contains
+PublicArticleController --> PublicArticleService : uses
+PublicArticleService --> ArticleListResponse : returns
+PaginationModel ..> ArticleListResponse : computed from
+
+@enduml

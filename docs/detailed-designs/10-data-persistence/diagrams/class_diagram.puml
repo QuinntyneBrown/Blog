@@ -1,0 +1,109 @@
+@startuml class_diagram
+!theme plain
+
+title Data Persistence - Entity Relationship Diagram
+
+class User {
+    +UserId : Guid <<PK>>
+    +Email : string <<unique>>
+    +PasswordHash : string
+    +DisplayName : string
+    +CreatedAt : DateTime
+    +LastLoginAt : DateTime?
+    --
+    +DigitalAssets : ICollection<DigitalAsset>
+}
+
+class Article {
+    +ArticleId : Guid <<PK>>
+    +Title : string
+    +Slug : string <<unique>>
+    +Abstract : string
+    +Body : string
+    +FeaturedImageId : Guid? <<FK>>
+    +Published : bool
+    +DatePublished : DateTime?
+    +ReadingTimeMinutes : int
+    +CreatedAt : DateTime
+    +UpdatedAt : DateTime
+    --
+    +FeaturedImage : DigitalAsset?
+}
+
+class DigitalAsset {
+    +DigitalAssetId : Guid <<PK>>
+    +OriginalFileName : string
+    +StoredFileName : string
+    +ContentType : string
+    +FileSizeBytes : long
+    +Width : int?
+    +Height : int?
+    +CreatedAt : DateTime
+    +CreatedBy : Guid <<FK>>
+    --
+    +Creator : User
+}
+
+User "1" --> "0..*" DigitalAsset : creates >
+Article "0..*" --> "0..1" DigitalAsset : featured image >
+
+interface IArticleRepository {
+    +GetByIdAsync(articleId: Guid) : Task<Article?>
+    +GetBySlugAsync(slug: string) : Task<Article?>
+    +GetPublishedAsync(page: int, pageSize: int) : Task<IReadOnlyList<Article>>
+    +GetPublishedCountAsync() : Task<int>
+    +AddAsync(article: Article) : Task
+    +Update(article: Article) : void
+    +Remove(article: Article) : void
+}
+
+interface IUserRepository {
+    +GetByIdAsync(userId: Guid) : Task<User?>
+    +GetByEmailAsync(email: string) : Task<User?>
+    +AddAsync(user: User) : Task
+    +Update(user: User) : void
+}
+
+interface IDigitalAssetRepository {
+    +GetByIdAsync(digitalAssetId: Guid) : Task<DigitalAsset?>
+    +GetByCreatedByAsync(userId: Guid) : Task<IReadOnlyList<DigitalAsset>>
+    +AddAsync(digitalAsset: DigitalAsset) : Task
+    +Remove(digitalAsset: DigitalAsset) : void
+}
+
+interface IUnitOfWork {
+    +Articles : IArticleRepository
+    +Users : IUserRepository
+    +DigitalAssets : IDigitalAssetRepository
+    +SaveChangesAsync(ct: CancellationToken) : Task<int>
+    +BeginTransactionAsync() : Task
+    +CommitTransactionAsync() : Task
+    +RollbackTransactionAsync() : Task
+}
+
+IArticleRepository --> Article : manages
+IUserRepository --> User : manages
+IDigitalAssetRepository --> DigitalAsset : manages
+IUnitOfWork --> IArticleRepository
+IUnitOfWork --> IUserRepository
+IUnitOfWork --> IDigitalAssetRepository
+
+note bottom of Article
+  Indexes:
+  - IX_Articles_Slug (unique)
+  - IX_Articles_Published_DatePublished
+  - IX_Articles_CreatedAt
+end note
+
+note bottom of User
+  Indexes:
+  - IX_Users_Email (unique)
+end note
+
+note bottom of DigitalAsset
+  Indexes:
+  - IX_DigitalAssets_CreatedBy
+  - IX_DigitalAssets_ContentType
+end note
+
+@enduml

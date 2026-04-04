@@ -1,0 +1,29 @@
+@startuml c4_component
+!theme plain
+!include <C4/C4_Component>
+
+title Blog Platform - Public Article Display - Component Diagram
+
+Container_Boundary(ssr, "Public Web App (SSR)") {
+    Component(listPage, "ArticleListPage", "Razor Page", "Renders paginated article listing grid with ArticleCard components")
+    Component(detailPage, "ArticleDetailPage", "Razor Page", "Renders single article with body, featured image, and metadata")
+    Component(layout, "LayoutComponent", "Razor Layout", "Shared layout with NavBar (desktop/mobile) and Footer")
+}
+
+Container_Boundary(api, "API Server") {
+    Component(ctrl, "PublicArticleController", "ASP.NET Controller", "Exposes GET /api/public/articles and GET /api/public/articles/{slug}")
+    Component(svc, "PublicArticleService", "Service", "Queries published articles, applies pagination, maps to DTOs")
+    Component(repo, "ArticleRepository", "Repository", "Reads Article entities from the database")
+}
+
+ContainerDb(db, "Database", "PostgreSQL / SQL Server")
+
+Rel(listPage, ctrl, "GET /api/public/articles?page=N", "HTTPS/JSON")
+Rel(detailPage, ctrl, "GET /api/public/articles/{slug}", "HTTPS/JSON")
+Rel(listPage, layout, "Uses shared layout")
+Rel(detailPage, layout, "Uses shared layout")
+Rel(ctrl, svc, "Delegates query")
+Rel(svc, repo, "Fetches published articles")
+Rel(repo, db, "Queries", "EF Core")
+
+@enduml

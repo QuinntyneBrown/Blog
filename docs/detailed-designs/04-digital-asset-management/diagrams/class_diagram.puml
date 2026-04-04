@@ -1,0 +1,91 @@
+@startuml class_diagram
+!theme plain
+
+title Digital Asset Management - Class Diagram
+
+class DigitalAsset {
+    +DigitalAssetId : Guid
+    +OriginalFileName : string
+    +StoredFileName : string
+    +ContentType : string
+    +FileSizeBytes : long
+    +Width : int
+    +Height : int
+    +CreatedAt : DateTime
+    +CreatedBy : Guid
+}
+
+class UploadResponse <<DTO>> {
+    +DigitalAssetId : Guid
+    +Url : string
+    +OriginalFileName : string
+    +ContentType : string
+    +FileSizeBytes : long
+    +Width : int
+    +Height : int
+}
+
+class DigitalAssetDto <<DTO>> {
+    +DigitalAssetId : Guid
+    +OriginalFileName : string
+    +Url : string
+    +ContentType : string
+    +FileSizeBytes : long
+    +Width : int
+    +Height : int
+    +CreatedAt : DateTime
+}
+
+class ImageTransformOptions <<Value Object>> {
+    +Width : int?
+    +Format : ImageFormat?
+}
+
+enum ImageFormat {
+    JPEG
+    PNG
+    WebP
+    AVIF
+    GIF
+}
+
+class DigitalAssetService {
+    +UploadAsync(file: IFormFile, userId: Guid) : UploadResponse
+    +GetByIdAsync(id: Guid) : DigitalAssetDto
+}
+
+class FileValidator {
+    +ValidateContentType(fileStream: Stream, declaredContentType: string) : string
+    +ValidateFileSize(sizeBytes: long) : void
+}
+
+class ImageProcessor {
+    +ConvertFormat(source: Stream, targetFormat: ImageFormat) : Stream
+    +Resize(source: Stream, targetWidth: int) : Stream
+    +GetDimensions(source: Stream) : (int Width, int Height)
+}
+
+interface IAssetStorage {
+    +SaveAsync(storedFileName: string, content: Stream) : Task
+    +GetAsync(storedFileName: string) : Task<Stream>
+    +DeleteAsync(storedFileName: string) : Task
+    +GetPublicUrl(storedFileName: string) : string
+}
+
+interface IAssetRepository {
+    +AddAsync(asset: DigitalAsset) : Task
+    +GetByIdAsync(id: Guid) : Task<DigitalAsset?>
+    +GetByStoredFileNameAsync(storedFileName: string) : Task<DigitalAsset?>
+    +DeleteAsync(id: Guid) : Task
+}
+
+DigitalAssetService --> FileValidator : validates files
+DigitalAssetService --> ImageProcessor : extracts dimensions
+DigitalAssetService --> IAssetStorage : persists files
+DigitalAssetService --> IAssetRepository : persists metadata
+DigitalAssetService ..> UploadResponse : returns
+DigitalAssetService ..> DigitalAssetDto : returns
+IAssetRepository --> DigitalAsset : manages
+ImageTransformOptions --> ImageFormat : uses
+
+@enduml

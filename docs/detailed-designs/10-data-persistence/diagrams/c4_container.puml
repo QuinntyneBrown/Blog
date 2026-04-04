@@ -1,0 +1,22 @@
+@startuml c4_container
+!theme plain
+!include <C4/C4_Container>
+
+title Blog Platform - Data Persistence Container Diagram
+
+Person(admin, "Admin User", "Back-office administrator")
+Person(reader, "Anonymous Reader", "Public blog reader")
+
+System_Boundary(blog, "Blog Platform") {
+    Container(api, "API Server", ".NET 8, ASP.NET Core", "Hosts REST API, business logic, EF Core DbContext, and repositories")
+    Container(migrator, "Migration Runner", ".NET 8, EF Core Migrations", "Applies pending schema migrations on startup or via CLI before deployment")
+    ContainerDb(db, "Database", "PostgreSQL / SQL Server", "Stores Users, Articles, DigitalAssets tables with indexes and constraints")
+}
+
+Rel(admin, api, "Manages content", "HTTPS/JSON + JWT")
+Rel(reader, api, "Reads articles", "HTTPS/JSON")
+Rel(api, db, "Reads and writes data", "EF Core / SQL")
+Rel(migrator, db, "Applies schema migrations", "EF Core / SQL")
+Rel(api, migrator, "Triggers on startup", "In-process")
+
+@enduml

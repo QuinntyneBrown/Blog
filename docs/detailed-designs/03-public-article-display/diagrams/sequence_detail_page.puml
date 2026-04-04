@@ -1,0 +1,38 @@
+@startuml sequence_detail_page
+!theme plain
+
+title Load Article Detail Page (SSR)
+
+actor Browser
+participant "ArticleDetailPage\n(Razor Page)" as Page
+participant "PublicArticleService" as Service
+database "Database" as DB
+
+Browser -> Page : GET /articles/{slug}
+activate Page
+
+Page -> Service : GetArticleBySlugAsync(slug)
+activate Service
+
+Service -> DB : SELECT article\nWHERE Slug = {slug}\nAND Status = 'Published'
+activate DB
+DB --> Service : Article row or null
+deactivate DB
+
+alt Article found and published
+    Service --> Page : PublicArticleDto\n(Slug, Title, Body, FeaturedImageUrl,\nDatePublished, ReadingTimeMinutes)
+    deactivate Service
+
+    Page -> Page : Render article HTML:\nFeatured image hero,\nTitle, Date, "X min read",\nBody (~720px centered)
+
+    Page --> Browser : 200 OK\nFull HTML (NavBar + Article + Footer)
+else Article not found or unpublished
+    Service --> Page : null
+    deactivate Service
+
+    Page --> Browser : 404 Not Found\nCustom error page
+end
+
+deactivate Page
+
+@enduml

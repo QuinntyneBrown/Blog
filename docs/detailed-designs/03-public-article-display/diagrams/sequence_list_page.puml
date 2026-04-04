@@ -1,0 +1,39 @@
+@startuml sequence_list_page
+!theme plain
+
+title Load Article Listing Page (SSR)
+
+actor Browser
+participant "ArticleListPage\n(Razor Page)" as Page
+participant "PublicArticleService" as Service
+database "Database" as DB
+
+Browser -> Page : GET /articles?page=1
+activate Page
+
+Page -> Service : GetArticlesAsync(page, pageSize)
+activate Service
+
+Service -> DB : SELECT articles\nWHERE Status = 'Published'\nORDER BY DatePublished DESC\nOFFSET/FETCH (pagination)
+activate DB
+DB --> Service : Article rows
+deactivate DB
+
+Service -> DB : SELECT COUNT(*)\nWHERE Status = 'Published'
+activate DB
+DB --> Service : TotalCount
+deactivate DB
+
+Service --> Page : ArticleListResponse\n(Articles[], TotalCount, Page, PageSize)
+deactivate Service
+
+alt Articles exist
+    Page -> Page : Render ArticleCard grid\n+ Pagination component
+else No articles
+    Page -> Page : Render EmptyState\n"No articles published yet"
+end
+
+Page --> Browser : 200 OK\nFull HTML (NavBar + Grid + Footer)
+deactivate Page
+
+@enduml

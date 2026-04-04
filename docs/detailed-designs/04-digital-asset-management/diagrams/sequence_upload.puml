@@ -1,0 +1,56 @@
+@startuml sequence_upload
+!theme plain
+
+title Digital Asset Upload Flow
+
+actor "Admin User" as user
+participant "Back-Office SPA" as spa
+participant "DigitalAssetController" as ctrl
+participant "DigitalAssetService" as svc
+participant "FileValidator" as validator
+participant "ImageProcessor" as processor
+participant "AssetStorage" as storage
+participant "AssetRepository" as repo
+database "Database" as db
+
+user -> spa : Drops image onto Dropzone
+spa -> ctrl : POST /api/digital-assets\n[multipart/form-data + JWT]
+
+alt Unauthenticated
+    ctrl --> spa : 401 Unauthorized
+end
+
+ctrl -> svc : UploadAsync(file, userId)
+
+svc -> validator : ValidateFileSize(file.Length)
+alt File > 10 MB
+    validator --> svc : FileTooLargeException
+    svc --> ctrl : 413 Content Too Large
+    ctrl --> spa : 413 response
+end
+
+svc -> validator : ValidateContentType(file.Stream, file.ContentType)
+alt Invalid file type
+    validator --> svc : InvalidContentTypeException
+    svc --> ctrl : 400 Bad Request
+    ctrl --> spa : 400 response
+end
+
+svc -> svc : Generate unique stored filename\n(GUID + original extension)
+
+svc -> processor : GetDimensions(file.Stream)
+processor --> svc : (width, height)
+
+svc -> storage : SaveAsync(storedFileName, file.Stream)
+storage --> svc : success
+
+svc -> repo : AddAsync(digitalAsset)
+repo -> db : INSERT DigitalAsset
+db --> repo : success
+repo --> svc : success
+
+svc --> ctrl : UploadResponse {id, url, metadata}
+ctrl --> spa : 201 Created + UploadResponse
+spa --> user : Display uploaded image preview
+
+@enduml

@@ -1,0 +1,16 @@
+@startuml c4_context
+!theme plain
+!include <C4/C4_Context>
+
+title System Context Diagram - Article Management
+
+Person(admin, "Admin User", "Authenticated administrator who manages blog articles")
+
+System(blogPlatform, "Blog Platform", "Provides article management, publishing, and public content delivery")
+
+SystemDb(database, "Database", "Stores articles, digital assets, and user accounts")
+
+Rel(admin, blogPlatform, "Creates, edits, publishes, and deletes articles", "HTTPS/JSON")
+Rel(blogPlatform, database, "Reads and writes article data", "SQL")
+
+@enduml

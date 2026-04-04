@@ -1,0 +1,22 @@
+@startuml c4_context
+!theme plain
+!include <C4/C4_Context>
+
+title System Context Diagram — Blog Platform Web Performance
+
+Person(reader, "Reader", "Visits the blog to read articles")
+Person(author, "Author", "Publishes and manages blog content")
+
+System(blog, "Blog Platform", "Serves server-rendered blog pages with sub-200ms TTFB and Lighthouse 100 performance")
+
+System_Ext(cdn, "CDN (Optional)", "Edge caching layer for static assets and HTML pages, reducing latency for distributed users")
+System_Ext(analytics, "Analytics Service", "Collects Core Web Vitals RUM data")
+
+Rel(reader, cdn, "Requests pages and assets", "HTTPS")
+Rel(cdn, blog, "Forwards cache misses", "HTTPS")
+Rel(reader, blog, "Requests pages directly (if no CDN)", "HTTPS")
+Rel(author, blog, "Publishes content", "HTTPS")
+Rel(blog, analytics, "Reports performance metrics", "HTTPS")
+
+SHOW_LEGEND()
+@enduml

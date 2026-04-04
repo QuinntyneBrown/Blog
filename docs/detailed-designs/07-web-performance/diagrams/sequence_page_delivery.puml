@@ -1,0 +1,64 @@
+@startuml sequence_page_delivery
+!theme plain
+
+title Page Delivery Pipeline — Full HTML Page Request
+
+actor Browser
+participant "CDN\n(Optional)" as CDN
+participant "CompressionMiddleware" as Compress
+participant "ResponseCachingMiddleware" as Cache
+participant "Razor SSR Engine" as Razor
+participant "CriticalCssInliner" as CriticalCss
+participant "ImageTagHelper" as ImageHelper
+participant "ResourceHintTagHelper" as ResourceHint
+participant "ETagGenerator" as ETag
+database "Database" as DB
+
+Browser -> CDN : GET /posts/my-article
+CDN -> CDN : Check edge cache
+
+alt CDN cache hit
+    CDN --> Browser : 200 OK (cached response)
+else CDN cache miss
+    CDN -> Compress : Forward request
+
+    Compress -> Cache : Pass request
+    Cache -> Cache : Check in-memory cache\n(key: URL + Accept-Encoding)
+
+    alt Response cache hit
+        Cache --> Compress : Return cached response
+    else Response cache miss
+        Cache -> Razor : Pass request to rendering
+
+        Razor -> DB : Query post data\n(compiled query, projection)
+        DB --> Razor : Post content
+
+        Razor -> CriticalCss : Inline critical CSS in <head>\nAsync-load non-critical CSS
+        CriticalCss --> Razor : Transformed <head>
+
+        Razor -> ImageHelper : Transform <img> tags\n(srcset, lazy loading, <picture>)
+        ImageHelper --> Razor : Transformed image markup
+
+        Razor -> ResourceHint : Emit preconnect, preload hints
+        ResourceHint --> Razor : <link> elements
+
+        Razor --> Cache : Rendered HTML body
+
+        Cache -> ETag : Compute ETag from body
+        ETag --> Cache : ETag value
+
+        alt If-None-Match matches ETag
+            Cache --> Compress : 304 Not Modified (no body)
+        else No match or no If-None-Match
+            Cache -> Cache : Store response in cache\n(TTL: 60s, SWR: 600s)
+            Cache --> Compress : 200 OK + rendered HTML\n+ Cache-Control: max-age=60,\n  stale-while-revalidate=600\n+ ETag + Vary: Accept-Encoding
+        end
+    end
+
+    Compress -> Compress : Compress body\n(Brotli preferred, Gzip fallback)
+    Compress --> CDN : Compressed response\n+ Content-Encoding: br
+    CDN -> CDN : Store in edge cache
+    CDN --> Browser : Response
+end
+
+@enduml

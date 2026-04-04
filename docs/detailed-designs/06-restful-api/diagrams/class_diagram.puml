@@ -1,0 +1,73 @@
+@startuml class_diagram
+!theme plain
+
+title RESTful API - Class Diagram
+
+class ProblemDetails {
+    +Type : string
+    +Title : string
+    +Status : int
+    +Detail : string
+    +Instance : string?
+    +Errors : Dictionary<string, string[]>?
+}
+
+class "PagedResponse<T>" as PagedResponse {
+    +Items : List<T>
+    +Page : int
+    +PageSize : int
+    +TotalCount : int
+    +TotalPages : int
+    +HasPreviousPage : bool
+    +HasNextPage : bool
+    +PreviousPageUrl : string?
+    +NextPageUrl : string?
+}
+
+class PaginationParameters {
+    +Page : int = 1
+    +PageSize : int = 20
+    --
+    {static} +MaxPageSize : int = 100
+    {static} +DefaultPageSize : int = 20
+}
+
+class "ApiResponse<T>" as ApiResponse {
+    +Data : T
+    +Timestamp : DateTime
+}
+
+class PaginationHelper {
+    +CreatePagedResponse<T>(items: List<T>,\n    totalCount: int,\n    parameters: PaginationParameters,\n    requestUri: Uri) : PagedResponse<T>
+    -ComputeOffset(page: int, pageSize: int) : int
+    -BuildPageUrl(uri: Uri, page: int, pageSize: int) : string
+}
+
+class ApiController <<abstract>> {
+    #PagedResult<T>(response: PagedResponse<T>) : IActionResult
+    #CreatedResult<T>(resource: T, routeName: string) : IActionResult
+}
+
+class ExceptionHandlingMiddleware {
+    +InvokeAsync(context: HttpContext) : Task
+    -HandleException(context: HttpContext,\n    exception: Exception) : Task
+}
+
+class ResponseEnvelopeMiddleware {
+    +InvokeAsync(context: HttpContext) : Task
+    -WrapResponse<T>(body: T) : ApiResponse<T>
+}
+
+class ValidationBehavior <<MediatR Behavior>> {
+    -_validators : IEnumerable<IValidator<TRequest>>
+    +Handle(request: TRequest,\n    next: RequestHandlerDelegate) : TResponse
+}
+
+PaginationHelper ..> PagedResponse : creates
+PaginationHelper ..> PaginationParameters : uses
+ExceptionHandlingMiddleware ..> ProblemDetails : creates
+ResponseEnvelopeMiddleware ..> ApiResponse : creates
+ApiController ..> PagedResponse : returns
+ValidationBehavior ..> ProblemDetails : triggers via exception
+
+@enduml

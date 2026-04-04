@@ -1,0 +1,51 @@
+@startuml sequence_rate_limit
+!theme plain
+
+title Rate Limit Enforcement Flow
+
+actor Client
+participant "Rate Limit\nMiddleware" as Middleware
+participant "Policy\nResolver" as Resolver
+participant "Counter\nStore" as Store
+participant "Next\nMiddleware" as Next
+
+Client -> Middleware : Incoming request
+
+Middleware -> Resolver : Determine applicable policy\n(auth endpoint vs. write endpoint)
+Resolver --> Middleware : RateLimitPolicy\n(MaxRequests, WindowSeconds, KeyType)
+
+alt KeyType = IpAddress
+    Middleware -> Middleware : Extract client IP\n(X-Forwarded-For or RemoteIpAddress)
+else KeyType = AuthenticatedUser
+    Middleware -> Middleware : Extract user ID\nfrom JWT claims
+end
+
+Middleware -> Store : Get current count\nfor key within sliding window
+Store --> Middleware : currentCount, windowResetSeconds
+
+alt currentCount >= MaxRequests
+    Middleware --> Client : 429 Too Many Requests
+    note right
+        Response headers:
+        Retry-After: {windowResetSeconds}
+        X-RateLimit-Limit: {MaxRequests}
+        X-RateLimit-Remaining: 0
+        X-RateLimit-Reset: {resetTimestamp}
+    end note
+else currentCount < MaxRequests
+    Middleware -> Store : Increment counter for key
+    Store --> Middleware : Updated count
+
+    Middleware -> Next : Forward request
+    Next --> Middleware : Response
+
+    Middleware --> Client : Response
+    note right
+        Response headers:
+        X-RateLimit-Limit: {MaxRequests}
+        X-RateLimit-Remaining: {remaining}
+        X-RateLimit-Reset: {resetTimestamp}
+    end note
+end
+
+@enduml

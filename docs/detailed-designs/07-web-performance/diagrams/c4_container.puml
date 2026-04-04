@@ -1,0 +1,28 @@
+@startuml c4_container
+!theme plain
+!include <C4/C4_Container>
+
+title Container Diagram — Blog Platform Web Performance
+
+Person(reader, "Reader", "Visits the blog")
+
+System_Boundary(blog, "Blog Platform") {
+    Container(webapp, "Public Web App", "ASP.NET, Razor Pages", "Server-renders HTML pages with critical CSS inlined, optimized images, resource hints, and compression")
+    ContainerDb(cache, "Response Cache", "In-Memory (IMemoryCache)", "Caches rendered HTML responses keyed by URL and Accept-Encoding")
+    ContainerDb(db, "Database", "SQL Server / PostgreSQL", "Stores posts, content, digital assets, and user data")
+}
+
+System_Ext(cdn, "CDN (Optional)", "Edge cache for static assets and HTML")
+System_Ext(browser, "Browser", "Renders HTML, executes minimal JS for progressive enhancement")
+
+Rel(browser, cdn, "Requests pages/assets", "HTTPS")
+Rel(cdn, webapp, "Forwards cache misses", "HTTPS")
+Rel(browser, webapp, "Direct requests (no CDN)", "HTTPS")
+
+Rel(webapp, cache, "Checks/stores cached responses")
+Rel(webapp, db, "Queries content data", "EF Core")
+
+Rel(webapp, browser, "Returns compressed HTML with cache headers", "HTTPS\nBrotli/Gzip\nCache-Control, ETag")
+
+SHOW_LEGEND()
+@enduml

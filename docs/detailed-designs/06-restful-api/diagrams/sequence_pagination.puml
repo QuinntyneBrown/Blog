@@ -1,0 +1,42 @@
+@startuml sequence_pagination
+!theme plain
+
+title Pagination Flow - GET /api/articles?page=2&pageSize=20
+
+actor "Client" as client
+participant "ArticlesController" as ctrl
+participant "MediatR" as mediatr
+participant "ValidationBehavior" as val
+participant "GetArticlesHandler" as handler
+participant "PaginationHelper" as pagHelper
+participant "ArticleRepository" as repo
+database "Database" as db
+
+client -> ctrl : GET /api/articles?page=2&pageSize=20
+ctrl -> ctrl : Bind query params\nto PaginationParameters\n(page=2, pageSize=20)
+ctrl -> mediatr : Send(GetArticlesQuery\n{Page=2, PageSize=20})
+mediatr -> val : Validate parameters
+val -> val : Check: page >= 1,\npageSize 1..100
+val -> handler : Validation passed
+
+handler -> repo : GetArticlesPagedAsync(\noffset=20, limit=20)
+
+repo -> db : SELECT COUNT(*)\nFROM Articles
+db --> repo : totalCount = 45
+
+repo -> db : SELECT * FROM Articles\nORDER BY CreatedAt DESC\nOFFSET 20 ROWS\nFETCH NEXT 20 ROWS ONLY
+db --> repo : 20 article rows
+
+repo --> handler : (articles, totalCount=45)
+
+handler -> pagHelper : CreatePagedResponse(\nitems, totalCount=45,\nparams={page=2, pageSize=20},\nrequestUri)
+
+pagHelper -> pagHelper : TotalPages = ceil(45/20) = 3\nHasPreviousPage = true\nHasNextPage = true\nPreviousPageUrl = /api/articles?page=1&pageSize=20\nNextPageUrl = /api/articles?page=3&pageSize=20
+
+pagHelper --> handler : PagedResponse<ArticleDto>
+
+handler --> mediatr : PagedResponse
+mediatr --> ctrl : PagedResponse
+ctrl --> client : 200 OK\n{\n  "data": {\n    "items": [...20 articles...],\n    "page": 2,\n    "pageSize": 20,\n    "totalCount": 45,\n    "totalPages": 3,\n    "hasPreviousPage": true,\n    "hasNextPage": true,\n    "previousPageUrl": "...?page=1",\n    "nextPageUrl": "...?page=3"\n  }\n}
+
+@enduml

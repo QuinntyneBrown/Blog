@@ -1,0 +1,30 @@
+@startuml c4_component
+!theme plain
+!include <C4/C4_Component>
+
+title Component Diagram - API Server Observability Components
+
+Container_Boundary(api, "API Server") {
+    Component(correlationMiddleware, "CorrelationIdMiddleware", "ASP.NET Middleware", "Generates or extracts X-Correlation-Id header, enriches log context")
+    Component(requestLoggingMiddleware, "RequestLoggingMiddleware", "ASP.NET Middleware", "Times requests, logs method/path/status/duration with correlation ID")
+    Component(healthService, "HealthCheckService", "Service", "Aggregates results from all registered health checks")
+    Component(dbHealthCheck, "DbHealthCheck", "IHealthCheck", "Verifies database connectivity via lightweight query")
+    Component(logSanitizer, "LogSanitizer", "Serilog IDestructuringPolicy", "Scrubs passwords, tokens, PII from log properties")
+    Component(serilogPipeline, "Serilog Pipeline", "Logging Infrastructure", "Routes structured JSON logs to configured sinks (Console, File, Seq)")
+    Component(controllers, "Controllers", "ASP.NET Controllers", "Application request handlers")
+}
+
+ContainerDb(db, "Database", "SQL Server / PostgreSQL")
+Container(logStorage, "Log Storage", "File / Seq / ELK")
+
+Rel(correlationMiddleware, requestLoggingMiddleware, "Passes request with correlation ID")
+Rel(requestLoggingMiddleware, controllers, "Forwards request, captures timing")
+Rel(controllers, healthService, "Invokes on GET /health")
+Rel(healthService, dbHealthCheck, "Executes health check")
+Rel(dbHealthCheck, db, "SELECT 1 with timeout")
+Rel(requestLoggingMiddleware, serilogPipeline, "Emits request log entry")
+Rel(controllers, serilogPipeline, "Emits business event logs")
+Rel(serilogPipeline, logSanitizer, "Applies sanitization before sink output")
+Rel(serilogPipeline, logStorage, "Writes sanitized JSON logs")
+
+@enduml

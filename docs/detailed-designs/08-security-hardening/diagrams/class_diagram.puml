@@ -1,0 +1,61 @@
+@startuml class_diagram
+!theme plain
+
+title Security Configuration Classes
+
+enum RateLimitKeyType {
+    IpAddress
+    AuthenticatedUser
+}
+
+class SecurityHeadersConfig {
+    + HstsMaxAgeSeconds : int = 31536000
+    + HstsIncludeSubDomains : bool = true
+    + HstsPreload : bool = true
+    + ContentSecurityPolicy : string
+    + XFrameOptions : string = "DENY"
+    + ReferrerPolicy : string = "strict-origin-when-cross-origin"
+    + PermissionsPolicy : string
+    + RemoveServerHeader : bool = true
+}
+
+class RateLimitPolicy {
+    + PolicyName : string
+    + MaxRequests : int
+    + WindowSeconds : int
+    + KeyType : RateLimitKeyType
+}
+
+class CorsConfig {
+    + AllowedOrigins : string[]
+    + AllowedMethods : string[]
+    + AllowedHeaders : string[]
+    + AllowCredentials : bool = true
+    + PreflightMaxAgeSeconds : int = 7200
+}
+
+class SecurityHeadersMiddleware {
+    - _config : SecurityHeadersConfig
+    - _next : RequestDelegate
+    + InvokeAsync(context : HttpContext) : Task
+}
+
+class RateLimitingMiddleware {
+    - _policies : RateLimitPolicy[]
+    - _next : RequestDelegate
+    + InvokeAsync(context : HttpContext) : Task
+    - GetKey(context : HttpContext, keyType : RateLimitKeyType) : string
+    - IsLimitExceeded(key : string, policy : RateLimitPolicy) : bool
+}
+
+class HtmlSanitizerService {
+    - _sanitizer : HtmlSanitizer
+    + Sanitize(html : string) : string
+}
+
+SecurityHeadersMiddleware --> SecurityHeadersConfig : uses
+RateLimitingMiddleware --> RateLimitPolicy : uses
+RateLimitPolicy --> RateLimitKeyType : key type
+CorsConfig ..> SecurityHeadersMiddleware : loaded from config
+
+@enduml

@@ -1,0 +1,29 @@
+@startuml c4_component
+!theme plain
+!include <C4/C4_Component>
+
+title API Server - Digital Asset Management Components
+
+Container_Boundary(api, "API Server") {
+    Component(ctrl, "DigitalAssetController", "ASP.NET Controller", "Exposes upload, metadata, and serving endpoints")
+    Component(svc, "DigitalAssetService", "Service", "Orchestrates upload workflow: validation, processing, storage, metadata persistence")
+    Component(validator, "FileValidator", "Service", "Validates file type by magic-byte inspection and enforces size limits")
+    Component(processor, "ImageProcessor", "Service", "Resizes images, converts formats (WebP/AVIF), extracts dimensions")
+    Component(storage, "AssetStorage", "Service", "Abstracts file persistence (local filesystem or blob storage)")
+    Component(repo, "AssetRepository", "Repository", "Reads and writes DigitalAsset entities")
+}
+
+ContainerDb(db, "Database", "PostgreSQL / SQL Server")
+Container(filestore, "File Storage", "Local Filesystem / Blob Storage")
+
+Rel(ctrl, svc, "Delegates upload and retrieval")
+Rel(svc, validator, "Validates file type and size")
+Rel(svc, processor, "Extracts dimensions on upload")
+Rel(svc, storage, "Saves original file")
+Rel(svc, repo, "Persists asset metadata")
+Rel(ctrl, storage, "Reads file for serving")
+Rel(ctrl, processor, "Resizes and converts on serve")
+Rel(repo, db, "Queries/updates", "EF Core")
+Rel(storage, filestore, "Reads/writes files")
+
+@enduml

@@ -1,0 +1,56 @@
+@startuml sequence_migration
+!theme plain
+
+title Migration Execution Flow
+
+participant "Application Host" as host
+participant "MigrationRunner" as runner
+participant "BlogDbContext" as ctx
+database "Database" as db
+
+host -> runner : Start hosted service
+activate runner
+
+runner -> ctx : Resolve from DI container
+activate ctx
+
+runner -> ctx : GetPendingMigrationsAsync()
+ctx -> db : SELECT * FROM __EFMigrationsHistory
+db --> ctx : Applied migration list
+ctx --> runner : Pending migrations list
+
+alt No pending migrations
+    runner -> runner : Log "Schema is up to date"
+    runner --> host : Ready
+else Has pending migrations
+    loop For each pending migration (in order)
+        runner -> ctx : MigrateAsync()\n[apply next migration]
+        ctx -> db : BEGIN TRANSACTION
+        ctx -> db : Execute migration SQL\n(CREATE TABLE, ALTER, ADD INDEX, etc.)
+        ctx -> db : INSERT INTO __EFMigrationsHistory\n(MigrationId, ProductVersion)
+        ctx -> db : COMMIT TRANSACTION
+        db --> ctx : Migration applied
+        ctx --> runner : Migration complete
+        runner -> runner : Log "Applied {MigrationName}\nin {Duration}ms"
+    end
+
+    runner -> ctx : Verify schema consistency
+    ctx -> db : Query metadata tables
+    db --> ctx : Schema metadata
+    ctx --> runner : Schema verified
+
+    alt Schema verification failed
+        runner -> runner : Log critical error
+        runner --> host : Terminate application
+    else Schema verified
+        runner --> host : Ready
+    end
+end
+
+deactivate ctx
+
+host -> host : Start HTTP pipeline\nand accept requests
+
+deactivate runner
+
+@enduml

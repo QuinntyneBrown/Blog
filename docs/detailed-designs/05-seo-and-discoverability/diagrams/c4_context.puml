@@ -1,0 +1,19 @@
+@startuml c4_context
+!theme plain
+!include <C4/C4_Context>
+
+title Blog Platform - SEO & Discoverability Context Diagram
+
+Person(reader, "Anonymous Reader", "Browses articles via clean URLs with semantic HTML")
+Person_Ext(crawler, "Search Engine Crawler", "Googlebot, Bingbot -- discovers content via sitemap, reads structured data")
+Person_Ext(aiagent, "AI Agent", "ChatGPT, Perplexity, Claude -- reads llms.txt, structured data, sitemap")
+Person_Ext(feedreader, "Feed Reader", "Feedly, NewsBlur -- subscribes to RSS/Atom feeds")
+
+System(blog, "Blog Platform", "Serves SEO-optimized public content with structured data, sitemaps, feeds, and crawler directives")
+
+Rel(reader, blog, "Reads articles", "HTTPS")
+Rel(crawler, blog, "Crawls /sitemap.xml, /robots.txt,\nreads JSON-LD and meta tags", "HTTPS")
+Rel(aiagent, blog, "Reads /llms.txt, /sitemap.xml,\nstructured data", "HTTPS")
+Rel(feedreader, blog, "Subscribes to /feed.xml, /atom.xml", "HTTPS")
+
+@enduml

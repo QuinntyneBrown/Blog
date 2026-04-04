@@ -1,0 +1,23 @@
+@startuml c4_context
+!theme plain
+!include <C4/C4_Context>
+
+title C4 Context Diagram - Security Hardening
+
+Person(admin, "Admin User", "Manages blog content via the back office")
+Person(reader, "Public Reader", "Reads published articles")
+Person_Ext(attacker, "Attacker", "Attempts unauthorized access, injection, or abuse")
+
+System(blogPlatform, "Blog Platform", "Serves blog content and admin interface with defense-in-depth security controls")
+
+System_Ext(identityProvider, "Identity Provider", "Issues and validates JWT tokens")
+System_Ext(cdn, "CDN / Reverse Proxy", "Terminates TLS, caches static assets")
+
+Rel(admin, blogPlatform, "Manages articles", "HTTPS + JWT")
+Rel(reader, blogPlatform, "Reads articles", "HTTPS")
+Rel(attacker, blogPlatform, "Sends malicious requests", "HTTP/HTTPS")
+
+Rel(blogPlatform, identityProvider, "Validates tokens", "HTTPS")
+Rel(cdn, blogPlatform, "Forwards requests", "HTTPS")
+
+@enduml

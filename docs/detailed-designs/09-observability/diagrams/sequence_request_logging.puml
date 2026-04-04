@@ -1,0 +1,56 @@
+@startuml sequence_request_logging
+!theme plain
+
+title Request Logging Pipeline
+
+actor Client
+participant "CorrelationId\nMiddleware" as CorrMw
+participant "RequestLogging\nMiddleware" as LogMw
+participant "ASP.NET\nPipeline" as Pipeline
+participant "Serilog\nPipeline" as Serilog
+participant "LogSanitizer" as Sanitizer
+
+Client -> CorrMw : HTTP Request
+
+alt X-Correlation-Id header present
+    CorrMw -> CorrMw : Extract correlation ID\nfrom header
+else No header
+    CorrMw -> CorrMw : Generate new GUID\nas correlation ID
+end
+
+CorrMw -> CorrMw : Push correlation ID to\nLogContext enricher
+CorrMw -> CorrMw : Add X-Correlation-Id\nto response headers
+
+CorrMw -> LogMw : Forward request
+activate LogMw
+
+LogMw -> LogMw : Start Stopwatch
+
+LogMw -> Pipeline : Forward request
+activate Pipeline
+
+Pipeline -> Pipeline : Authentication,\nRouting,\nController execution
+
+Pipeline --> LogMw : Response (StatusCode)
+deactivate Pipeline
+
+LogMw -> LogMw : Stop Stopwatch\nCalculate DurationMs
+
+LogMw -> Serilog : Emit log entry\n{Method, Path, StatusCode,\nDurationMs, CorrelationId, Timestamp}
+activate Serilog
+
+Serilog -> Sanitizer : Apply sanitization
+activate Sanitizer
+Sanitizer -> Sanitizer : Redact denied properties\nwith "[REDACTED]"
+Sanitizer --> Serilog : Sanitized entry
+deactivate Sanitizer
+
+Serilog -> Serilog : Write to sinks\n(Console, File, Seq)
+deactivate Serilog
+
+LogMw --> CorrMw : Response
+deactivate LogMw
+
+CorrMw --> Client : HTTP Response\n(with X-Correlation-Id header)
+
+@enduml

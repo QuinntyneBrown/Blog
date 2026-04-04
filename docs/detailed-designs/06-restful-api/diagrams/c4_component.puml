@@ -1,0 +1,32 @@
+@startuml c4_component
+!theme plain
+!include <C4/C4_Component>
+
+title API Server - RESTful API Components
+
+Container_Boundary(api, "API Server") {
+    Component(controllers, "Controllers", "ASP.NET Controllers", "ArticlesController, DigitalAssetsController,\nAuthController, HealthController.\nInherit from ApiController base class.")
+    Component(mediatr, "MediatR Pipeline", "MediatR", "Dispatches requests through\npipeline behaviors to handlers.")
+    Component(validation, "ValidationBehavior", "MediatR Behavior", "Runs FluentValidation validators\nbefore the handler executes.")
+    Component(logging, "LoggingBehavior", "MediatR Behavior", "Logs request/response for\nobservability and diagnostics.")
+    Component(handlers, "Handlers", "MediatR Handlers", "Execute business logic for\neach command/query.")
+    Component(repos, "Repositories", "EF Core", "Data access layer.\nExecute queries and persist changes.")
+    Component(problemDetails, "ProblemDetailsFactory", "Service", "Creates RFC 7807 ProblemDetails\nfor all error responses.")
+    Component(pagination, "PaginationHelper", "Service", "Computes page metadata,\nnavigation URLs, and OFFSET/LIMIT.")
+    Component(exceptionMw, "ExceptionHandlingMiddleware", "Middleware", "Catches unhandled exceptions and\nconverts them to ProblemDetails.")
+    Component(envelopeMw, "ResponseEnvelopeMiddleware", "Middleware", "Wraps 2xx responses in\nApiResponse<T> envelope.")
+}
+
+ContainerDb(db, "Database", "SQL Server / PostgreSQL")
+
+Rel(controllers, mediatr, "Sends commands/queries")
+Rel(mediatr, validation, "Pipeline step 1")
+Rel(validation, logging, "Pipeline step 2")
+Rel(logging, handlers, "Pipeline step 3")
+Rel(handlers, repos, "Reads/writes data")
+Rel(handlers, pagination, "Builds paged responses")
+Rel(repos, db, "Queries/persists", "EF Core")
+Rel(exceptionMw, problemDetails, "Creates error responses")
+Rel(controllers, pagination, "Passes pagination params")
+
+@enduml

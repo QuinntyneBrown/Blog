@@ -1,0 +1,25 @@
+@startuml c4_container
+!theme plain
+!include <C4/C4_Container>
+
+title Blog Platform - SEO & Discoverability Container Diagram
+
+Person(reader, "Anonymous Reader", "Browses articles")
+Person_Ext(crawler, "Search Engine Crawler", "Discovers and indexes content")
+Person_Ext(aiagent, "AI Agent", "Reads machine-readable content")
+Person_Ext(feedreader, "Feed Reader", "Subscribes to feeds")
+
+System_Boundary(blog, "Blog Platform") {
+    Container(webapp, "Public Web App", "ASP.NET Core, Razor Pages", "Renders SEO-optimized HTML with meta tags, JSON-LD, serves sitemap, feeds, robots.txt, llms.txt")
+    Container(api, "API Server", ".NET 8, ASP.NET Core", "Provides article data via REST API")
+    ContainerDb(db, "Database", "PostgreSQL / SQL Server", "Stores articles, slugs, metadata, digital assets")
+}
+
+Rel(reader, webapp, "Browses articles", "HTTPS")
+Rel(crawler, webapp, "Requests /sitemap.xml, /robots.txt,\narticle pages with JSON-LD", "HTTPS")
+Rel(aiagent, webapp, "Requests /llms.txt, /sitemap.xml", "HTTPS")
+Rel(feedreader, webapp, "Requests /feed.xml, /atom.xml", "HTTPS")
+Rel(webapp, api, "Fetches article data", "HTTPS/JSON")
+Rel(api, db, "Reads articles and metadata", "EF Core / SQL")
+
+@enduml

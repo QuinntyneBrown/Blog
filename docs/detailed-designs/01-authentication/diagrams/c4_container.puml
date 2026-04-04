@@ -1,0 +1,19 @@
+@startuml c4_container
+!theme plain
+!include <C4/C4_Container>
+
+title Blog Platform - Container Diagram
+
+Person(admin, "Admin User", "Back-office administrator")
+
+System_Boundary(blog, "Blog Platform") {
+    Container(spa, "SPA", "Angular/React", "Back-office UI with login form, content management")
+    Container(api, "API Server", ".NET 8, ASP.NET Core", "Handles authentication, serves REST API")
+    ContainerDb(db, "Database", "PostgreSQL / SQL Server", "Stores users, content, digital assets")
+}
+
+Rel(admin, spa, "Uses", "HTTPS")
+Rel(spa, api, "Sends login credentials, API requests", "HTTPS/JSON + JWT")
+Rel(api, db, "Reads/writes", "EF Core / SQL")
+
+@enduml

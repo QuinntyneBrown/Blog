@@ -1,0 +1,65 @@
+@startuml class_diagram
+!theme plain
+
+title Article Management - Class Diagram
+
+class Article {
+    +ArticleId : Guid
+    +Title : string
+    +Slug : string
+    +Abstract : string
+    +Body : string
+    +FeaturedImageId : Guid?
+    +Published : bool
+    +DatePublished : DateTime?
+    +ReadingTimeMinutes : int
+    +CreatedAt : DateTime
+    +UpdatedAt : DateTime
+}
+
+class CreateArticleRequest {
+    +Title : string
+    +Body : string
+    +Abstract : string
+    +FeaturedImageId : Guid?
+}
+
+class UpdateArticleRequest {
+    +Title : string
+    +Body : string
+    +Abstract : string
+    +FeaturedImageId : Guid?
+}
+
+class ArticleDto {
+    +ArticleId : Guid
+    +Title : string
+    +Slug : string
+    +Abstract : string
+    +Body : string
+    +FeaturedImageId : Guid?
+    +Published : bool
+    +DatePublished : DateTime?
+    +ReadingTimeMinutes : int
+    +CreatedAt : DateTime
+    +UpdatedAt : DateTime
+}
+
+class ArticleListDto {
+    +ArticleId : Guid
+    +Title : string
+    +Slug : string
+    +Abstract : string
+    +Published : bool
+    +DatePublished : DateTime?
+    +ReadingTimeMinutes : int
+    +CreatedAt : DateTime
+    +UpdatedAt : DateTime
+}
+
+CreateArticleRequest ..> Article : maps to
+UpdateArticleRequest ..> Article : updates
+Article ..> ArticleDto : maps to
+Article ..> ArticleListDto : projects to
+
+@enduml

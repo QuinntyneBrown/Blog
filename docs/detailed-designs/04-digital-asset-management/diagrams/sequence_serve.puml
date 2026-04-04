@@ -1,0 +1,43 @@
+@startuml sequence_serve
+!theme plain
+
+title Digital Asset Serve with Optimization Flow
+
+actor "Browser" as browser
+participant "DigitalAssetController" as ctrl
+participant "ImageProcessor" as processor
+participant "AssetStorage" as storage
+participant "AssetRepository" as repo
+database "Database" as db
+
+browser -> ctrl : GET /assets/{filename}?w=800\nAccept: image/avif,image/webp,image/*;q=0.8
+
+ctrl -> repo : GetByStoredFileNameAsync(filename)
+repo -> db : SELECT by StoredFileName
+db --> repo : DigitalAsset record
+repo --> ctrl : DigitalAsset
+
+alt Asset not found
+    ctrl --> browser : 404 Not Found
+end
+
+ctrl -> ctrl : Parse query params\ninto ImageTransformOptions
+
+ctrl -> ctrl : Negotiate output format\nfrom Accept header\n(prefer AVIF > WebP > original)
+
+ctrl -> storage : GetAsync(storedFileName)
+storage --> ctrl : original image Stream
+
+opt Resize requested (?w=800)
+    ctrl -> processor : Resize(stream, targetWidth=800)
+    processor --> ctrl : resized Stream
+end
+
+opt Format conversion needed
+    ctrl -> processor : ConvertFormat(stream, negotiatedFormat)
+    processor --> ctrl : converted Stream
+end
+
+ctrl --> browser : 200 OK\nContent-Type: image/webp\nCache-Control: public, max-age=31536000, immutable\nVary: Accept\n\n<image bytes>
+
+@enduml
