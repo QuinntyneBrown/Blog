@@ -20,6 +20,13 @@ public class ResponseEnvelopeMiddleware(RequestDelegate next)
 
     public async Task InvokeAsync(HttpContext context)
     {
+        // Only wrap API responses — Razor Pages and other non-API responses pass through unmodified.
+        if (!context.Request.Path.StartsWithSegments("/api"))
+        {
+            await next(context);
+            return;
+        }
+
         // Check for [RawResponse] opt-out before executing the pipeline.
         // We defer the check until after routing has resolved the endpoint.
         var originalBody = context.Response.Body;
