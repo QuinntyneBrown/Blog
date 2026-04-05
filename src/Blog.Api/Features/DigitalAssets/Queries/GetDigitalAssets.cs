@@ -6,7 +6,7 @@ namespace Blog.Api.Features.DigitalAssets.Queries;
 
 public record DigitalAssetDto(
     Guid DigitalAssetId, string OriginalFileName, string StoredFileName,
-    string ContentType, long FileSizeBytes, int? Width, int? Height,
+    string ContentType, long FileSizeBytes, int Width, int Height,
     string Url, DateTime CreatedAt);
 
 public record GetDigitalAssetsQuery : IRequest<List<DigitalAssetDto>>;
