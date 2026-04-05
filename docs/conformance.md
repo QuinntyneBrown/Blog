@@ -1147,3 +1147,19 @@ A prior conformance fix ("JSON-LD structured data not implemented on any page") 
 - Added the `publisher.logo` sub-object (`@type: "ImageObject"`, `url`) reading from `Configuration["Site:PublisherLogoUrl"]`, fulfilling the `JsonLdOrganization` contract specified in the design.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — og:image never set; DefaultOgImage fallback from SiteConfiguration not implemented
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.1 — SeoMetaTagHelper, Section 4.6 — SiteConfiguration
+
+**Description:**
+The design specifies (Section 3.1): Open Graph tags include `og:image` on every page. Section 4.6 defines `DefaultOgImage` — "Default Open Graph image URL when article has no image." No page ever set `ViewBag.OgImage`, so the `og:image` and `twitter:image` meta tags were never rendered on any page. Article detail pages had `FeaturedImageUrl` available but didn't pass it to the layout. Pages without a featured image had no fallback default image. Social platforms sharing any page from the blog would show no preview image, significantly reducing click-through rates from social feeds.
+
+**Fix applied:**
+- `Slug.cshtml`: Set `ViewBag.OgImage` to the absolute featured image URL (`{SiteUrl}{FeaturedImageUrl}`) when the article has a featured image.
+- `_Layout.cshtml`: Injected `IConfiguration` and changed the `ogImage` fallback from empty string to `Configuration["Site:DefaultOgImage"]`, so all pages without an explicit image still get the site-wide default OG image.
+- Added `Site:DefaultOgImage` to `appsettings.json`.
+
+**Status:** FIXED
