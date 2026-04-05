@@ -1963,7 +1963,12 @@ Two schema discrepancies exist between the EF Core entity configuration and the 
 
 2. **StoredFileName unique index missing from migration:** Design 04 (Section 4.1) specifies `StoredFileName: Required, unique, max 256 chars`. A prior conformance fix added `.HasIndex(d => d.StoredFileName).IsUnique().HasDatabaseName("IX_DigitalAssets_StoredFileName")` to `DigitalAssetConfiguration.cs`. The initial migration pre-dates this fix: it creates the `StoredFileName` column as `NOT NULL NVARCHAR(256)` but never creates the unique index. The `BlogDbContextModelSnapshot.cs` likewise has no entry for this index. Without the unique constraint in the database, the storage layer has no defence against duplicate stored filenames — two concurrent uploads could receive the same GUID-based filename and overwrite each other's files on disk while the database silently accepts both records.
 
-**Status:** OPEN
+**Fix applied:**
+- Created `src/Blog.Infrastructure/Data/Migrations/20260406000000_CorrectDigitalAssetSchema.cs` — a corrective migration that: (1) runs UPDATE statements to coerce any existing NULL values in `Width`/`Height` to `0` before the NOT NULL constraint is applied; (2) alters `Width` and `Height` from `INT NULL` to `INT NOT NULL DEFAULT 0`; (3) creates the `IX_DigitalAssets_StoredFileName` unique index on `StoredFileName`.
+- Created the corresponding `20260406000000_CorrectDigitalAssetSchema.Designer.cs` with the post-migration model snapshot for EF Core's migration history tracking.
+- Updated `BlogDbContextModelSnapshot.cs`: changed `Width` and `Height` properties from `int?` to `int`, and added the `IX_DigitalAssets_StoredFileName` unique index entry. The snapshot now accurately reflects the schema enforced by both migrations combined.
+
+**Status:** FIXED
 
 ---
 

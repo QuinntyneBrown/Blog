@@ -115,7 +115,7 @@ namespace Blog.Infrastructure.Data.Migrations
                     b.Property<long>("FileSizeBytes")
                         .HasColumnType("bigint");
 
-                    b.Property<int?>("Height")
+                    b.Property<int>("Height")
                         .HasColumnType("int");
 
                     b.Property<string>("OriginalFileName")
@@ -128,7 +128,7 @@ namespace Blog.Infrastructure.Data.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<int?>("Width")
+                    b.Property<int>("Width")
                         .HasColumnType("int");
 
                     b.HasKey("DigitalAssetId");
@@ -138,6 +138,10 @@ namespace Blog.Infrastructure.Data.Migrations
 
                     b.HasIndex("CreatedBy")
                         .HasDatabaseName("IX_DigitalAssets_CreatedBy");
+
+                    b.HasIndex("StoredFileName")
+                        .IsUnique()
+                        .HasDatabaseName("IX_DigitalAssets_StoredFileName");
 
                     b.ToTable("DigitalAssets");
                 });
