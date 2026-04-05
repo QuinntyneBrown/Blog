@@ -5,7 +5,7 @@ test.describe('Rate Limiting - L2-027', () => {
     for (let i = 0; i < 10; i++) {
       await request.post('/api/auth/login', {
         data: {
-          username: 'attacker@example.com',
+          email: 'attacker@example.com',
           password: 'wrong-password',
         },
       });
@@ -13,7 +13,7 @@ test.describe('Rate Limiting - L2-027', () => {
 
     const response = await request.post('/api/auth/login', {
       data: {
-        username: 'attacker@example.com',
+        email: 'attacker@example.com',
         password: 'wrong-password',
       },
     });
@@ -25,7 +25,7 @@ test.describe('Rate Limiting - L2-027', () => {
     for (let i = 0; i < 11; i++) {
       await request.post('/api/auth/login', {
         data: {
-          username: 'attacker2@example.com',
+          email: 'attacker2@example.com',
           password: 'wrong-password',
         },
       });
@@ -33,7 +33,7 @@ test.describe('Rate Limiting - L2-027', () => {
 
     const response = await request.post('/api/auth/login', {
       data: {
-        username: 'attacker2@example.com',
+        email: 'attacker2@example.com',
         password: 'wrong-password',
       },
     });

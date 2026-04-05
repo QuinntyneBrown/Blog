@@ -14,7 +14,7 @@ test.describe('Expired JWT session handling', () => {
       },
     ]);
 
-    await page.goto('/articles');
+    await page.goto('/admin/articles');
 
     await expect(page).toHaveURL(/\/login$/);
   });

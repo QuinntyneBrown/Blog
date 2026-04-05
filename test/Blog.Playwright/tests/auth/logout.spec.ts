@@ -27,7 +27,7 @@ test.describe('Logout flow', () => {
 
     await expect(page).toHaveURL(/\/login$/);
 
-    await page.goto('/articles');
+    await page.goto('/admin/articles');
     await expect(page).toHaveURL(/\/login$/);
   });
 });

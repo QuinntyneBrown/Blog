@@ -27,6 +27,17 @@ public class SeedData(IUnitOfWork uow, ILogger<SeedData> logger, IConfiguration 
             new Article
             {
                 ArticleId = Guid.NewGuid(),
+                Title = "Hello World",
+                Slug = "hello-world",
+                Abstract = "Welcome to the blog! This is the first post, covering the basics of getting started with our platform and what to expect.",
+                Body = "# Hello World\n\nWelcome to the blog! This is the very first post.\n\n## Getting Started\n\nThis platform is built with ASP.NET Core and follows clean architecture principles. Every article supports Markdown formatting, featured images, and SEO-friendly metadata.\n\n## What to Expect\n\nWe will be covering topics ranging from software engineering best practices to .NET architecture patterns. Stay tuned for more content!\n\n## Summary\n\nThank you for reading the first post. There is much more to come as we build out this platform and share our knowledge with the community.",
+                BodyHtml = "<h1>Hello World</h1><p>Welcome to the blog! This is the very first post.</p><h2>Getting Started</h2><p>This platform is built with ASP.NET Core and follows clean architecture principles. Every article supports Markdown formatting, featured images, and SEO-friendly metadata.</p><h2>What to Expect</h2><p>We will be covering topics ranging from software engineering best practices to .NET architecture patterns. Stay tuned for more content!</p><h2>Summary</h2><p>Thank you for reading the first post. There is much more to come as we build out this platform and share our knowledge with the community.</p>",
+                Published = true, DatePublished = now.AddDays(-10), ReadingTimeMinutes = 2,
+                Version = 1, CreatedAt = now.AddDays(-10), UpdatedAt = now.AddDays(-10)
+            },
+            new Article
+            {
+                ArticleId = Guid.NewGuid(),
                 Title = "Getting Started with ASP.NET Core",
                 Slug = "getting-started-with-aspnet-core",
                 Abstract = "A practical introduction to building web applications with ASP.NET Core, covering project setup, middleware, and deployment.",
