@@ -164,6 +164,8 @@ Key points:
 | `GET` | `/api/events/{id}` | — | 200 + `EventDto` | 401, 404 |
 | `GET` | `/api/events?page&pageSize` (default pageSize=20, max 50) | — | 200 + `PagedResponse<EventListDto>` | 401 |
 
+**Published filter**: The back-office list intentionally does **not** accept a `published` boolean filter. `EventListDto` includes the `published` field so the author can see state inline; the back-office UX is expected to be a small list where client-side filtering is sufficient. A server-side `?published=true/false` filter is not needed at this scale and is intentionally omitted to keep the endpoint surface minimal. If the list grows large enough to warrant server-side filtering, a `published` boolean query parameter can be added to `GetEventsQuery` and `EventRepository.GetAllAsync` without a breaking change.
+
 ### Public endpoints (no auth)
 
 | Method | Path | Params | Success | Errors |
