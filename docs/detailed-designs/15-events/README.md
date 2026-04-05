@@ -172,7 +172,7 @@ Key points:
 
 | Method | Path | Params | Success | Errors |
 |--------|------|--------|---------|--------|
-| `GET` | `/api/events/published` | `?upcomingPage&pastPage&pageSize` (default pageSize=20, max 50) | 200 + `PublicEventsDto` | — |
+| `GET` | `/api/events/published` | `?upcomingPage&pastPage&pageSize` (default upcomingPage=1, pastPage=1, pageSize=20, max pageSize=50) | 200 + `PublicEventsDto` | — |
 
 **`pageSize` applies independently to both sections**: a single `pageSize` value controls the page size for both the upcoming and past sections. A request with `upcomingPage=1&pastPage=1&pageSize=5` returns up to 5 upcoming events **and** up to 5 past events — a maximum of 10 items in total. This is intentional: the two sections are rendered as separate lists on the public page and are paginated independently; using a single `pageSize` parameter keeps the API surface minimal while allowing both sections to be navigated with consistent page sizes. Callers that need asymmetric page sizes (e.g. show 3 upcoming but 10 past) cannot express this with the current API — this is an accepted limitation at current scale.
 | `GET` | `/api/events/by-slug/{slug}` | — | 200 + `PublicEventDto` | 404 |

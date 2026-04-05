@@ -176,7 +176,7 @@ Key points:
 |--------|------|------|---------------|---------|--------|
 | `GET` | `/api/about` | None | — | 200 + `PublicAboutContentDto?` | — |
 | `PUT` | `/api/about` | Bearer token | `{ heading, body, profileImageId?, version }` — `version` must be `0` on first-ever insert (no prior version exists); must be ≥ 1 (current stored version) on subsequent updates | 200 + `AboutContentDto` | 400, 401, 403, 409 |
-| `GET` | `/api/about/history` | Bearer token | `?page&pageSize` (default pageSize=20, max 50) | 200 + `PagedResponse<AboutContentHistoryDto>` | 401 |
+| `GET` | `/api/about/history` | Bearer token | `?page&pageSize` (default page=1, pageSize=20, max pageSize=50) | 200 + `PagedResponse<AboutContentHistoryDto>` | 401 |
 | `PUT` | `/api/about/restore/{historyId}` | Bearer token | `{ currentVersion }` | 200 + `AboutContentDto` | 401, 403, 404, 409 |
 
 ### DTOs
