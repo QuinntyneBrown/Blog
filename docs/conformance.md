@@ -2136,3 +2136,14 @@ This key is the operator-visible configuration value for the database health che
 - Updated `Program.cs` to read the timeout from `builder.Configuration.GetValue<int>("HealthChecks:DatabaseTimeoutSeconds", 5)` (falling back to 5 if the key is absent for backward compatibility) and pass it to `TimeSpan.FromSeconds(dbHealthCheckTimeoutSeconds)` in the `HealthCheckServiceOptions` post-configuration, replacing the hardcoded `5`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Admin articles table not replaced with card layout at SM/XS breakpoints
+
+**Design reference:** `docs/detailed-designs/02-article-management/README.md`, Section 7.3 — Articles List — Mobile (SM/XS Breakpoints)
+
+**Description:**
+The design specifies (Section 7.3): "At 576px and below, the table is replaced with a card-based layout. Each card displays the article title, a status badge, the date, and an edit button. A hamburger menu provides access to navigation. At the XS breakpoint (375px), cards use more compact padding." The admin articles listing page (`Admin/Articles/Index.cshtml`) renders a `<table>` element at all viewport widths. The `_AdminLayout.cshtml` `max-width: 575px` media query only adjusts toolbar height, button text visibility, and the asset grid — there is no CSS to hide the table and no card HTML in the page. On a narrow mobile viewport (320–575px), the browser renders a horizontally-scrollable table with cramped columns, degrading usability for admin users managing articles on a phone. The design's intent was a purpose-built mobile-first card layout that shows each article's essential information (title, status, date, edit action) in a scannable single-column stack.
+
+**Status:** OPEN
