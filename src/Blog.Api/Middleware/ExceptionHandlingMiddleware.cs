@@ -40,6 +40,10 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         context.Response.StatusCode = status;
         context.Response.ContentType = "application/problem+json";
 
+        // Emit Retry-After header for 429 responses when the wait duration is known.
+        if (ex is RateLimitExceededException { RetryAfterSeconds: > 0 } rle2)
+            context.Response.Headers["Retry-After"] = rle2.RetryAfterSeconds.ToString();
+
         var problem = new
         {
             type = GetTypeUri(status),

@@ -15,8 +15,10 @@ public sealed class EmailRateLimitService : IEmailRateLimitService
     // email (normalized) -> ordered queue of attempt timestamps
     private readonly ConcurrentDictionary<string, Queue<DateTime>> _attempts = new(StringComparer.OrdinalIgnoreCase);
 
-    public bool TryAcquire(string email)
+    public bool TryAcquire(string email, out int retryAfterSeconds)
     {
+        retryAfterSeconds = 0;
+
         var key = email.Trim().ToLowerInvariant();
         var now = DateTime.UtcNow;
         var cutoff = now - Window;
@@ -30,7 +32,15 @@ public sealed class EmailRateLimitService : IEmailRateLimitService
                 queue.Dequeue();
 
             if (queue.Count >= MaxAttempts)
+            {
+                // The oldest attempt in the queue is the one that will expire first.
+                // Retry-After = seconds until that timestamp slides out of the window.
+                var oldestAttempt = queue.Peek();
+                var windowExpiry = oldestAttempt + Window;
+                retryAfterSeconds = (int)Math.Ceiling((windowExpiry - now).TotalSeconds);
+                if (retryAfterSeconds < 1) retryAfterSeconds = 1;
                 return false;
+            }
 
             queue.Enqueue(now);
             return true;

@@ -802,7 +802,14 @@ The design's `DigitalAssetDto` (Section 4.2) specifies these fields: `DigitalAss
 **Description:**
 Both design documents explicitly require that when a rate limit is exceeded the response includes a `Retry-After` header indicating the number of seconds until the sliding window resets. The authentication design (Section 7.3) states: "the endpoint returns `429 Too Many Requests` with a `Retry-After` header indicating the number of seconds until the window resets." The security hardening design (Section 3.3) states the same. The `ExceptionHandlingMiddleware` catches `RateLimitExceededException` and writes a 429 ProblemDetails body, but never sets the `Retry-After` header on the response. `IEmailRateLimitService.TryAcquire` returns only a `bool` and has no mechanism to surface the reset time, so even if the middleware wanted to emit the header it had no data to populate it with. Clients (browsers, API consumers) that respect `Retry-After` to implement automatic back-off therefore had no delay hint and would immediately retry — the opposite of what rate limiting is designed to achieve.
 
-**Status:** OPEN
+**Fix applied:**
+- Updated `IEmailRateLimitService.TryAcquire` signature to `bool TryAcquire(string email, out int retryAfterSeconds)`, returning the number of whole seconds until the oldest attempt slides out of the 15-minute window.
+- Updated `EmailRateLimitService.TryAcquire` to compute `retryAfterSeconds` as `ceil((oldestAttempt + Window - now).TotalSeconds)` when the quota is exhausted, with a minimum of 1 second.
+- Updated `RateLimitExceededException` to carry a `RetryAfterSeconds` property (constructor parameter with default 0).
+- Updated `LoginCommandHandler` to pass `retryAfterSeconds` from `TryAcquire` into the `RateLimitExceededException`.
+- Updated `ExceptionHandlingMiddleware` to set `Response.Headers["Retry-After"]` when the caught exception is a `RateLimitExceededException` with `RetryAfterSeconds > 0`.
+
+**Status:** FIXED
 
 ---
 

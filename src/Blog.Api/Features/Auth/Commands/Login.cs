@@ -32,8 +32,10 @@ public class LoginCommandHandler(
 {
     public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        if (!emailRateLimitService.TryAcquire(request.Email))
-            throw new RateLimitExceededException("Too many login attempts for this email address. Please try again later.");
+        if (!emailRateLimitService.TryAcquire(request.Email, out var retryAfterSeconds))
+            throw new RateLimitExceededException(
+                "Too many login attempts for this email address. Please try again later.",
+                retryAfterSeconds);
 
         var user = await userRepository.GetByEmailAsync(request.Email, cancellationToken);
         if (user == null)
