@@ -35,27 +35,15 @@ else
     <article class="article-detail">
     @if (!string.IsNullOrEmpty(Model.Article.FeaturedImageUrl))
     {
-        // Build AVIF and WebP srcsets from the pre-generated variants: {assetId}-{width}w.{format}
-        // FeaturedImageUrl is "/assets/{assetId}.ext" — strip prefix and extension to get the assetId.
-        var heroFileName = Model.Article.FeaturedImageUrl.StartsWith("/assets/")
-            ? Model.Article.FeaturedImageUrl.Substring("/assets/".Length)
-            : System.IO.Path.GetFileName(Model.Article.FeaturedImageUrl);
-        var heroAssetId = System.IO.Path.GetFileNameWithoutExtension(heroFileName);
-        var heroBreakpoints = new[] { 320, 640, 960, 1280, 1920 };
-        var heroAvifSrcset = string.Join(", ", heroBreakpoints.Select(w => $"/assets/{heroAssetId}-{w}w.avif {w}w"));
-        var heroWebpSrcset = string.Join(", ", heroBreakpoints.Select(w => $"/assets/{heroAssetId}-{w}w.webp {w}w"));
         <figure class="article-featured-image">
-            <picture>
-                <source type="image/avif"
-                        srcset="@heroAvifSrcset"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 960px, 1280px" />
-                <source type="image/webp"
-                        srcset="@heroWebpSrcset"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 960px, 1280px" />
-                <img src="@Model.Article.FeaturedImageUrl" alt="@Model.Article.Title"
-                     @(Model.Article.FeaturedImageWidth.HasValue ? $"width=\"{Model.Article.FeaturedImageWidth}\" height=\"{Model.Article.FeaturedImageHeight}\"" : "")
-                     loading="eager" fetchpriority="high" decoding="async" />
-            </picture>
+            <img responsive
+                 src="@Model.Article.FeaturedImageUrl"
+                 alt="@Model.Article.Title"
+                 img-width="@Model.Article.FeaturedImageWidth"
+                 img-height="@Model.Article.FeaturedImageHeight"
+                 breakpoints="320,640,960,1280,1920"
+                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 960px, 1280px"
+                 priority="true" />
         </figure>
     }
     else

@@ -72,12 +72,14 @@
     <!-- Feeds -->
     <link rel="alternate" type="application/rss+xml" title="@(Configuration["Site:SiteName"] ?? "Quinn Brown") RSS Feed" href="/feed.xml" />
     <link rel="alternate" type="application/atom+xml" title="@(Configuration["Site:SiteName"] ?? "Quinn Brown") Atom Feed" href="/atom.xml" />
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600;700&display=swap" />
+    <!-- Resource Hints -->
+    <resource-hint type="preconnect" href="https://fonts.googleapis.com" />
+    <resource-hint type="preconnect" href="https://fonts.gstatic.com" crossorigin="true" />
+    <resource-hint type="dns-prefetch" href="https://fonts.googleapis.com" />
+    <resource-hint type="dns-prefetch" href="https://fonts.gstatic.com" />
+    <!-- Fonts: async-loaded to avoid render-blocking -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600;700&display=swap" /></noscript>
     <style nonce="@cspNonce">
         :root {
             --surface-primary: #000000;
@@ -919,7 +921,7 @@
             btn.setAttribute('aria-expanded', isOpen.toString());
         });
     </script>
-    <script src="/js/search.js" defer></script>
+    <script src="/js/search.js" defer content-hash></script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>

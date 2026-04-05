@@ -60,11 +60,11 @@ The Events feature allows the blog author to manage a list of speaking engagemen
 
 | Handler | Command | Validator | Effect |
 |---------|---------|-----------|--------|
-| `CreateEventHandler` | `CreateEventCommand` | `CreateEventCommandValidator` — rules: `Title` NotEmpty, MaximumLength(256); `Description` NotEmpty, MaximumLength(4000); `StartDate` NotEmpty; `Location` NotEmpty, MaximumLength(512); `EndDate` must be ≥ `StartDate` when provided (Must predicate); `ExternalUrl` must be a well-formed absolute URL (`https://` or `http://`) when provided (Must predicate, rejects relative URLs and empty strings) | Generates slug, persists with `published=false` |
-| `UpdateEventHandler` | `UpdateEventCommand` | `UpdateEventCommandValidator` — rules: same field rules as `CreateEventCommandValidator` plus `Version` GreaterThan(0) | Updates all mutable fields; regenerates slug from new title; calls `ICacheInvalidator` if the event is currently `Published = true` |
+| `CreateEventHandler` | `CreateEventCommand` | `CreateEventCommandValidator` — rules: `Title` NotEmpty, MaximumLength(256); `Description` NotEmpty, MaximumLength(4000); `StartDate` NotEmpty; `Location` NotEmpty, MaximumLength(512); `EndDate` must be ≥ `StartDate` when provided (Must predicate); `ExternalUrl` must be a well-formed absolute URL (`https://` or `http://`) when provided (Must predicate, rejects relative URLs and empty strings) | Generates slug, persists with `published=false`; sets `CreatedAt = UpdatedAt = UtcNow` and `Version = 1` on insert. `UpdatedAt` must be explicitly set on insert (not left to a DB default) so that the value is always populated and consistent with the EF Core entity model — EF Core does not automatically populate `UpdatedAt` on insert unless a value converter or `SaveChanges` interceptor is configured. |
+| `UpdateEventHandler` | `UpdateEventCommand` | `UpdateEventCommandValidator` — rules: same field rules as `CreateEventCommandValidator` plus `Version` GreaterThan(0) | Updates all mutable fields; regenerates slug from new title; sets `UpdatedAt = UtcNow` and increments `Version` by 1 (`Version = storedVersion + 1`) before saving (both must be explicit — EF Core does not auto-set these without an interceptor); `CreatedAt` must never be modified on the update path — it is the event's creation timestamp and must remain stable; calls `ICacheInvalidator` if the event is currently `Published = true` |
 | `DeleteEventHandler` | `DeleteEventCommand` | — | Removes event; returns 409 if `Published = true` (must unpublish first) |
-| `PublishEventHandler` | `PublishEventCommand` | — | Sets `published=true` and updates `UpdatedAt` to `UtcNow`; calls `ICacheInvalidator` to bust the public events cache |
-| `UnpublishEventHandler` | `UnpublishEventCommand` | — | Sets `published=false` and updates `UpdatedAt` to `UtcNow`; calls `ICacheInvalidator` to bust the public events cache |
+| `PublishEventHandler` | `PublishEventCommand` | — | Sets `published=true`, updates `UpdatedAt` to `UtcNow`, and increments `Version` by 1; calls `ICacheInvalidator` to bust the public events cache. The response `EventDto` carries the new `version` value so the back-office client can use it in a subsequent PUT without needing to re-fetch the event. On no-op invocations (event already published), `UpdatedAt` and `Version` are not changed and the existing `EventDto` is returned. |
+| `UnpublishEventHandler` | `UnpublishEventCommand` | — | Sets `published=false`, updates `UpdatedAt` to `UtcNow`, and increments `Version` by 1; calls `ICacheInvalidator` to bust the public events cache. The response `EventDto` carries the new `version` value for the same reason as `PublishEventHandler`. On no-op invocations (event already unpublished), `UpdatedAt` and `Version` are not changed and the existing `EventDto` is returned. |
 
 ### 3.3 Query Handlers
 
@@ -80,7 +80,7 @@ The Events feature allows the blog author to manage a list of speaking engagemen
 - **Responsibility**: Data access for `Event` entities.
 - **Key methods**:
   - `GetByIdAsync(eventId)` — by PK
-  - `GetBySlugAsync(slug)` — by unique slug
+  - `GetBySlugAsync(slug)` — by unique slug, **regardless of `Published` state** (returns any event, published or unpublished). `GetEventBySlugHandler` applies the `Published == true` check after the repository call and returns 404 for unpublished events. Implementers must not add a published filter inside this method — doing so would make unpublished events' slugs invisible to the handler's "not found" branch, but the important distinction is that `SlugExistsAsync` (not `GetBySlugAsync`) is used for slug-conflict checking on `UpdateEventHandler`, so a published-only `GetBySlugAsync` would not cause missed conflicts. The no-filter semantic is documented here to prevent confusion during implementation.
   - `GetAllAsync(page, pageSize)` — paginated, all statuses, ordered by `StartDate DESC` (puts far-future events at top; see `GetEventsHandler` note for rationale)
   - `GetUpcomingAsync(page, pageSize)` — published, `StartDate >= UtcNow`, ordered `StartDate ASC`
   - `GetPastAsync(page, pageSize)` — published, `StartDate < UtcNow`, ordered `StartDate DESC`
@@ -121,6 +121,8 @@ The Events feature allows the blog author to manage a list of speaking engagemen
 | `Version` | `int` | Optimistic concurrency; starts at `1` on first insert, incremented by `1` on each update |
 
 **Recommended indexes**: `IX_Events_Published_StartDate` on `(Published, StartDate)` to support efficient upcoming/past queries. `IX_Events_Slug` unique on `Slug`.
+
+**`EndDate >= StartDate` constraint**: There is **no DB-level CHECK constraint** for this rule. The `EndDate >= StartDate` invariant is enforced exclusively at the application layer via `CreateEventCommandValidator` and `UpdateEventCommandValidator` (FluentValidation `Must` predicate — see §3.2). A developer writing `IEntityTypeConfiguration<Event>` must **not** add `CHECK (EndDate >= StartDate)` to the migration. Application-layer enforcement is sufficient here: the back-office UI is the only write path, all writes pass through the validator before the command reaches EF Core, and a CHECK constraint in the DB would add migration complexity with no correctness benefit given the single-writer design.
 
 ---
 
