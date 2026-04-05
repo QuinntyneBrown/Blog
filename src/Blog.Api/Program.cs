@@ -12,10 +12,15 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using RedisRateLimiting;
 using Serilog;
+using StackExchange.Redis;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Redis connection string — read early so it can be referenced by multiple service registrations.
+var redisConnectionString = builder.Configuration.GetValue<string>("Redis:ConnectionString");
 
 // Kestrel request size limits (Design 06, OQ-4: 1 MB default, 10 MB for file uploads).
 // The digital-asset upload endpoint overrides this to 10 MB via [RequestSizeLimit] /
@@ -49,12 +54,26 @@ builder.Services.AddSingleton<ISlugGenerator, SlugGenerator>();
 builder.Services.AddSingleton<IMarkdownConverter, MarkdownConverter>();
 builder.Services.AddSingleton<IReadingTimeCalculator, ReadingTimeCalculator>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
-builder.Services.AddSingleton<IEmailRateLimitService, EmailRateLimitService>();
+// EmailRateLimitService — uses Redis when available, in-memory otherwise.
+if (!string.IsNullOrWhiteSpace(redisConnectionString))
+{
+    builder.Services.AddSingleton<IEmailRateLimitService>(sp =>
+        new RedisEmailRateLimitService(
+            sp.GetRequiredService<IConnectionMultiplexer>(),
+            sp.GetRequiredService<IConfiguration>()));
+}
+else
+{
+    builder.Services.AddSingleton<IEmailRateLimitService, EmailRateLimitService>();
+}
 builder.Services.AddSingleton<ICacheInvalidator, CacheInvalidator>();
 builder.Services.AddSingleton<IETagGenerator, ETagGenerator>();
 builder.Services.AddSingleton<IImageVariantGenerator, ImageVariantGenerator>();
 builder.Services.AddSingleton<ISearchHighlighter, SearchHighlighter>();
+builder.Services.AddSingleton<ICriticalCssService, CriticalCssService>();
+builder.Services.AddSingleton<IContentHashService, ContentHashService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // MediatR + Validation
 builder.Services.AddMediatR(cfg =>
@@ -89,33 +108,61 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// Rate Limiting
+// Rate Limiting — uses Redis-backed counters when Redis:ConnectionString is configured,
+// falling back to in-memory SlidingWindowRateLimiter otherwise (Design 08, Section 3.2).
 var loginRateLimit = builder.Configuration.GetValue("RateLimiting:LoginPermitLimit", 10);
 var writeRateLimit = builder.Configuration.GetValue("RateLimiting:WritePermitLimit", 60);
 builder.Services.AddRateLimiter(options =>
 {
     options.AddPolicy("login-ip", context =>
-        RateLimitPartition.GetSlidingWindowLimiter(
-            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            factory: _ => new SlidingWindowRateLimiterOptions
+    {
+        var partitionKey = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var redis = context.RequestServices.GetService<IConnectionMultiplexer>();
+        if (redis != null)
+        {
+            return RateLimitPartition.Get(partitionKey, key =>
+                new RedisRateLimiter(redis, $"ratelimit:login-ip:{key}", loginRateLimit, TimeSpan.FromMinutes(1)));
+        }
+        return RateLimitPartition.GetSlidingWindowLimiter(partitionKey,
+            _ => new SlidingWindowRateLimiterOptions
             {
                 Window = TimeSpan.FromMinutes(1),
                 SegmentsPerWindow = 6,
                 PermitLimit = loginRateLimit,
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                 QueueLimit = 0
-            }));
+            });
+    });
     options.AddPolicy("write-endpoints", context =>
-        RateLimitPartition.GetSlidingWindowLimiter(
-            partitionKey: context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-                ?? context.User?.FindFirst("sub")?.Value
-                ?? context.Connection.RemoteIpAddress?.ToString()
-                ?? "unknown",
-            factory: _ => new SlidingWindowRateLimiterOptions
+    {
+        var partitionKey = context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? context.User?.FindFirst("sub")?.Value
+            ?? context.Connection.RemoteIpAddress?.ToString()
+            ?? "unknown";
+        var redis = context.RequestServices.GetService<IConnectionMultiplexer>();
+        if (redis != null)
+        {
+            return RateLimitPartition.Get(partitionKey, key =>
+                new RedisRateLimiter(redis, $"ratelimit:write:{key}", writeRateLimit, TimeSpan.FromMinutes(1)));
+        }
+        return RateLimitPartition.GetSlidingWindowLimiter(partitionKey,
+            _ => new SlidingWindowRateLimiterOptions
             {
                 Window = TimeSpan.FromMinutes(1),
                 SegmentsPerWindow = 6,
                 PermitLimit = writeRateLimit,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            });
+    });
+    options.AddPolicy("csp-report", context =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new SlidingWindowRateLimiterOptions
+            {
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 6,
+                PermitLimit = 20,
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                 QueueLimit = 0
             }));
@@ -221,6 +268,14 @@ builder.Services.AddSession(options =>
     options.Cookie.Name = ".blog.admin.session";
 });
 
+// Redis — used for distributed rate limiting counters (Design 08, Section 3.2).
+// Falls back gracefully when Redis:ConnectionString is not configured.
+if (!string.IsNullOrWhiteSpace(redisConnectionString))
+{
+    var redisConnection = ConnectionMultiplexer.Connect(redisConnectionString);
+    builder.Services.AddSingleton<IConnectionMultiplexer>(redisConnection);
+}
+
 // HTTP Context Accessor
 builder.Services.AddHttpContextAccessor();
 
@@ -261,6 +316,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<SlugRedirectMiddleware>();
+app.UseMiddleware<ContentHashRewriteMiddleware>();
 app.UseStaticFiles(new StaticFileOptions
 {
     OnPrepareResponse = ctx =>

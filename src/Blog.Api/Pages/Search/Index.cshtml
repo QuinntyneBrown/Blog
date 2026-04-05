@@ -301,7 +301,12 @@
                     <div class="article-card-image">
                         @if (!string.IsNullOrEmpty(result.FeaturedImageUrl))
                         {
-                            <img src="@result.FeaturedImageUrl" alt="@result.Title" loading="lazy" decoding="async" />
+                            <img responsive
+                                 src="@result.FeaturedImageUrl"
+                                 alt="@result.Title"
+                                 breakpoints="320,640,960"
+                                 sizes="(max-width: 576px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                 priority="false" />
                         }
                         else
                         {
