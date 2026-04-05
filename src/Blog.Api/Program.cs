@@ -246,6 +246,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseResponseCompression();
 
+app.UseStatusCodePagesWithReExecute("/404");
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
