@@ -588,3 +588,17 @@ The design specifies (Section 3.2): "CreatedBy: required FK to Users, with `Dele
 - Added explicit relationship configuration to `DigitalAssetConfiguration`: `builder.HasOne(d => d.Creator).WithMany().HasForeignKey(d => d.CreatedBy).OnDelete(DeleteBehavior.Restrict)`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Article detail hero image missing loading="eager" and fetchpriority="high"
+
+**Design reference:** `docs/detailed-designs/07-web-performance/README.md`, Section 3.5 — ImageTagHelper; `docs/detailed-designs/03-public-article-display/README.md`, Section 3.2 — ArticleDetailPage
+
+**Description:**
+The design specifies (Section 3.5, Table): above-fold images must have `loading="eager"`, `fetchpriority="high"`, and `decoding="async"`. The article detail page's featured image is the full-width hero element at the top of the page — it is the Largest Contentful Paint (LCP) element and is always above the fold. The `<img>` tag in `Slug.cshtml` had no `loading`, `fetchpriority`, or `decoding` attributes. Without `fetchpriority="high"`, the browser deprioritizes the hero image relative to stylesheets and scripts, delaying LCP. Without `loading="eager"` (the default, but explicit is safer), lazy-loading polyfills or future browser defaults could defer it.
+
+**Fix applied:**
+- Added `loading="eager" fetchpriority="high" decoding="async"` to the featured image `<img>` tag in `Slug.cshtml`.
+
+**Status:** FIXED
