@@ -1,6 +1,6 @@
 # Blog
 
-A high-quality, open-source blog platform built with .NET — focused on articles, engineered for perfect SEO, extreme web performance, and maximum discoverability by search engines, AI agents, and crawlers.
+An open-source blog platform built with .NET, focused on articles, SEO, web performance, and discoverability by search engines, AI agents, and crawlers.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-8.0-purple.svg)](https://dotnet.microsoft.com/download)
