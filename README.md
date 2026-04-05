@@ -4,10 +4,11 @@ A personal blog platform built with .NET, narrowly focused on articles. Designed
 
 ## Architecture
 
-The platform consists of two web applications powered by a shared API:
+The platform is built on ASP.NET Core 8 with Razor Pages for both public and back-office experiences plus JSON API endpoints where HTTP contracts are required:
 
-- **Public Site** — Server-rendered, anonymous, optimized for sub-200ms TTFB and Lighthouse 100. Responsive across all viewports (XS through XL).
-- **Back Office** — Authenticated admin UI for creating, editing, publishing articles and managing digital assets.
+- **Public Site** — Server-rendered Razor Pages, anonymous, optimized for sub-200ms TTFB and top-tier SEO/discoverability.
+- **Back Office** — Authenticated Razor Pages administration UI for creating, editing, publishing articles and managing digital assets.
+- **Application/API Layer** — Shared application services and REST endpoints for authenticated admin workflows, health checks, and machine-readable integrations.
 
 ```
 Blog/
@@ -29,11 +30,12 @@ Blog/
 
 | Layer | Technology |
 |-------|-----------|
-| API | ASP.NET Core, MediatR (CQRS), FluentValidation |
-| Data | Entity Framework Core, SQL Server |
-| Auth | JWT bearer tokens, bcrypt password hashing |
-| Public Site | Server-side rendered, minimal JS (<50 KB gzipped) |
-| Back Office | SPA with authenticated API calls |
+| Platform | ASP.NET Core 8, Razor Pages, MediatR, FluentValidation |
+| Data | Entity Framework Core, PostgreSQL |
+| Auth | JWT bearer tokens, PBKDF2-SHA256 password hashing |
+| Public Site | Server-side rendered Razor Pages, minimal JS (<50 KB gzipped) |
+| Back Office | Razor Pages admin with authenticated API calls |
+| Assets | Object storage in production, local filesystem in development |
 
 ## Key Features
 
@@ -58,7 +60,7 @@ Blog/
 - OWASP Top 10 hardened
 - Input validation and XSS sanitization at API boundaries
 - HTTPS-only with HSTS, CSP, and security headers
-- Rate limiting on auth (10/min) and write (60/min) endpoints
+- Layered rate limiting on auth (10/min per IP and 5/15 min per normalized email) and write (60/min) endpoints
 - Strict CORS policy
 
 ## Getting Started
@@ -66,7 +68,7 @@ Blog/
 ### Prerequisites
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
-- [SQL Server](https://www.microsoft.com/sql-server) (or SQL Server LocalDB)
+- [PostgreSQL](https://www.postgresql.org/) 16+
 
 ### Setup
 
@@ -81,11 +83,11 @@ dotnet restore
 # Apply database migrations
 dotnet ef database update --project src/Blog.Api
 
-# Run the API
+# Run the application
 dotnet run --project src/Blog.Api
 ```
 
-The API will be available at `https://localhost:5001`.
+The application will be available at `https://localhost:5001`.
 
 ### Running Tests
 
@@ -110,7 +112,7 @@ Every acceptance test traces back to an L2 requirement:
 
 ## Design
 
-UI designs are created in [Pencil](https://pencil.dev) with the SpaceX-inspired dark theme. All screens are designed at 5 responsive breakpoints (XS 375px, SM 576px, MD 768px, LG 992px, XL 1440px).
+UI designs are created in [Pencil](https://pencil.dev) with the SpaceX-inspired dark theme. The implementation uses 5 responsive breakpoints: XS `< 576px`, SM `>= 576px`, MD `>= 768px`, LG `>= 992px`, and XL `>= 1200px`. The 375px and 1440px values used in the design files are reference canvas widths, not the CSS media-query thresholds.
 
 Design exports are in `designs/exports/` (public site) and `designs/exports-admin/` (back office).
 
@@ -120,15 +122,18 @@ Detailed architecture documents with C4 and sequence diagrams are in `docs/detai
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/users/authenticate` | Authenticate and receive JWT |
-| GET | `/api/posts` | List articles (paginated) |
-| GET | `/api/posts/{id}` | Get article by ID |
-| POST | `/api/posts` | Create article |
-| PUT | `/api/posts/{id}` | Update article |
-| DELETE | `/api/posts/{id}` | Delete article |
-| POST | `/api/digital-assets/upload` | Upload image |
-| GET | `/api/digital-assets` | List assets |
-| GET | `/health` | Health check |
+| POST | `/api/auth/login` | Authenticate and receive JWT |
+| POST | `/api/auth/logout` | Revoke the current admin token and end the session |
+| GET | `/api/articles` | List articles (paginated) |
+| GET | `/api/articles/{id}` | Get article by ID |
+| POST | `/api/articles` | Create article |
+| PUT | `/api/articles/{id}` | Update article |
+| PATCH | `/api/articles/{id}/publish` | Publish or unpublish an article |
+| DELETE | `/api/articles/{id}` | Delete article |
+| POST | `/api/digital-assets` | Upload image |
+| GET | `/api/digital-assets/{id}` | Get asset metadata |
+| GET | `/health` | Public liveness-style health check |
+| GET | `/health/ready` | Detailed readiness check |
 | GET | `/sitemap.xml` | XML sitemap |
 | GET | `/feed.xml` | RSS 2.0 feed |
 | GET | `/atom.xml` | Atom feed |
