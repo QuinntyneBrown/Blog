@@ -1952,6 +1952,21 @@ The design specifies (Section 3.2, L2-008): "Listing pages emit a `Schema.org/Bl
 
 ---
 
+## 2026-04-04 — DigitalAsset migration schema mismatch: Width/Height nullable and StoredFileName unique index missing
+
+**Design reference:** `docs/detailed-designs/04-digital-asset-management/README.md`, Section 4.1 — DigitalAsset Entity; `docs/detailed-designs/10-data-persistence/README.md`, Section 3.2 — DigitalAssetConfiguration, Section 4.6 — Indexes
+
+**Description:**
+Two schema discrepancies exist between the EF Core entity configuration and the actual database migration:
+
+1. **Width and Height nullability:** Design 04 (Section 4.1) specifies `Width int, Required` and `Height int, Required`. A prior conformance fix changed `DigitalAsset.cs` from `int?` to `int` for both fields. However, the sole migration (`20260405013757_InitialCreate.cs`) still defines these columns as `nullable: true` (`INT NULL`), and the `BlogDbContextModelSnapshot.cs` still declares them as `int?`. At runtime, EF Core will silently coerce a database `NULL` to `0` for non-nullable `int` properties, hiding any data-integrity violation. The database schema must enforce `NOT NULL` to match the entity contract and the design's Required constraint.
+
+2. **StoredFileName unique index missing from migration:** Design 04 (Section 4.1) specifies `StoredFileName: Required, unique, max 256 chars`. A prior conformance fix added `.HasIndex(d => d.StoredFileName).IsUnique().HasDatabaseName("IX_DigitalAssets_StoredFileName")` to `DigitalAssetConfiguration.cs`. The initial migration pre-dates this fix: it creates the `StoredFileName` column as `NOT NULL NVARCHAR(256)` but never creates the unique index. The `BlogDbContextModelSnapshot.cs` likewise has no entry for this index. Without the unique constraint in the database, the storage layer has no defence against duplicate stored filenames — two concurrent uploads could receive the same GUID-based filename and overwrite each other's files on disk while the database silently accepts both records.
+
+**Status:** OPEN
+
+---
+
 ## 2026-04-04 — CSP `style-src` and `font-src` directives block Google Fonts; fonts never load under enforced CSP
 
 **Design reference:** `docs/detailed-designs/08-security-hardening/README.md`, Section 3.2 — SecurityHeadersMiddleware, Section 7 — Security Headers Reference
