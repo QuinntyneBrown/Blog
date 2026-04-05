@@ -17,6 +17,9 @@ namespace Blog.Infrastructure.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql(@"
+                IF FULLTEXTSERVICEPROPERTY('IsFullTextInstalled') <> 1
+                    RETURN;
+
                 IF NOT EXISTS (
                     SELECT 1 FROM sys.fulltext_catalogs WHERE name = 'BlogSearchCatalog'
                 )
@@ -26,6 +29,9 @@ namespace Blog.Infrastructure.Data.Migrations
             ", suppressTransaction: true);
 
             migrationBuilder.Sql(@"
+                IF FULLTEXTSERVICEPROPERTY('IsFullTextInstalled') <> 1
+                    RETURN;
+
                 IF NOT EXISTS (
                     SELECT 1 FROM sys.fulltext_indexes WHERE object_id = OBJECT_ID('Articles')
                 )
