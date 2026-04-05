@@ -1,4 +1,5 @@
 using Blog.Api.Common.Exceptions;
+using Blog.Api.Services;
 using Blog.Domain.Entities;
 using Blog.Domain.Interfaces;
 using Blog.Infrastructure.Data;
@@ -11,7 +12,10 @@ namespace Blog.Api.Features.DigitalAssets.Commands;
 
 public record UploadDigitalAssetCommand(IFormFile File, Guid UserId) : IRequest<DigitalAssetDto>;
 
-public class UploadDigitalAssetCommandHandler(IUnitOfWork uow, IWebHostEnvironment env) : IRequestHandler<UploadDigitalAssetCommand, DigitalAssetDto>
+public class UploadDigitalAssetCommandHandler(
+    IUnitOfWork uow,
+    IWebHostEnvironment env,
+    IImageVariantGenerator variantGenerator) : IRequestHandler<UploadDigitalAssetCommand, DigitalAssetDto>
 {
     private const long MaxFileSize = 10 * 1024 * 1024; // 10MB
     private const int MaxDimension = 8192;
@@ -25,7 +29,10 @@ public class UploadDigitalAssetCommandHandler(IUnitOfWork uow, IWebHostEnvironme
         var (contentType, extension) = await DetectContentTypeAsync(request.File);
         if (contentType == null)
             throw new BadRequestException("File type not allowed. Supported types: JPEG, PNG, WebP, GIF, AVIF.");
-        var storedFileName = $"{Guid.NewGuid()}{extension}";
+        // Use the same GUID for both the entity ID and the stored filename so that variant
+        // filenames ({assetId}-{width}w.{format}) can be resolved from the entity ID alone.
+        var assetGuid = Guid.NewGuid();
+        var storedFileName = $"{assetGuid}{extension}";
         var assetsPath = Path.Combine(env.WebRootPath, "assets");
         Directory.CreateDirectory(assetsPath);
         var filePath = Path.Combine(assetsPath, storedFileName);
@@ -45,9 +52,13 @@ public class UploadDigitalAssetCommandHandler(IUnitOfWork uow, IWebHostEnvironme
         if ((long)width * height > MaxPixelCount)
             throw new BadRequestException($"Image pixel count ({(long)width * height:N0}) exceeds the maximum of {MaxPixelCount:N0}.");
 
+        // Eagerly generate WebP and AVIF responsive variants at breakpoints narrower
+        // than the original width (design Section 5.1, step 11).
+        await variantGenerator.GenerateVariantsAsync(filePath, assetGuid, width, cancellationToken);
+
         var asset = new DigitalAsset
         {
-            DigitalAssetId = Guid.NewGuid(),
+            DigitalAssetId = assetGuid,
             OriginalFileName = request.File.FileName,
             StoredFileName = storedFileName,
             ContentType = contentType,
