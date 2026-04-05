@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace Blog.Api.Pages.Admin;
@@ -30,7 +31,7 @@ public abstract class AdminPageModelBase : PageModel
         // The JwtMiddleware validates the session JWT and populates HttpContext.User with claims
         // Extract the user ID from the "sub" claim (JwtRegisteredClaimNames.Sub)
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? User.FindFirstValue("sub");
+            ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
         
         return string.IsNullOrEmpty(userId) ? Guid.Empty : Guid.Parse(userId);
     }
@@ -42,7 +43,7 @@ public abstract class AdminPageModelBase : PageModel
     protected string? GetCurrentUserEmail()
     {
         return User.FindFirstValue(ClaimTypes.Email)
-            ?? User.FindFirstValue("email");
+            ?? User.FindFirstValue(JwtRegisteredClaimNames.Email);
     }
 
     /// <summary>
