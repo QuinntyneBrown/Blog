@@ -778,3 +778,15 @@ The design specifies that article body HTML must be sanitized using the `HtmlSan
 **Status:** FIXED
 
 ---
+
+## 2026-04-04 — Sitemap includes non-article pages (/articles, /feed) contrary to design resolution
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.3 — SitemapGenerator, Section 8 — Open Question #5
+
+**Description:**
+The design resolves Open Question #5: "Published articles only. Non-article pages (about, contact) are few and static; search engines discover them via internal links. Keeping the sitemap article-only simplifies generation." Section 3.3 confirms: "each `<url>` entry for each article plus the homepage." The `SeoController.Sitemap()` method included three static entries — the homepage (`/`), `/articles`, and `/feed` — before appending individual article URLs. The `/articles` and `/feed` entries violate the design's explicit resolution to limit the sitemap to the homepage and individual published articles only.
+
+**Fix applied:**
+- Removed the `/articles` and `/feed` static entries from the sitemap URL list in `SeoController.Sitemap()`. Only the homepage (`/`) and individual published article URLs remain.
+
+**Status:** FIXED
