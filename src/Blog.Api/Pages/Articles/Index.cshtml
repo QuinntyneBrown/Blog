@@ -1,8 +1,10 @@
 @page "/articles"
 @model Blog.Api.Pages.Articles.ArticlesIndexModel
+@inject IConfiguration Configuration
 @{
     ViewBag.Title = "Articles | Quinn Brown";
     ViewBag.ActiveNav = "articles";
+    ViewBag.CanonicalUrl = $"{Configuration["Site:SiteUrl"]?.TrimEnd('/')}/articles";
 }
 
 <section class="hero" style="padding-bottom: 40px;">

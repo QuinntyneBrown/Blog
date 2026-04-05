@@ -1,9 +1,15 @@
 @page "/articles/{slug}"
 @model Blog.Api.Pages.Articles.ArticleDetailModel
+@inject IConfiguration Configuration
 @{
     ViewBag.Title = $"{Model.Article?.Title} | Quinn Brown";
     ViewBag.Description = Model.Article?.Abstract;
     ViewBag.ActiveNav = "";
+    var siteUrl = Configuration["Site:SiteUrl"]?.TrimEnd('/') ?? "";
+    if (Model.Article != null)
+    {
+        ViewBag.CanonicalUrl = $"{siteUrl}/articles/{Model.Article.Slug}";
+    }
 }
 @if (Model.Article == null)
 {
