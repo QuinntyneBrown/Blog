@@ -2229,3 +2229,21 @@ As a result, any client (the search results page, the header autocomplete, or an
 **Status:** FIXED
 
 ---
+
+## 2026-04-04 — Search input component and search.js entirely absent from public layout
+
+**Design reference:** `docs/detailed-designs/12-search-input/README.md`, Sections 3.1–3.4
+
+**Description:**
+Design 12 specifies a global search input component embedded in the public site's shared layout (`_Layout.cshtml`) and a `search.js` script (~120 lines of vanilla JavaScript) served from `wwwroot/js/search.js`. Neither exists:
+
+1. **`_Layout.cshtml`** has no search form HTML, no `.search-wrapper` element, no `<form action="/search">`, no `<input type="search" id="site-search">`, no `.search-toggle` icon button, and no `#search-suggestions` listbox `<ul>`. The design specifies this entire HTML block must be inside the `<nav>` element (right-hand side).
+2. **`wwwroot/js/search.js`** does not exist. The design specifies it handles: the `/` keyboard shortcut to focus the input; small-screen expand/collapse of the form; debounced autocomplete fetch to `/api/public/articles/suggestions`; ARIA combobox keyboard navigation (ArrowUp/Down, Enter, Escape, Tab); clear button; and outside-click dismissal.
+3. **CSS rules** for `.search-wrapper`, `.search-form`, `.search-input`, `.search-toggle`, `.search-shortcut`, `.search-clear`, `#search-suggestions`, and their responsive breakpoint overrides are missing from the layout's `<style>` block.
+4. **`<script src="/js/search.js" defer>` tag** is absent from the layout.
+
+Without the search input, the global search feature added by design 11 (the server-side endpoints, `SearchArticlesHandler`, and `GetSearchSuggestionsHandler`) is entirely unreachable from the public UI. Visitors cannot search for articles from any page, and the designed `/` keyboard shortcut does not exist.
+
+**Status:** OPEN
+
+---
