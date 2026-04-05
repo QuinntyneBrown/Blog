@@ -1791,4 +1791,8 @@ The design specifies a custom `JwtMiddleware` class (Section 3.5) that "intercep
 
 No `JwtMiddleware` class exists anywhere in the codebase. A prior conformance fix added `ValidateToken(string token)` to `ITokenService` and `TokenService`, fulfilling the service contract — but `ValidateToken` is never called from any code path. Instead, `Program.cs` registers the built-in `AddJwtBearer` handler and calls `app.UseAuthentication()`, which validates tokens entirely inside the framework without touching `TokenService`. As a result, the `ITokenService` abstraction boundary is incomplete: the interface declares `ValidateToken`, the implementation is correct, but no component ever invokes it. Any code that depends on the designed `JwtMiddleware` → `TokenService.ValidateToken()` call chain (custom middleware, unit tests, future extensions) cannot reach the method. The designed separation of concerns between the token-validation middleware and the `TokenService` service is not enforced.
 
-**Status:** OPEN
+**Fix applied:**
+- Created `src/Blog.Api/Middleware/JwtMiddleware.cs` — extracts the `Bearer` token from the `Authorization` request header, calls `ITokenService.ValidateToken(token)`, and on success assigns the returned `ClaimsPrincipal` to `HttpContext.User`. If the token is absent or invalid, the request continues with an unauthenticated principal and the `[Authorize]` attribute returns 401 as before.
+- Replaced `app.UseAuthentication()` in `Program.cs` with `app.UseMiddleware<JwtMiddleware>()`. The `AddAuthentication`/`AddJwtBearer` service registration is retained so `UseAuthorization()` has a scheme for challenge/forbid operations; only the per-request token extraction and validation now flows through the designed `JwtMiddleware` → `TokenService.ValidateToken()` path.
+
+**Status:** FIXED
