@@ -130,6 +130,12 @@ The design specifies that the asset serving endpoint must set `Vary: Accept` on 
 **Design reference:** `docs/detailed-designs/06-restful-api/README.md`, Section 7.3 — Global Exception Handler
 
 **Description:**
-The design's exception-to-status-code mapping table specifies the 429 exception class as `RateLimitExceededException`. The implementation created and uses `TooManyRequestsException` in all three relevant files: `src/Blog.Api/Common/Exceptions/TooManyRequestsException.cs` (class declaration), `src/Blog.Api/Middleware/ExceptionHandlingMiddleware.cs` (catch arm), and `src/Blog.Api/Features/Auth/Commands/Login.cs` (throw site). The class name diverges from the design specification, making the codebase inconsistent with the documented contract and breaking any tooling, documentation, or future code that relies on the name given in the design.
+The design's exception-to-status-code mapping table specifies the 429 exception class as `RateLimitExceededException`. The implementation created and used `TooManyRequestsException` in all three relevant files: `src/Blog.Api/Common/Exceptions/TooManyRequestsException.cs` (class declaration), `src/Blog.Api/Middleware/ExceptionHandlingMiddleware.cs` (catch arm), and `src/Blog.Api/Features/Auth/Commands/Login.cs` (throw site). The class name diverged from the design specification, making the codebase inconsistent with the documented contract and any tooling or future code that relies on the name given in the design.
 
-**Status:** OPEN
+**Fix applied:**
+- Deleted `src/Blog.Api/Common/Exceptions/TooManyRequestsException.cs`.
+- Created `src/Blog.Api/Common/Exceptions/RateLimitExceededException.cs` with the correct class name.
+- Updated the catch arm in `ExceptionHandlingMiddleware.cs` from `TooManyRequestsException` to `RateLimitExceededException`.
+- Updated the throw site in `Login.cs` from `TooManyRequestsException` to `RateLimitExceededException`.
+
+**Status:** FIXED
