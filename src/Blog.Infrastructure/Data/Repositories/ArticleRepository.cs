@@ -20,13 +20,16 @@ public class ArticleRepository(BlogDbContext context) : IArticleRepository
         return (items, total);
     }
 
-    public async Task<(List<Article> Items, int TotalCount)> GetPublishedAsync(int page, int pageSize, CancellationToken cancellationToken = default)
-    {
-        var query = context.Articles.Where(a => a.Published).OrderByDescending(a => a.DatePublished);
-        var total = await query.CountAsync(cancellationToken);
-        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
-        return (items, total);
-    }
+    public async Task<IReadOnlyList<Article>> GetPublishedAsync(int page, int pageSize, CancellationToken cancellationToken = default)
+        => await context.Articles
+            .Where(a => a.Published)
+            .OrderByDescending(a => a.DatePublished)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+    public async Task<int> GetPublishedCountAsync(CancellationToken cancellationToken = default)
+        => await context.Articles.CountAsync(a => a.Published, cancellationToken);
 
     public async Task<bool> SlugExistsAsync(string slug, Guid? excludeId = null, CancellationToken cancellationToken = default)
         => await context.Articles.AnyAsync(a => a.Slug == slug && (excludeId == null || a.ArticleId != excludeId), cancellationToken);

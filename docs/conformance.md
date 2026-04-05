@@ -588,4 +588,11 @@ The design specifies two separate members on `IArticleRepository` for querying p
 
 The implementation collapsed both into a single method with a tuple return type: `Task<(List<Article> Items, int TotalCount)> GetPublishedAsync(int page, int pageSize)`. This diverges from the design in two ways: the return type is `List<Article>` (not `IReadOnlyList<Article>`), and `GetPublishedCountAsync()` does not exist on the interface at all. Any code that relies on the designed interface contract (e.g., test doubles, future implementations) will not find the expected method signature. `GetPublishedArticlesHandler` uses tuple destructuring to read both values, coupling it to the non-standard tuple shape instead of calling the two methods the design defines.
 
-**Status:** OPEN
+**Fix applied:**
+- Changed `IArticleRepository.GetPublishedAsync` return type from `Task<(List<Article> Items, int TotalCount)>` to `Task<IReadOnlyList<Article>>` in `src/Blog.Domain/Interfaces/IArticleRepository.cs`.
+- Added `Task<int> GetPublishedCountAsync(CancellationToken cancellationToken = default)` to `IArticleRepository`.
+- Updated `ArticleRepository.GetPublishedAsync` in `src/Blog.Infrastructure/Data/Repositories/ArticleRepository.cs` to return only the page of items (no count in the tuple).
+- Added `ArticleRepository.GetPublishedCountAsync` that executes `CountAsync(a => a.Published)` independently.
+- Updated `GetPublishedArticlesHandler` in `src/Blog.Api/Features/Articles/Queries/GetPublishedArticles.cs` to call both `GetPublishedAsync` and `GetPublishedCountAsync` separately, eliminating the tuple destructuring.
+
+**Status:** FIXED

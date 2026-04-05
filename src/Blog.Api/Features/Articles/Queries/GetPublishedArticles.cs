@@ -11,7 +11,8 @@ public class GetPublishedArticlesHandler(IArticleRepository articles) : IRequest
 {
     public async Task<PagedResponse<ArticleListDto>> Handle(GetPublishedArticlesQuery request, CancellationToken cancellationToken)
     {
-        var (items, total) = await articles.GetPublishedAsync(request.Page, request.PageSize, cancellationToken);
+        var items = await articles.GetPublishedAsync(request.Page, request.PageSize, cancellationToken);
+        var total = await articles.GetPublishedCountAsync(cancellationToken);
         return new PagedResponse<ArticleListDto>
         {
             Items = items.Select(a => new ArticleListDto(
