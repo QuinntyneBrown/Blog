@@ -45,12 +45,12 @@ We will implement a **server-side digital asset pipeline** that:
 - Immutable cache headers mean images are fetched once and cached indefinitely by browsers.
 
 ### Negative
-- Image processing adds a library dependency (ImageSharp or SkiaSharp — see open questions).
+- Image processing adds a library dependency (SixLabors.ImageSharp).
 - Multiple format variants increase storage requirements.
 - First request for a resized/converted variant incurs processing time.
 
 ### Risks
-- Image processing library choice is still open. ImageSharp has a restrictive license for SaaS; SkiaSharp depends on native binaries. This should be resolved before implementation.
+- ~~Image processing library choice is still open.~~ **Resolved:** SixLabors.ImageSharp selected. Fully managed, cross-platform, Apache 2.0 license (open-source friendly), no native binary dependencies.
 
 ## Implementation Notes
 

@@ -56,7 +56,7 @@ The component diagram details the digital-asset-related components inside the AP
 
 - **Responsibility:** Orchestrates the upload workflow -- validates the file, generates a unique stored filename, triggers image processing, persists to storage, and saves metadata to the database.
 - **Dependencies:** `FileValidator`, `ImageProcessor`, `AssetStorage`, `AssetRepository`
-- **Behavior:** Returns an `UploadResponse` DTO containing the asset ID and public URL. Coordinates format conversion and thumbnail generation as needed.
+- **Behavior:** Returns an `UploadResponse` DTO containing the asset ID and public URL. After persisting the original file, triggers eager variant generation for all responsive breakpoints and modern formats.
 
 ### 3.3 FileValidator
 
@@ -74,7 +74,9 @@ The component diagram details the digital-asset-related components inside the AP
   - `ConvertFormat(Stream source, ImageFormat targetFormat)` -- converts the source image to the specified format and returns the result stream.
   - `Resize(Stream source, int targetWidth)` -- resizes the image proportionally to the target width, preserving aspect ratio.
   - `GetDimensions(Stream source)` -- reads image metadata to extract width and height without fully decoding the image.
+  - `GenerateVariants(Stream source, int originalWidth)` -- eagerly generates all responsive variants at upload time. For each breakpoint width (320, 640, 960, 1280, 1920) that is smaller than the original, produces WebP and AVIF variants. Skips widths that exceed the original image width. Returns a list of generated variant metadata (width, format, stored filename, file size).
 - **Library:** SixLabors.ImageSharp — fully managed, cross-platform, no native dependencies. Licensed under Apache 2.0.
+- **Variant naming convention:** `{assetId}-{width}w.{format}` (e.g., `a1b2c3d4-...-640w.webp`, `a1b2c3d4-...-640w.avif`).
 
 ### 3.5 AssetStorage
 
@@ -163,8 +165,9 @@ The component diagram details the digital-asset-related components inside the AP
 8. `DigitalAssetService` calls `ImageProcessor.GetDimensions()` to extract width and height.
 9. `DigitalAssetService` calls `FileValidator.ValidateDimensions()` to reject oversized or abusive images.
 10. `DigitalAssetService` calls `AssetStorage.SaveAsync()` to persist the original file.
-11. `DigitalAssetService` creates a `DigitalAsset` entity and calls `AssetRepository.AddAsync()` to save metadata.
-12. `DigitalAssetController` returns 201 Created with the `UploadResponse` containing the asset ID and public URL.
+11. `DigitalAssetService` calls `ImageProcessor.GenerateVariants()` to eagerly produce WebP and AVIF variants at each responsive breakpoint (320, 640, 960, 1280, 1920) that is smaller than the original width. Each variant is saved via `AssetStorage.SaveAsync()`.
+12. `DigitalAssetService` creates a `DigitalAsset` entity and calls `AssetRepository.AddAsync()` to save metadata.
+13. `DigitalAssetController` returns 201 Created with the `UploadResponse` containing the asset ID and public URL.
 
 ### 5.2 Serve with Optimization Flow
 
