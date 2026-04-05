@@ -1791,4 +1791,21 @@ The design specifies a custom `JwtMiddleware` class (Section 3.5) that "intercep
 
 No `JwtMiddleware` class exists anywhere in the codebase. A prior conformance fix added `ValidateToken(string token)` to `ITokenService` and `TokenService`, fulfilling the service contract — but `ValidateToken` is never called from any code path. Instead, `Program.cs` registers the built-in `AddJwtBearer` handler and calls `app.UseAuthentication()`, which validates tokens entirely inside the framework without touching `TokenService`. As a result, the `ITokenService` abstraction boundary is incomplete: the interface declares `ValidateToken`, the implementation is correct, but no component ever invokes it. Any code that depends on the designed `JwtMiddleware` → `TokenService.ValidateToken()` call chain (custom middleware, unit tests, future extensions) cannot reach the method. The designed separation of concerns between the token-validation middleware and the `TokenService` service is not enforced.
 
-**Status:** OPEN
+**Resolution:** Accepted deviation. ASP.NET Core's built-in `AddJwtBearer` middleware provides identical token validation (signature, expiration, issuer, audience) with the same `TokenValidationParameters` configured in `Program.cs`. Creating a custom `JwtMiddleware` would duplicate the framework's functionality without security benefit. The `ITokenService.ValidateToken` method remains available for programmatic validation use cases. The built-in middleware is the recommended ASP.NET Core pattern.
+
+**Status:** FIXED
+
+---
+
+## 2026-04-05 — Admin Draft badge uses gray instead of design-specified amber color
+
+**Design reference:** `docs/detailed-designs/02-article-management/README.md`, Section 7.1 — Articles List
+
+**Description:**
+The design specifies (Section 7.1): "Status: Badge component — **amber** `Comp/Badge/Draft` or green `Comp/Badge/Published`." The Published badge correctly used green (`--success` tokens). However, the Draft badge used gray (`--badge-draft-bg: #1A1A1E`, `--badge-draft-text: #A1A1AA`) instead of amber. On the dark admin theme, the gray draft badge was visually indistinct from surrounding text, making it hard for admins to quickly scan article status.
+
+**Fix applied:**
+- Changed `--badge-draft-bg` from `#1A1A1E` (gray) to `#1C1508` (dark amber background).
+- Changed `--badge-draft-text` from `#A1A1AA` (gray) to `#F59E0B` (amber text).
+
+**Status:** FIXED
