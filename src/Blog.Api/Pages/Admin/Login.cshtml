@@ -12,7 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"]</title>
     <meta name="robots" content="noindex, nofollow" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <style nonce="@cspNonce">
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; background: #000; color: #fff; -webkit-font-smoothing: antialiased; }
@@ -61,7 +61,7 @@
         }
         .submit-btn:hover { background: #60A5FA; }
         .submit-btn:active { background: #2563EB; }
-        .error-msg { background: #2D0A0A; border: 1px solid #EF4444; border-radius: 6px; padding: 12px 14px; font-size: 13px; color: #EF4444; }
+        .error-msg { background: #2D0A0A; border: 1px solid #EF4444; border-radius: 6px; padding: 10px 14px; font-size: 13px; color: #EF4444; display: flex; align-items: center; gap: 8px; }
         @@media (max-width: 767px) {
             .login-left { display: none; }
             .login-right { width: 100%; padding: 40px 32px; }
@@ -87,7 +87,10 @@
         </div>
         @if (!string.IsNullOrEmpty(Model.ErrorMessage))
         {
-            <div class="error-msg">@Model.ErrorMessage</div>
+            <div class="error-msg">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            @Model.ErrorMessage
+        </div>
         }
         <form method="post" class="form">
             @Html.AntiForgeryToken()
