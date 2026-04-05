@@ -723,7 +723,9 @@
             transition: background 0.15s;
         }
         .feed-card-btn:hover { background: var(--accent-primary-hover); }
-        @@media (max-width: 767px) { .feed-page { padding: 48px 24px; } .feed-card { flex-direction: column; align-items: flex-start; } }
+        @@media (max-width: 1199px) { .feed-page { padding: 64px 48px; } }
+        @@media (max-width: 991px) { .feed-page { padding: 48px 32px; } }
+        @@media (max-width: 767px) { .feed-page { padding: 40px 24px; } .feed-card { flex-direction: column; align-items: flex-start; } }
         @@media (max-width: 575px) { .feed-page { padding: 32px 16px; } }
 
         /* 404 */
