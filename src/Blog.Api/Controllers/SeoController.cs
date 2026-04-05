@@ -60,7 +60,7 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
     }
 
     [HttpGet("sitemap.xml")]
-    [ResponseCache(Duration = 600)] // Design spec: 10 minutes (docs/detailed-designs/05-seo-and-discoverability/README.md, Section 6.3 — Caching Strategy)
+    [ResponseCache(Duration = 3600)] // Design spec: 60 minutes per resolved Open Question #4 (docs/detailed-designs/05-seo-and-discoverability/README.md, Section 8)
     public async Task<IActionResult> Sitemap()
     {
         var result = await mediator.Send(new GetPublishedArticlesQuery(1, 1000));
@@ -90,7 +90,7 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
     }
 
     [HttpGet("feed.xml")]
-    [ResponseCache(Duration = 300)] // Design spec: 5 minutes (docs/detailed-designs/05-seo-and-discoverability/README.md, Section 6.3 — Caching Strategy)
+    [ResponseCache(Duration = 3600)] // Design spec: 60 minutes per resolved Open Question #4 (docs/detailed-designs/05-seo-and-discoverability/README.md, Section 8)
     public async Task<IActionResult> Rss()
     {
         var result = await mediator.Send(new GetPublishedArticlesQuery(1, 20));
@@ -130,7 +130,7 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
     }
 
     [HttpGet("atom.xml")]
-    [ResponseCache(Duration = 300)] // Design spec: 5 minutes (docs/detailed-designs/05-seo-and-discoverability/README.md, Section 6.3 — Caching Strategy)
+    [ResponseCache(Duration = 3600)] // Design spec: 60 minutes per resolved Open Question #4 (docs/detailed-designs/05-seo-and-discoverability/README.md, Section 8)
     public async Task<IActionResult> Atom()
     {
         var result = await mediator.Send(new GetPublishedArticlesQuery(1, 20));

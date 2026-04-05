@@ -1285,6 +1285,24 @@ The design specifies (Section 3.1): "Title pattern `{Article Title} | {Site Name
 
 ---
 
+## 2026-04-04 — Sitemap and feed cache TTL uses Section 6.3 values instead of resolved Open Question 4 value (60 minutes)
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 8 — Open Question #4
+
+**Description:**
+Design 05, Section 6.3 initially specified a 10-minute cache TTL for the sitemap and 5-minute TTL for RSS/Atom feeds. However, Open Question #4 (Section 8) was explicitly resolved: "60 minutes. `Cache-Control: public, max-age=3600`." Resolved open questions override the initial design text. The implementation applied the Section 6.3 values — `[ResponseCache(Duration = 600)]` on `Sitemap()` and `[ResponseCache(Duration = 300)]` on `Rss()` and `Atom()` — while the JSON Feed endpoint already correctly uses `Duration = 3600`. This inconsistency means the sitemap and XML feeds expire from caches after 10 and 5 minutes respectively, requiring unnecessary regeneration. The inline code comments even explicitly cite Section 6.3 rather than the overriding Open Question 4 resolution. Any crawler or CDN caching these endpoints would see them as much more frequently stale than the design intends.
+
+**Fix applied:**
+- Changed `[ResponseCache(Duration = 600)]` → `[ResponseCache(Duration = 3600)]` on `Sitemap()` in `SeoController`.
+- Changed `[ResponseCache(Duration = 300)]` → `[ResponseCache(Duration = 3600)]` on `Rss()` in `SeoController`.
+- Changed `[ResponseCache(Duration = 300)]` → `[ResponseCache(Duration = 3600)]` on `Atom()` in `SeoController`.
+- Updated inline comments to cite the resolved Open Question #4 rather than the superseded Section 6.3 values.
+- All four SEO endpoints (`/sitemap.xml`, `/feed.xml`, `/atom.xml`, and `/feed.json`) now consistently use a 60-minute (3600 s) cache TTL as the design resolution specifies.
+
+**Status:** FIXED
+
+---
+
 ## 2026-04-05 — llms.txt missing sitemap and structured data references
 
 **Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.6 — LlmsTxtMiddleware
