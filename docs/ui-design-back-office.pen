@@ -1565,7 +1565,7 @@
                 {
                   "type": "text",
                   "id": "Mvnd6",
-                  "fill": "#000000",
+                  "fill": "#FFFFFF",
                   "content": "QB",
                   "fontFamily": "Inter",
                   "fontSize": 32,
@@ -1575,7 +1575,7 @@
                 {
                   "type": "text",
                   "id": "T657F",
-                  "fill": "#000000",
+                  "fill": "#71717A",
                   "content": "Blog Admin",
                   "fontFamily": "Geist Mono",
                   "fontSize": 13,
@@ -1595,7 +1595,7 @@
                 {
                   "type": "text",
                   "id": "eCSiJ",
-                  "fill": "#000000",
+                  "fill": "#FFFFFF",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "Manage your\ncontent.",
@@ -1608,7 +1608,7 @@
                 {
                   "type": "text",
                   "id": "iyCan",
-                  "fill": "#000000",
+                  "fill": "#A1A1AA",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
                   "content": "Create, edit, and publish articles\nfrom one streamlined dashboard.",
@@ -1623,7 +1623,7 @@
               "type": "text",
               "id": "nRx8i",
               "name": "loginBrandBot",
-              "fill": "#000000",
+              "fill": "#71717A",
               "content": "© 2026 Quinn Brown",
               "fontFamily": "Geist Mono",
               "fontSize": 11,
@@ -1637,7 +1637,7 @@
           "name": "LoginForm",
           "width": 480,
           "height": "fill_container",
-          "fill": "#000000",
+          "fill": "#0A0A0A",
           "layout": "vertical",
           "gap": 32,
           "padding": [
@@ -1656,7 +1656,7 @@
                 {
                   "type": "text",
                   "id": "JHKkS",
-                  "fill": "#000000",
+                  "fill": "#FFFFFF",
                   "content": "Sign in",
                   "fontFamily": "Inter",
                   "fontSize": 28,
@@ -1665,7 +1665,7 @@
                 {
                   "type": "text",
                   "id": "OaABT",
-                  "fill": "#000000",
+                  "fill": "#A1A1AA",
                   "content": "Enter your credentials to access the admin panel.",
                   "lineHeight": 1.5,
                   "fontFamily": "Inter",
@@ -1693,7 +1693,7 @@
                     {
                       "type": "text",
                       "id": "lntAh",
-                      "fill": "#000000",
+                      "fill": "#A1A1AA",
                       "content": "Email",
                       "fontFamily": "Inter",
                       "fontSize": 13,
@@ -1705,11 +1705,11 @@
                       "name": "emailInput",
                       "width": "fill_container",
                       "height": 44,
-                      "fill": "#000000",
+                      "fill": "#0D0D0D",
                       "cornerRadius": 6,
                       "stroke": {
                         "thickness": 1,
-                        "fill": "#000000"
+                        "fill": "#1E1E1E"
                       },
                       "padding": [
                         0,
@@ -1720,7 +1720,7 @@
                         {
                           "type": "text",
                           "id": "PYTON",
-                          "fill": "#000000",
+                          "fill": "#FFFFFF",
                           "content": "admin@blog.dev",
                           "fontFamily": "Inter",
                           "fontSize": 14,
@@ -1741,7 +1741,7 @@
                     {
                       "type": "text",
                       "id": "WaW9x",
-                      "fill": "#000000",
+                      "fill": "#A1A1AA",
                       "content": "Password",
                       "fontFamily": "Inter",
                       "fontSize": 13,
@@ -1753,11 +1753,11 @@
                       "name": "passInput",
                       "width": "fill_container",
                       "height": 44,
-                      "fill": "#000000",
+                      "fill": "#0D0D0D",
                       "cornerRadius": 6,
                       "stroke": {
                         "thickness": 1,
-                        "fill": "#000000"
+                        "fill": "#1E1E1E"
                       },
                       "padding": [
                         0,
@@ -1769,7 +1769,7 @@
                         {
                           "type": "text",
                           "id": "3j3iA",
-                          "fill": "#000000",
+                          "fill": "#FFFFFF",
                           "content": "••••••••••",
                           "fontFamily": "Inter",
                           "fontSize": 14,
@@ -1782,7 +1782,7 @@
                           "height": 18,
                           "iconFontName": "eye-off",
                           "iconFontFamily": "lucide",
-                          "fill": "#000000"
+                          "fill": "#71717A"
                         }
                       ]
                     }
@@ -1794,7 +1794,7 @@
                   "name": "loginBtn",
                   "width": "fill_container",
                   "height": 44,
-                  "fill": "#000000",
+                  "fill": "#3B82F6",
                   "cornerRadius": 6,
                   "justifyContent": "center",
                   "alignItems": "center",
@@ -1815,12 +1815,12 @@
                   "id": "FDmfi",
                   "name": "errorMsg",
                   "width": "fill_container",
-                  "fill": "#000000",
+                  "fill": "#2D0A0A",
                   "cornerRadius": 6,
                   "stroke": {
                     "align": "inside",
                     "thickness": 1,
-                    "fill": "#000000"
+                    "fill": "#EF4444"
                   },
                   "gap": 8,
                   "padding": [
@@ -1836,12 +1836,12 @@
                       "height": 16,
                       "iconFontName": "circle-x",
                       "iconFontFamily": "lucide",
-                      "fill": "#000000"
+                      "fill": "#EF4444"
                     },
                     {
                       "type": "text",
                       "id": "7qpVu",
-                      "fill": "#000000",
+                      "fill": "#EF4444",
                       "content": "Invalid email or password.",
                       "fontFamily": "Inter",
                       "fontSize": 13,
@@ -3132,6 +3132,8 @@
                       "type": "text",
                       "id": "O9NFp",
                       "fill": "#71717A",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
                       "content": "Title",
                       "fontFamily": "Geist Mono",
                       "fontSize": 11,
@@ -4021,6 +4023,8 @@
                       "type": "text",
                       "id": "PTQQu",
                       "fill": "#71717A",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
                       "content": "Title",
                       "fontFamily": "Geist Mono",
                       "fontSize": 11,
@@ -4695,6 +4699,8 @@
                   "type": "text",
                   "id": "ZWvV4",
                   "fill": "#71717A",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
                   "content": "Title",
                   "fontFamily": "Geist Mono",
                   "fontSize": 11,
