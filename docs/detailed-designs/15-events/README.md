@@ -60,7 +60,7 @@ The Events feature allows the blog author to manage a list of speaking engagemen
 | Handler | Command | Effect |
 |---------|---------|--------|
 | `CreateEventHandler` | `CreateEventCommand` | Generates slug, persists with `published=false` |
-| `UpdateEventHandler` | `UpdateEventCommand` | Updates all mutable fields; regenerates slug from new title |
+| `UpdateEventHandler` | `UpdateEventCommand` | Updates all mutable fields; regenerates slug from new title; calls `ICacheInvalidator` if the event is currently `Published = true` |
 | `DeleteEventHandler` | `DeleteEventCommand` | Removes event; returns 409 if `Published = true` (must unpublish first) |
 | `PublishEventHandler` | `PublishEventCommand` | Sets `published=true` |
 | `UnpublishEventHandler` | `UnpublishEventCommand` | Sets `published=false` |
@@ -157,8 +157,8 @@ Key points:
 | `POST` | `/api/events` | `{ title, description, startDate, location, endDate?, externalUrl? }` | 201 + `EventDto` | 400, 401, 409 |
 | `PUT` | `/api/events/{id}` | `{ title, description, startDate, location, endDate?, externalUrl?, version }` | 200 + `EventDto` | 400, 401, 404, 409 |
 | `DELETE` | `/api/events/{id}` | — | 204 | 401, 404, 409 |
-| `POST` | `/api/events/{id}/publish` | — | 200 | 401, 404 |
-| `POST` | `/api/events/{id}/unpublish` | — | 200 | 401, 404 |
+| `POST` | `/api/events/{id}/publish` | — | 200 + `EventDto` | 401, 404 |
+| `POST` | `/api/events/{id}/unpublish` | — | 200 + `EventDto` | 401, 404 |
 | `GET` | `/api/events?page&pageSize` (default pageSize=20, max 50) | — | 200 + `PagedResponse<EventListDto>` | 401 |
 
 ### Public endpoints (no auth)
@@ -186,7 +186,7 @@ PublicEventsDto  { upcoming: PagedResult<PublicEventDto>, past: PagedResult<Publ
 - **Input validation**: `EndDate`, when provided, must be ≥ `StartDate` (validated in the command handler). `ExternalUrl`, when provided, must be a well-formed absolute URL; malformed values are rejected with 400 before any persistence occurs.
 - **Delete guard**: Deleting a published event returns 409. The author must unpublish first, making removal from the public site an explicit step.
 - **Unpublished event access**: `GetEventBySlugHandler` explicitly checks `Published == true` before returning the event, ensuring draft events are not accessible to public visitors (L2-070.2).
-- **HTTP caching**: The `GET /api/events/published` and `GET /api/events/by-slug/{slug}` endpoints are served with `Cache-Control: public, max-age=60, stale-while-revalidate=300`. Publish and unpublish operations must call `ICacheInvalidator` to bust the public events cache.
+- **HTTP caching**: The `GET /api/events/published` and `GET /api/events/by-slug/{slug}` endpoints are served with `Cache-Control: public, max-age=60, stale-while-revalidate=300`. Publish and unpublish operations must call `ICacheInvalidator` to bust the public events cache. `UpdateEventHandler` must also call `ICacheInvalidator` when the event being updated is currently published, so that title, date, or location changes are reflected immediately.
 - **Optimistic concurrency**: `PUT /api/events/{id}` requires `version` in the request body. A mismatch returns 409 to prevent lost-update conflicts.
 
 ---

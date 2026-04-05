@@ -60,7 +60,7 @@ The About Page feature provides a publicly visible biography for the site author
 
 - **Responsibility**: Reverts the live about content to a prior revision identified by `historyId`.
 - **Dependencies**: `AboutContentRepository`, `IMarkdownConverter`, `ICacheInvalidator`
-- **Steps**: (1) Load history record by `historyId`; return 404 if not found. (2) Verify `AboutContentId` matches the singleton — prevents cross-resource access. (3) Snapshot the current live row into `AboutContentHistory`. (4) Overwrite live row with the history snapshot fields; increment `Version`. (5) Call `ICacheInvalidator.InvalidateAsync("/about")`.
+- **Steps**: (1) Load history record by `historyId`; return 404 if not found. (2) Verify `AboutContentId` matches the singleton — prevents cross-resource access. (3) Load the current live row; if the supplied `currentVersion` does not match the stored `Version`, return 409 (prevents a restore from silently overwriting concurrent edits). (4) Snapshot the current live row into `AboutContentHistory`. (5) Overwrite live row with the history snapshot fields; increment `Version`. (6) Call `ICacheInvalidator.InvalidateAsync("/about")`.
 
 ### 3.4 GetAboutHistoryHandler
 
@@ -136,7 +136,7 @@ Key points:
 - On update (existing record), `version` in the request body must match the stored value; a mismatch returns 409.
 - Markdown is converted and sanitized at save time; the public page reads `BodyHtml` directly.
 - `profileImageId`, if provided, must reference an existing `DigitalAsset` owned by the requesting user — validated before save (L2-072.5). Returns 403 if the asset exists but belongs to a different user.
-- On restore (`PUT /api/about/restore/{historyId}`), the current live state is snapshotted into `AboutContentHistory` before overwriting, making the restore reversible. `ICacheInvalidator.InvalidateAsync("/about")` is called after restore.
+- On restore (`PUT /api/about/restore/{historyId}`), the caller must supply the current `version` of the live row in the request body. If the version mismatches, the handler returns 409 — this prevents a restore from silently overwriting a concurrent in-flight edit. The current live state is snapshotted into `AboutContentHistory` before overwriting, making the restore reversible. `ICacheInvalidator.InvalidateAsync("/about")` is called after restore.
 
 ### 5.2 Public About Page Render
 
@@ -160,7 +160,7 @@ Key points:
 | `GET` | `/api/about` | None | — | 200 + `AboutContentDto?` | — |
 | `PUT` | `/api/about` | Bearer token | `{ heading, body, profileImageId?, version }` | 200 + `AboutContentDto` | 400, 401, 403, 409 |
 | `GET` | `/api/about/history` | Bearer token | `?page&pageSize` (default pageSize=20, max 50) | 200 + `PagedResponse<AboutContentHistoryDto>` | 401 |
-| `PUT` | `/api/about/restore/{historyId}` | Bearer token | — | 200 + `AboutContentDto` | 401, 404 |
+| `PUT` | `/api/about/restore/{historyId}` | Bearer token | `{ currentVersion }` | 200 + `AboutContentDto` | 401, 404, 409 |
 
 ### DTOs
 
@@ -197,7 +197,7 @@ AboutContentHistoryDto  {
 - **XSS**: `BodyHtml` is produced via `IMarkdownConverter`, which uses HtmlSanitizer to strip disallowed tags and attributes before storage.
 - **Image validation**: `profileImageId` is validated against the `DigitalAssets` table and must be owned by the requesting user. Returns 403 if the asset belongs to a different user. Prevents orphaned references and SSRF-style manipulation of the image URL.
 - **Cache invalidation**: `ICacheInvalidator.InvalidateAsync("/about")` is called after both a successful PUT and a successful restore, ensuring visitors see updated content promptly.
-- **Optimistic concurrency**: `PUT /api/about` requires `version` in the request body. A mismatch returns 409 to prevent lost-update conflicts when the author has the page open in two tabs simultaneously.
+- **Optimistic concurrency**: `PUT /api/about` requires `version` in the request body. A mismatch returns 409 to prevent lost-update conflicts when the author has the page open in two tabs simultaneously. `PUT /api/about/restore/{historyId}` likewise requires `currentVersion` in the request body and returns 409 on mismatch, preventing a restore from silently overwriting a concurrent edit.
 
 ---
 

@@ -62,7 +62,7 @@ The Newsletter feature allows the blog author to compose and send email newslett
 - **Interfaces**:
   - `POST /api/newsletter-subscriptions` — subscribe (anonymous); returns 202 (confirmation email enqueued)
   - `POST /api/newsletter-subscriptions/confirm` — confirm subscription via token in request body (anonymous); POST prevents link prefetchers from accidentally activating the confirmation
-  - `DELETE /api/newsletter-subscriptions/{token}` — unsubscribe (anonymous, token-based); returns 204
+  - `DELETE /api/newsletter-subscriptions/{token}` — unsubscribe (anonymous, token-based); returns 204; idempotent — if the subscriber is already inactive the endpoint still returns 204 (prevents status enumeration)
   - `GET /api/subscribers` — paginated subscriber list (auth-guarded, for back office)
 - **Security**: No authentication required for sign-up/confirm/unsubscribe. Tokens are opaque random values (not guessable). The sign-up endpoint never reveals whether an email is already subscribed (L2-054.2). The confirmation endpoint uses POST (not GET) to prevent HTTP proxies and link-preview crawlers from pre-fetching and unintentionally confirming subscriptions (OWASP A01 — using GET for state-changing operations is unsafe).
 
@@ -75,7 +75,7 @@ The Newsletter feature allows the blog author to compose and send email newslett
 | `DeleteNewsletterHandler` | `DeleteNewsletterCommand` | Deletes draft; returns 409 if sent (L2-059.2) |
 | `SendNewsletterHandler` | `SendNewsletterCommand` | Sets `status=Sent`, `dateSent=UtcNow`; enqueues emails (L2-060) |
 | `SubscribeHandler` | `SubscribeCommand` | Upserts subscriber record; sends confirmation email (L2-054) |
-| `ConfirmSubscriptionHandler` | `ConfirmSubscriptionCommand` | Validates token (48h window); marks `confirmed=true` (L2-055) |
+| `ConfirmSubscriptionHandler` | `ConfirmSubscriptionCommand` | Validates token (48h window); returns 422 if token not found, already used, or expired; marks `confirmed=true` on success (L2-055) |
 | `UnsubscribeHandler` | `UnsubscribeCommand` | Sets `isActive=false` by unsubscribe token (L2-056) |
 
 ### 3.4 NewsletterRepository
@@ -189,8 +189,8 @@ Key points:
 
 | Method | Path | Body / Params | Success | Errors |
 |--------|------|---------------|---------|--------|
-| `POST` | `/api/newsletter-subscriptions` | `{ email }` | 202 | 400 |
-| `POST` | `/api/newsletter-subscriptions/confirm` | `{ token }` | 200 | 404, 422 |
+| `POST` | `/api/newsletter-subscriptions` | `{ email }` | 202 | 400, 429 |
+| `POST` | `/api/newsletter-subscriptions/confirm` | `{ token }` | 200 | 422, 429 |
 | `DELETE` | `/api/newsletter-subscriptions/{token}` | — | 204 | 404 |
 
 ### Public archive endpoints (no auth)
@@ -221,7 +221,7 @@ SubscriberDto              { subscriberID, email, confirmed, isActive, confirmed
 ## 7. Security Considerations
 
 - **Token guessing**: Confirmation and unsubscribe tokens are `Guid.NewGuid().ToString("N")` — 122 bits of entropy. They are never exposed in logs.
-- **Email enumeration**: The subscribe endpoint always returns 200 regardless of whether the email already exists (L2-054.2).
+- **Email enumeration**: The subscribe endpoint always returns 202 regardless of whether the email already exists (L2-054.2).
 - **Sent newsletter protection**: Update and delete operations are rejected with 409 once `status=Sent`. This prevents accidental data mutation of historical records.
 - **Rate limiting**: The `POST /api/newsletter-subscriptions` and `POST /api/newsletter-subscriptions/confirm` endpoints are covered by an IP-based rate limit to prevent abuse (same `write-endpoints` sliding-window policy used elsewhere). Rate limiting the confirm endpoint prevents brute-force token enumeration.
 - **HTML sanitisation**: `BodyHtml` is produced by `IMarkdownConverter` which wraps Markdig + HtmlSanitizer — XSS-safe.
