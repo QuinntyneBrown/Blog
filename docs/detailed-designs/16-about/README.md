@@ -123,7 +123,7 @@ The About Page feature provides a publicly visible biography for the site author
 | `AboutContentId` | `Guid` | FK → `AboutContent.AboutContentId` |
 | `Heading` | `nvarchar(256)` | Snapshot at time of save |
 | `Body` | `nvarchar(max)` | Raw Markdown snapshot |
-| `BodyHtml` | `nvarchar(max)` | Pre-rendered HTML snapshot |
+| `BodyHtml` | `nvarchar(max)` | Pre-rendered HTML snapshot — stored for preview rendering in the history list UI. **Not used verbatim on restore**: `RestoreAboutContentHandler` (§3.3 step 5) re-renders `BodyHtml` from `Body` via `IMarkdownConverter` at restore time so that the restored HTML reflects the current sanitizer allow-list rather than rules that may have been in effect when the snapshot was originally saved. Implementers must not "optimise" restore by copying this field directly. |
 | `ProfileImageId` | `Guid?` | Snapshot value — **no FK constraint**. Storing this as a live FK to `DigitalAssets` would cause `ON DELETE RESTRICT` to block asset deletion whenever a history snapshot references that asset. Since history rows are immutable records of past state, the `ProfileImageId` value here is informational only; the corresponding asset may no longer exist. |
 | `Version` | `int` | Version number copied from parent at time of snapshot |
 | `ArchivedAt` | `datetime2` | UTC timestamp when snapshot was created |

@@ -110,7 +110,7 @@ The Events feature allows the blog author to manage a list of speaking engagemen
 | `EventId` | `Guid` | PK |
 | `Title` | `nvarchar(256)` | Required |
 | `Slug` | `nvarchar(256)` | Unique index; generated from `Title` |
-| `Description` | `nvarchar(max)` | Required; application layer enforces ≤ 4000 chars |
+| `Description` | `nvarchar(max)` | Required; plain text (not Markdown). No `DescriptionHtml` field exists — the value is stored and rendered as-is without Markdown processing. Application layer enforces ≤ 4000 chars |
 | `StartDate` | `datetime2` | Required; drives upcoming/past split |
 | `EndDate` | `datetime2?` | Optional |
 | `Location` | `nvarchar(512)` | Required |
