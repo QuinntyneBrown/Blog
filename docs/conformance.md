@@ -1986,7 +1986,14 @@ The `DigitalAsset` entity already stores `Width` (int) and `Height` (int) for ev
 
 As a result, all three public Razor pages that emit `<picture>` elements for article featured images — `Pages/Articles/Slug.cshtml` (hero image), `Pages/Index.cshtml` (article card grid), and `Pages/Articles/Index.cshtml` (article card grid) — render `<img>` fallback tags without `width` or `height` attributes. The browser must wait for each image to load before it knows its intrinsic dimensions, causing layout shift as images arrive. This violates the design's CLS < 0.1 budget (Section 6) and the Core Web Vitals requirement from L2-022.
 
-**Status:** OPEN
+**Fix applied:**
+- Added `FeaturedImageWidth` (`int?`) and `FeaturedImageHeight` (`int?`) to `ArticleDto` in `src/Blog.Api/Features/Articles/Queries/GetArticleById.cs`. Nullable so articles without a featured image or with unknown dimensions (legacy records with `Width = 0`) gracefully omit the attributes.
+- Added the same two fields to `ArticleListDto` in `src/Blog.Api/Features/Articles/Queries/GetArticles.cs`.
+- Updated all six DTO construction sites to populate both fields from `article.FeaturedImage?.Width`/`Height`, treating `0` as absent (sentinel value from default-initialized assets): `GetArticleByIdHandler`, `GetArticleBySlugHandler`, `GetPublishedArticleBySlugHandler`, `GetArticlesHandler`, `GetPublishedArticlesHandler`, `UpdateArticleCommandHandler`, `PublishArticleCommandHandler`. `CreateArticleCommandHandler` passes `null, null` because the newly-created article's `FeaturedImage` navigation property is not eagerly loaded within that transaction.
+- Updated `Pages/Articles/Slug.cshtml`: added `width="@Model.Article.FeaturedImageWidth" height="@Model.Article.FeaturedImageHeight"` to the hero `<img>` tag when dimensions are known.
+- Updated `Pages/Index.cshtml` and `Pages/Articles/Index.cshtml`: added the same conditional width/height attributes to the article card `<img>` tags.
+
+**Status:** FIXED
 
 ---
 
