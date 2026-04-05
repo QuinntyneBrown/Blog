@@ -1595,7 +1595,12 @@ The design specifies (Section 3.3): "Serves static assets (CSS, JS, images, font
 **Description:**
 The design specifies (Section 3.5) that article images are transformed into `<picture>` elements with `<source type="image/webp" srcset="...">` entries at all pre-generated breakpoints (320, 640, 960, 1280, 1920 px), plus a standard `<img>` fallback for browsers without `<picture>` support. Section 7.4 confirms: "ImageTagHelper emits `<picture>` elements with `<source>` for AVIF and WebP, plus `<img>` fallback." The `ImageVariantGenerator` correctly pre-generates `{assetId}-{width}w.webp` variants at upload time, and the `AssetsController` supports `?w=` + `Accept` header negotiation. However, all three public Razor pages still emit bare `<img src="@article.FeaturedImageUrl" ...>` tags: the article detail hero (`Slug.cshtml` line 36), the homepage article card images (`Index.cshtml`), and the articles listing card images (`Articles/Index.cshtml`). The pre-generated WebP variants are never referenced, forcing every visitor to download the original format (JPEG/PNG) at full resolution regardless of viewport width. Browsers that support `<picture>` (all modern browsers) receive no WebP alternative and no responsive width selection, violating L2-020 (image optimization with modern formats and responsive srcset) and the performance budget requirements the design establishes for LCP and total transferred bytes.
 
-**Status:** OPEN
+**Fix applied:**
+- `Pages/Articles/Slug.cshtml`: Replaced the `<img>` hero with a `<picture>` element. Derives the asset ID from `FeaturedImageUrl` (strips `/assets/` prefix and file extension), builds a WebP `srcset` at breakpoints 320, 640, 960, 1280, 1920 w with a `sizes` attribute appropriate for the full-width hero. The original-format `<img>` is retained as a fallback. `loading="eager"`, `fetchpriority="high"`, and `decoding="async"` are preserved on the `<img>`.
+- `Pages/Index.cshtml`: Replaced the card `<img>` with a `<picture>` element. Uses breakpoints 320, 640, 960 w (card images are never rendered at the largest breakpoints) with a `sizes` attribute appropriate for the responsive grid. `loading="lazy"` and `decoding="async"` are preserved on the `<img>` fallback.
+- `Pages/Articles/Index.cshtml`: Same change as `Index.cshtml` — card images use `<picture>` with WebP srcset at 320/640/960 w breakpoints.
+
+**Status:** FIXED
 
 ---
 
