@@ -92,11 +92,19 @@ The Newsletter feature allows the blog author to compose and send email newslett
 | `GetNewsletterArchiveHandler` | `GetNewsletterArchiveQuery(page, pageSize)` | Paginated list of sent newsletters for public archive |
 | `GetNewsletterBySlugHandler` | `GetNewsletterBySlugQuery(slug)` | Single sent newsletter by slug; 404 if not found or not Sent |
 
-### 3.5 IEmailSender
+### 3.6 PublicNewslettersController
+
+- **Responsibility**: Unauthenticated endpoints for the public newsletter archive. Separate from `NewslettersController` to avoid auth middleware applying globally.
+- **Interfaces**:
+  - `GET /api/newsletters/archive` — paginated list of sent newsletters
+  - `GET /api/newsletters/archive/{slug}` — single sent newsletter detail
+
+### 3.7 IEmailSender
 
 - **Responsibility**: Abstraction over the transactional email provider. Implementations may use SMTP, SendGrid, or similar.
 - **Key methods**: `SendConfirmationEmailAsync(email, confirmUrl)`, `SendNewsletterEmailAsync(email, subject, bodyHtml, unsubscribeUrl)`
 - **Notes**: `SendNewsletterHandler` enqueues one Azure Service Bus message per confirmed subscriber and returns HTTP 202 immediately. A background `IHostedService` dequeues and calls `IEmailSender` per message with dead-letter retry.
+- **Recommended DB indexes**: `IX_NewsletterSubscriber_ConfirmationToken` on `ConfirmationToken` (sparse/filtered, non-null rows only); `IX_NewsletterSubscriber_UnsubscribeToken` on `UnsubscribeToken`. Both are used as lookup keys in hot paths.
 
 ---
 
@@ -201,7 +209,7 @@ Key points:
 
 ```
 NewsletterDto              { newsletterID, subject, slug, body, bodyHtml, status, dateSent, createdAt, updatedAt, version }
-NewsletterListDto          { newsletterID, subject, slug, status, dateSent, createdAt }
+NewsletterListDto          { newsletterID, subject, slug?, status, dateSent, createdAt }  // slug is null while status=Draft
 NewsletterArchiveDto       { newsletterID, subject, slug, dateSent }
 NewsletterArchiveDetailDto { newsletterID, subject, slug, bodyHtml, dateSent }   // body (Markdown) omitted — public consumers need only rendered HTML
 SubscriberDto              { subscriberID, email, confirmed, isActive, confirmedAt, resubscribedAt, createdAt }
@@ -216,6 +224,7 @@ SubscriberDto              { subscriberID, email, confirmed, isActive, confirmed
 - **Sent newsletter protection**: Update and delete operations are rejected with 409 once `status=Sent`. This prevents accidental data mutation of historical records.
 - **Rate limiting**: The `POST /api/newsletter-subscriptions` endpoint is covered by an IP-based rate limit to prevent abuse (same `write-endpoints` sliding-window policy used elsewhere).
 - **HTML sanitisation**: `BodyHtml` is produced by `IMarkdownConverter` which wraps Markdig + HtmlSanitizer — XSS-safe.
+- **Token URL security**: Confirmation and unsubscribe links are only ever sent over HTTPS. The `confirmUrl` and `unsubscribeUrl` passed to `IEmailSender` are always constructed with `https://` scheme. Tokens are invalidated immediately on first use.
 
 ---
 

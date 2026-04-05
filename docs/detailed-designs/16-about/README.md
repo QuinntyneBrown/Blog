@@ -40,11 +40,13 @@ The About Page feature provides a publicly visible biography for the site author
 
 ### 3.1 AboutController
 
-- **Responsibility**: Public GET and authenticated PUT for the about content.
+- **Responsibility**: Public GET, authenticated PUT, and back-office history/restore for the about content.
 - **Interfaces**:
   - `GET /api/about` — returns current about content (anonymous, response-cached)
   - `PUT /api/about` — creates or updates about content (requires `[Authorize]`)
-- **Caching**: The public GET response is served with `Cache-Control: public, max-age=60, stale-while-revalidate=600` (L2-071.3). The `ICacheInvalidator` is called on a successful PUT to bust the cached response.
+  - `GET /api/about/history` — paginated revision history (requires `[Authorize]`)
+  - `PUT /api/about/restore/{historyId}` — restore a prior revision (requires `[Authorize]`)
+- **Caching**: The public GET response is served with `Cache-Control: public, max-age=60, stale-while-revalidate=600` (L2-071.3). The `ICacheInvalidator` is called on a successful PUT or restore to bust the cached response.
 - **Empty state**: If no about content has been authored, `GET /api/about` returns `null` in the body with HTTP 200. The public Razor Page renders a default message (L2-071.2).
 
 ### 3.2 UpsertAboutContentHandler
@@ -54,12 +56,23 @@ The About Page feature provides a publicly visible biography for the site author
 - **Pre-render**: Markdown `Body` is converted to sanitized HTML at save time and stored in `BodyHtml`. Runtime rendering is not performed (same pattern as articles).
 - **Version increment**: On update, `Version` is incremented for optimistic concurrency.
 
-### 3.3 GetAboutContentHandler
+### 3.3 RestoreAboutContentHandler
+
+- **Responsibility**: Reverts the live about content to a prior revision identified by `historyId`.
+- **Dependencies**: `AboutContentRepository`, `IMarkdownConverter`, `ICacheInvalidator`
+- **Steps**: (1) Load history record by `historyId`; return 404 if not found. (2) Verify `AboutContentId` matches the singleton — prevents cross-resource access. (3) Snapshot the current live row into `AboutContentHistory`. (4) Overwrite live row with the history snapshot fields; increment `Version`. (5) Call `ICacheInvalidator.InvalidateAsync("/about")`.
+
+### 3.4 GetAboutHistoryHandler
+
+- **Responsibility**: Returns a paginated list of `AboutContentHistory` records ordered by `ArchivedAt DESC`.
+- **Dependencies**: `AboutContentRepository`
+
+### 3.5 GetAboutContentHandler
 
 - **Responsibility**: Retrieves the current about content record (singleton). Returns `null` if no record exists.
 - **Dependencies**: `AboutContentRepository`, `DigitalAssetRepository` (resolves profile image URL from `ProfileImageId`)
 
-### 3.4 AboutContentRepository
+### 3.6 AboutContentRepository
 
 - **Responsibility**: Single-row data access for `AboutContent`.
 - **Key methods**:
@@ -130,7 +143,7 @@ Key points:
 4. If content exists, the page renders `Heading` as `<h1>`, `BodyHtml` as the body, and the profile image (if set).
 5. The `<head>` includes:
    - `<title>{Heading} — {SiteName}</title>` (L2-073.1)
-   - `<meta name="description" content="...">` derived from the first ~160 chars of the body
+   - `<meta name="description" content="...">` derived from `BodyHtml` stripped of HTML tags, truncated to ~160 chars (using raw `Body` Markdown would bleed syntax characters into the description)
    - `og:title`, `og:description`, `og:type` Open Graph tags (L2-073.2)
    - `og:image` referencing the profile image URL when set (L2-073.3)
 6. `Cache-Control: public, max-age=60, stale-while-revalidate=600` is applied via the page's `[ResponseCache]` attribute.
@@ -143,21 +156,22 @@ Key points:
 |--------|------|------|------|---------|--------|
 | `GET` | `/api/about` | None | — | 200 + `AboutContentDto?` | — |
 | `PUT` | `/api/about` | Bearer token | `{ heading, body, profileImageId? }` | 200 + `AboutContentDto` | 400, 401, 403 |
-| `GET` | `/api/about/history` | Bearer token | `?page&pageSize` | 200 + `PagedResponse<AboutContentHistoryDto>` | 401 |
+| `GET` | `/api/about/history` | Bearer token | `?page&pageSize` (default pageSize=20, max 50) | 200 + `PagedResponse<AboutContentHistoryDto>` | 401 |
 | `PUT` | `/api/about/restore/{historyId}` | Bearer token | — | 200 + `AboutContentDto` | 401, 404 |
 
 ### DTOs
 
 ```
 AboutContentDto  {
-    aboutContentId: Guid,
-    heading:        string,
-    body:           string,       // Markdown source
-    bodyHtml:       string,       // Pre-rendered HTML
-    profileImageId: Guid?,
-    profileImageUrl: string?,     // Resolved CDN/storage URL
-    updatedAt:      DateTime,
-    version:        int
+    aboutContentId:  Guid,
+    heading:         string,
+    body:            string,       // Markdown source
+    bodyHtml:        string,       // Pre-rendered HTML
+    profileImageId:  Guid?,
+    profileImageUrl: string?,      // Resolved CDN/storage URL
+    createdAt:       DateTime,
+    updatedAt:       DateTime,
+    version:         int
 }
 
 AboutContentHistoryDto  {

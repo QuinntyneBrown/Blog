@@ -70,7 +70,7 @@ The Events feature allows the blog author to manage a list of speaking engagemen
 | Handler | Query | Returns |
 |---------|-------|---------|
 | `GetEventsHandler` | `GetEventsQuery(page, pageSize)` | Paginated list, all statuses, descending by `StartDate` |
-| `GetPublishedEventsHandler` | `GetPublishedEventsQuery(upcomingPage, pastPage, pageSize)` | `{ upcoming: PagedResult<EventDto>, past: PagedResult<EventDto> }` split by `StartDate` vs `UtcNow` |
+| `GetPublishedEventsHandler` | `GetPublishedEventsQuery(upcomingPage, pastPage, pageSize)` | `{ upcoming: PagedResult<PublicEventDto>, past: PagedResult<PublicEventDto> }` split by `StartDate` vs `UtcNow` |
 | `GetEventBySlugHandler` | `GetEventBySlugQuery(slug)` | Single published event; 404 if not found or not published |
 | `GetEventByIdHandler` | `GetEventByIdQuery(eventId)` | Admin detail by ID |
 
@@ -84,6 +84,8 @@ The Events feature allows the blog author to manage a list of speaking engagemen
   - `GetUpcomingAsync(page, pageSize)` — published, `StartDate >= UtcNow`, ordered `StartDate ASC`
   - `GetPastAsync(page, pageSize)` — published, `StartDate < UtcNow`, ordered `StartDate DESC`
   - `SlugExistsAsync(slug, excludeEventId?)` — uniqueness check
+  - `GetTotalUpcomingCountAsync()` — total published upcoming count for pagination metadata
+  - `GetTotalPastCountAsync()` — total published past count for pagination metadata
 
 ### 3.5 ISlugGenerator
 
@@ -140,6 +142,7 @@ Key points:
 - Publish and unpublish are separate endpoints rather than a single toggle, making intent explicit.
 - Once published, the event appears on `/events` in the appropriate upcoming or past section based on `StartDate` relative to the current UTC time.
 - Unpublishing an event removes it from the public site immediately.
+- Both `PublishEventHandler` and `UnpublishEventHandler` call `ICacheInvalidator` to bust the public events cache after the state change.
 
 ---
 
@@ -188,5 +191,5 @@ PublicEventsDto  { upcoming: PagedResult<PublicEventDto>, past: PagedResult<Publ
 ## 8. Open Questions
 
 1. **Slug regeneration on update**: ~~Consider freezing the slug after first publish.~~ **Resolved**: The slug is regenerated on every update from the current title. Bookmarked URLs may break on title changes; this is accepted. `UpdateEventHandler` regenerates the slug and returns 409 if it conflicts with a different event.
-2. **Pagination on public events**: ~~L2-069 does not mention pagination.~~ **Resolved**: Pagination is added to the public events page. Both the upcoming and past sections are paginated independently. `GetPublishedEventsQuery` accepts `upcomingPage`, `pastPage`, and `pageSize` parameters. The public API response is updated to `{ upcoming: PagedResult<EventDto>, past: PagedResult<EventDto> }`.
+2. **Pagination on public events**: ~~L2-069 does not mention pagination.~~ **Resolved**: Pagination is added to the public events page. Both the upcoming and past sections are paginated independently. `GetPublishedEventsQuery` accepts `upcomingPage`, `pastPage`, and `pageSize` parameters. The public API response is updated to `{ upcoming: PagedResult<PublicEventDto>, past: PagedResult<PublicEventDto> }`.
 3. **Time zone handling**: ~~Should the time zone be a field on the event, a site-wide setting, or always UTC?~~ **Resolved**: `StartDate` is stored and displayed as UTC. No time zone conversion is performed. The public page renders dates with an explicit "UTC" suffix so visitors understand the reference.
