@@ -62,7 +62,21 @@ else
     </div>
     </article>
 
-    @section Head {
+}
+@if (Model.Article != null)
+{
+    var publisherLogoUrl = Configuration["Site:PublisherLogoUrl"] ?? $"{siteUrl}/images/logo.png";
+    var imageJson = !string.IsNullOrEmpty(Model.Article.FeaturedImageUrl)
+        ? $"\"image\": \"{siteUrl}{Model.Article.FeaturedImageUrl}\","
+        : string.Empty;
+}
+@section Head {
+    @if (Model.Article != null)
+    {
+        var publisherLogoUrl = Configuration["Site:PublisherLogoUrl"] ?? $"{siteUrl}/images/logo.png";
+        var imageJson = !string.IsNullOrEmpty(Model.Article.FeaturedImageUrl)
+            ? $"\"image\": \"{siteUrl}{Model.Article.FeaturedImageUrl}\","
+            : string.Empty;
         <script type="application/ld+json">
         {
             "@@context": "https://schema.org",
@@ -71,6 +85,7 @@ else
             "datePublished": "@Model.Article.DatePublished?.ToString("O")",
             "dateModified": "@Model.Article.UpdatedAt.ToString("O")",
             "description": "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(Model.Article.Abstract))",
+            @Html.Raw(imageJson)
             "mainEntityOfPage": "@siteUrl/articles/@Model.Article.Slug",
             "author": {
                 "@@type": "Person",
@@ -78,7 +93,11 @@ else
             },
             "publisher": {
                 "@@type": "Organization",
-                "name": "Quinn Brown"
+                "name": "Quinn Brown",
+                "logo": {
+                    "@@type": "ImageObject",
+                    "url": "@Html.Raw(publisherLogoUrl)"
+                }
             }
         }
         </script>
