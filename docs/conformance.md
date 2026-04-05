@@ -1749,3 +1749,16 @@ The design specifies that `AssetRepository` (Section 3.6) exposes `GetByStoredFi
 **Status:** OPEN
 
 ---
+
+## 2026-04-05 — Pagination prev/next links hidden instead of disabled on first/last page
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 3.6 — Pagination
+
+**Description:**
+The design specifies (Section 3.6): "**Disables** the previous link on page 1 and the next link on the last page." The implementation used `@if (HasPreviousPage)` / `@if (HasNextPage)` which **hid** the prev/next controls entirely rather than rendering them in a disabled state. Hiding changes the visual layout (pagination width shifts between pages) and removes the controls from the accessibility tree — screen reader users on the first page have no indication that a "previous" concept exists. Disabling keeps the element visible but non-interactive, providing a consistent layout and communicating boundary state.
+
+**Fix applied:**
+- Added `else` branches to both `@if` blocks on `Articles/Index.cshtml` and `Index.cshtml` that render `<span class="pagination-btn disabled" aria-disabled="true">` with the same icon and text content.
+- Added `.pagination-btn.disabled { color: var(--foreground-disabled); cursor: default; pointer-events: none; }` CSS rule.
+
+**Status:** FIXED
