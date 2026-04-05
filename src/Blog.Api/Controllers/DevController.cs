@@ -1,3 +1,4 @@
+using Blog.Api.Common.Attributes;
 using Blog.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,6 +7,7 @@ namespace Blog.Api.Controllers;
 /// <summary>Development-only utilities. NOT available in production.</summary>
 [ApiController]
 [Route("dev")]
+[RawResponse]
 public class DevController(IPasswordHasher passwordHasher, IWebHostEnvironment env) : ControllerBase
 {
     [HttpGet("hash-password")]

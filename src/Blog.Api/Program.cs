@@ -155,6 +155,7 @@ using (var scope = app.Services.CreateScope())
 // Middleware Pipeline
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseMiddleware<ResponseEnvelopeMiddleware>();
 
 app.UseResponseCompression();
 

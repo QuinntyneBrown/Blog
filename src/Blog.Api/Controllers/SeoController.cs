@@ -1,3 +1,4 @@
+using Blog.Api.Common.Attributes;
 using Blog.Api.Features.Articles.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +9,7 @@ namespace Blog.Api.Controllers;
 
 [Route("")]
 [ApiController]
+[RawResponse]
 public class SeoController(IMediator mediator, IHttpContextAccessor httpContextAccessor) : ControllerBase
 {
     private string BaseUrl

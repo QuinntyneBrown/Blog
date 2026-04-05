@@ -16,7 +16,7 @@ public class DigitalAssetsController(IMediator mediator) : ApiControllerBase(med
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
         var result = await Mediator.Send(new GetDigitalAssetsQuery(), ct);
-        return Ok(ApiResponse<List<DigitalAssetDto>>.Ok(result));
+        return Ok(result);
     }
 
     [HttpGet("{id:guid}", Name = "GetDigitalAssetById")]
@@ -24,7 +24,7 @@ public class DigitalAssetsController(IMediator mediator) : ApiControllerBase(med
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
         var result = await Mediator.Send(new GetDigitalAssetByIdQuery(id), ct);
-        return Ok(ApiResponse<DigitalAssetDto>.Ok(result));
+        return Ok(result);
     }
 
     [HttpPost]

@@ -23,7 +23,7 @@ public class ArticlesController(IMediator mediator) : ApiControllerBase(mediator
     {
         var result = await Mediator.Send(new GetArticleByIdQuery(id), ct);
         Response.Headers.ETag = $"W/\"article-{result.ArticleId}-v{result.Version}\"";
-        return Ok(ApiResponse<ArticleDto>.Ok(result));
+        return Ok(result);
     }
 
     [HttpPost]
@@ -43,7 +43,7 @@ public class ArticlesController(IMediator mediator) : ApiControllerBase(mediator
         var command = body with { Id = id, IfMatch = ifMatch };
         var result = await Mediator.Send(command, ct);
         Response.Headers.ETag = $"W/\"article-{result.ArticleId}-v{result.Version}\"";
-        return Ok(ApiResponse<ArticleDto>.Ok(result));
+        return Ok(result);
     }
 
     [HttpPatch("{id:guid}/publish")]
@@ -53,7 +53,7 @@ public class ArticlesController(IMediator mediator) : ApiControllerBase(mediator
         var ifMatch = Request.Headers.IfMatch.FirstOrDefault();
         var result = await Mediator.Send(new PublishArticleCommand(id, body.Published, ifMatch), ct);
         Response.Headers.ETag = $"W/\"article-{result.ArticleId}-v{result.Version}\"";
-        return Ok(ApiResponse<ArticleDto>.Ok(result));
+        return Ok(result);
     }
 
     [HttpDelete("{id:guid}")]
