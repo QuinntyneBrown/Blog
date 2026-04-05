@@ -26,7 +26,8 @@ public class LoginCommandHandler(
     IUserRepository userRepository,
     IPasswordHasher passwordHasher,
     ITokenService tokenService,
-    IEmailRateLimitService emailRateLimitService) : IRequestHandler<LoginCommand, LoginResponse>
+    IEmailRateLimitService emailRateLimitService,
+    IUnitOfWork uow) : IRequestHandler<LoginCommand, LoginResponse>
 {
     public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
@@ -41,6 +42,8 @@ public class LoginCommandHandler(
 
         user.LastLoginAt = DateTime.UtcNow;
         userRepository.Update(user);
+
+        await uow.SaveChangesAsync(cancellationToken);
 
         var token = tokenService.GenerateToken(user);
         var expiresAt = tokenService.GetExpiration();
