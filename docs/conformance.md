@@ -991,7 +991,12 @@ The design lists `Serilog.Enrichers.Thread` as a required NuGet package (Section
 **Description:**
 The design specifies (Section 7.1): "ApplicationInsights: Staging, Production — Centralized log aggregation, KQL querying, dashboards, and alerting via `Serilog.Sinks.ApplicationInsights`." Section 7.3 lists two required NuGet packages for this: `Serilog.Sinks.ApplicationInsights` and `Microsoft.ApplicationInsights.AspNetCore`. Section 7.2 shows the `appsettings.json` `WriteTo` array including an `ApplicationInsights` entry with `telemetryConverter: "Serilog.Sinks.ApplicationInsights.TelemetryConverters.TraceTelemetryConverter, Serilog.Sinks.ApplicationInsights"`. Neither package appears in `Blog.Api.csproj`, `Serilog.Sinks.ApplicationInsights` is absent from the `Using` array in `appsettings.json`, and no `ApplicationInsights` sink entry exists in the `WriteTo` array. As a result, production and staging deployments emit logs only to Console and to the rolling file — structured log entries never reach Azure Monitor, making KQL querying, dashboards, alerting, and the 30-day log retention described in Open Question 4 completely unavailable.
 
-**Status:** OPEN
+**Fix applied:**
+- Added `<PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="4.0.0" />` and `<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />` to `src/Blog.Api/Blog.Api.csproj`.
+- Added `"Serilog.Sinks.ApplicationInsights"` to the `Using` array in `appsettings.json` so `Serilog.Settings.Configuration` can resolve the sink type by reflection at startup.
+- Added the `ApplicationInsights` sink entry to the `WriteTo` array in `appsettings.json` with `telemetryConverter: "Serilog.Sinks.ApplicationInsights.TelemetryConverters.TraceTelemetryConverter, Serilog.Sinks.ApplicationInsights"`, matching the design's Section 7.2 configuration exactly.
+
+**Status:** FIXED
 
 ---
 
