@@ -828,6 +828,20 @@ The design specifies (Section 3.3): "When the limit is exceeded, returns HTTP 42
 
 ---
 
+## 2026-04-04 — PaginationParameters.Page accepts zero or negative values
+
+**Design reference:** `docs/detailed-designs/06-restful-api/README.md`, Section 4.4 — PaginationParameters
+
+**Description:**
+The design specifies (Section 4.4): "Page: Minimum 1, default 1." The `PaginationParameters` class clamped `PageSize` to [1, 100] via a custom setter but left `Page` as an auto-property with no validation. A query string like `?page=0` or `?page=-5` would be accepted, producing a negative `Skip` value (`(Page - 1) * PageSize`), which translates to a negative SQL `OFFSET` — causing a database query error or returning unexpected results depending on the provider.
+
+**Fix applied:**
+- Changed `Page` from an auto-property to a backing-field property with a setter that clamps values below 1 to 1, matching the pattern already used for `PageSize`.
+
+**Status:** FIXED
+
+---
+
 ## 2026-04-04 — 429 responses missing Retry-After header
 
 **Design reference:** `docs/detailed-designs/01-authentication/README.md`, Section 7.3 — Rate Limiting on Login; `docs/detailed-designs/08-security-hardening/README.md`, Section 3.3 — RateLimitingMiddleware
