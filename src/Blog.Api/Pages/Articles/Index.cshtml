@@ -119,7 +119,11 @@
         "@@type": "Blog",
         "name": "@(Configuration["Site:SiteName"] ?? "Quinn Brown")",
         "description": "@(Configuration["Site:SiteDescription"] ?? "Personal blog")",
-        "url": "@(Configuration["Site:SiteUrl"]?.TrimEnd('/'))/articles"
+        "url": "@(Configuration["Site:SiteUrl"]?.TrimEnd('/'))/articles",
+        "author": {
+            "@@type": "Person",
+            "name": "@(Configuration["Site:AuthorName"] ?? "Quinn Brown")"
+        }
     }
     </script>
 }

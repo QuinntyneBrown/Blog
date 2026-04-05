@@ -308,3 +308,6 @@ app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.Health
 });
 
 await app.RunAsync();
+
+// Expose the auto-generated Program class to integration tests.
+public partial class Program { }
