@@ -2015,3 +2015,23 @@ The result is that every visitor to the public site with a CSP-enforcing browser
 - Removed the erroneous `img-src` placement (it was between `font-src` and `frame-ancestors`; corrected ordering to `style-src`, `font-src`, `img-src`).
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Homepage hero `<h1>` and subtitle hardcode site name and description instead of reading from SiteConfiguration
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 4.6 — SiteConfiguration
+
+**Description:**
+The design specifies `SiteName` and `SiteDescription` as configurable values in `SiteConfiguration` (Section 4.6). Prior conformance fixes made virtually every occurrence of the site name and description in the codebase configuration-driven — the `<title>` tags, `og:site_name`, footer copyright, nav logo, JSON-LD blocks, and meta description tags all read from `Site:SiteName` and `Site:SiteDescription`. However, two visible text nodes on the homepage (`Pages/Index.cshtml`) were missed:
+
+1. **`<h1 class="hero-title">Quinn Brown</h1>`** (line 13) — the primary heading of the homepage, the most prominent brand element on the public site, hardcodes the author/site name instead of reading `Configuration["Site:SiteName"]`.
+2. **`<p class="hero-subtitle">Thoughts on software engineering, .NET architecture, and building systems that last.</p>`** (line 14) — the hero subtitle visible below the `<h1>`, which is the site description, hardcodes the same default string that `Site:SiteDescription` holds instead of reading from configuration.
+
+Both values are already present in `appsettings.json` under `Site:SiteName` and `Site:SiteDescription`, and `IConfiguration` is already injected into `Index.cshtml`. Despite this, the most visually prominent text on the page — the hero heading and subtitle — are the last two content strings that bypass configuration. An operator who changes `Site:SiteName` to rebrand the blog would see the title tag, nav logo, footer, and meta tags update correctly, but the hero heading would still show the hardcoded original name.
+
+**Fix applied:**
+- Changed `<h1 class="hero-title">Quinn Brown</h1>` to `<h1 class="hero-title">@(Configuration["Site:SiteName"] ?? "Quinn Brown")</h1>` in `Pages/Index.cshtml`.
+- Changed the hardcoded hero subtitle `<p>` to read `Configuration["Site:SiteDescription"]` with the original string as fallback.
+
+**Status:** FIXED

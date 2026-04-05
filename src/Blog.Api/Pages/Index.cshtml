@@ -10,8 +10,8 @@
 
 <section class="hero">
     <span class="hero-tag">Personal Blog</span>
-    <h1 class="hero-title">Quinn Brown</h1>
-    <p class="hero-subtitle">Thoughts on software engineering, .NET architecture, and building systems that last.</p>
+    <h1 class="hero-title">@(Configuration["Site:SiteName"] ?? "Quinn Brown")</h1>
+    <p class="hero-subtitle">@(Configuration["Site:SiteDescription"] ?? "Thoughts on software engineering, .NET architecture, and building systems that last.")</p>
     <div class="hero-divider"></div>
 </section>
 
