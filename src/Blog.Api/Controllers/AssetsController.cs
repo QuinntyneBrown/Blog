@@ -32,6 +32,7 @@ public class AssetsController(IWebHostEnvironment env) : ControllerBase
         };
 
         Response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
+        Response.Headers["Vary"] = "Accept";
         Response.Headers["ETag"] = $"\"{fileName}\"";
 
         if (Request.Headers.IfNoneMatch.Contains($"\"{fileName}\""))
