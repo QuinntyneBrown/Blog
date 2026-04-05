@@ -85,6 +85,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero
         };
+        options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+        {
+            OnChallenge = context =>
+            {
+                // For Razor Pages (non-API) requests, redirect to login instead of 401
+                if (!context.Request.Path.StartsWithSegments("/api"))
+                {
+                    context.HandleResponse();
+                    context.Response.Redirect("/admin/login");
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
