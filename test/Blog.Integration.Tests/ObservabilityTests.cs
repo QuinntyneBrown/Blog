@@ -1,43 +1,10 @@
 using System.Net;
 using System.Text.Json;
 using FluentAssertions;
-using Blog.Infrastructure.Data;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
 using Xunit;
 
 namespace Blog.Integration.Tests;
-
-/// <summary>
-/// Custom factory that replaces the SQL Server database with an in-memory provider
-/// and removes hosted services (MigrationRunner, SeedDataHostedService) that require
-/// a real database.
-/// </summary>
-public class BlogWebApplicationFactory : WebApplicationFactory<Program>
-{
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
-    {
-        builder.UseEnvironment("Development");
-
-        builder.ConfigureServices(services =>
-        {
-            // Remove the real SQL Server DbContext registration.
-            services.RemoveAll<DbContextOptions<BlogDbContext>>();
-            services.RemoveAll<BlogDbContext>();
-
-            // Remove hosted services that depend on a real database.
-            services.RemoveAll<IHostedService>();
-
-            // Add BlogDbContext backed by an in-memory database.
-            services.AddDbContextPool<BlogDbContext>(options =>
-                options.UseInMemoryDatabase("BlogTestDb_" + Guid.NewGuid().ToString("N")));
-        });
-    }
-}
 
 public class HealthEndpointTests : IClassFixture<BlogWebApplicationFactory>
 {

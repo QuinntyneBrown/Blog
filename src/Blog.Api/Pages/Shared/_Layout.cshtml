@@ -902,11 +902,13 @@
         @RenderBody()
     </main>
     <footer class="footer" role="contentinfo">
+        <nav aria-label="Footer navigation">
         <div class="footer-links">
             <a href="/feed.xml">RSS Feed</a>
             <a href="/atom.xml">Atom Feed</a>
             <a href="/sitemap.xml">Sitemap</a>
         </div>
+        </nav>
         <p class="footer-copyright" data-testid="copyright">© @DateTime.Now.Year @(Configuration["Site:AuthorName"] ?? Configuration["Site:SiteName"] ?? "Quinn Brown"). All rights reserved.</p>
     </footer>
     <script nonce="@cspNonce" defer>
