@@ -90,6 +90,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 // Rate Limiting
+var loginRateLimit = builder.Configuration.GetValue("RateLimiting:LoginPermitLimit", 10);
+var writeRateLimit = builder.Configuration.GetValue("RateLimiting:WritePermitLimit", 60);
 builder.Services.AddRateLimiter(options =>
 {
     options.AddPolicy("login-ip", context =>
@@ -99,7 +101,7 @@ builder.Services.AddRateLimiter(options =>
             {
                 Window = TimeSpan.FromMinutes(1),
                 SegmentsPerWindow = 6,
-                PermitLimit = 10,
+                PermitLimit = loginRateLimit,
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                 QueueLimit = 0
             }));
@@ -113,7 +115,7 @@ builder.Services.AddRateLimiter(options =>
             {
                 Window = TimeSpan.FromMinutes(1),
                 SegmentsPerWindow = 6,
-                PermitLimit = 60,
+                PermitLimit = writeRateLimit,
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                 QueueLimit = 0
             }));
