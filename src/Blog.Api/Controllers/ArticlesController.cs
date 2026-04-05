@@ -4,6 +4,7 @@ using Blog.Api.Features.Articles.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Blog.Api.Controllers;
 
@@ -28,6 +29,7 @@ public class ArticlesController(IMediator mediator) : ApiControllerBase(mediator
 
     [HttpPost]
     [Authorize]
+    [EnableRateLimiting("write-endpoints")]
     public async Task<IActionResult> Create([FromBody] CreateArticleCommand command, CancellationToken ct)
     {
         var result = await Mediator.Send(command, ct);
@@ -37,6 +39,7 @@ public class ArticlesController(IMediator mediator) : ApiControllerBase(mediator
 
     [HttpPut("{id:guid}")]
     [Authorize]
+    [EnableRateLimiting("write-endpoints")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateArticleCommand body, CancellationToken ct)
     {
         var ifMatch = Request.Headers.IfMatch.FirstOrDefault();
@@ -48,6 +51,7 @@ public class ArticlesController(IMediator mediator) : ApiControllerBase(mediator
 
     [HttpPatch("{id:guid}/publish")]
     [Authorize]
+    [EnableRateLimiting("write-endpoints")]
     public async Task<IActionResult> Publish(Guid id, [FromBody] PublishArticleBody body, CancellationToken ct)
     {
         var ifMatch = Request.Headers.IfMatch.FirstOrDefault();
@@ -58,6 +62,7 @@ public class ArticlesController(IMediator mediator) : ApiControllerBase(mediator
 
     [HttpDelete("{id:guid}")]
     [Authorize]
+    [EnableRateLimiting("write-endpoints")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         var ifMatch = Request.Headers.IfMatch.FirstOrDefault();

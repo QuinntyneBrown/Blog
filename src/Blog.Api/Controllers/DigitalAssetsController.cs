@@ -4,6 +4,7 @@ using Blog.Api.Features.DigitalAssets.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace Blog.Api.Controllers;
@@ -32,6 +33,7 @@ public class DigitalAssetsController(IMediator mediator) : ApiControllerBase(med
 
     [HttpPost]
     [Authorize]
+    [EnableRateLimiting("write-endpoints")]
     public async Task<IActionResult> Upload(IFormFile file, CancellationToken ct)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)
@@ -43,6 +45,7 @@ public class DigitalAssetsController(IMediator mediator) : ApiControllerBase(med
 
     [HttpDelete("{id:guid}")]
     [Authorize]
+    [EnableRateLimiting("write-endpoints")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         await Mediator.Send(new DeleteDigitalAssetCommand(id), ct);
