@@ -996,3 +996,17 @@ The design specifies (Section 7.4): "The JWT signing key must be at least 256 bi
 - Reused the validated `jwtSecret` variable for the `IssuerSigningKey` construction to avoid reading the config value twice.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Database health check has no timeout; hung connection blocks /health/ready indefinitely
+
+**Design reference:** `docs/detailed-designs/09-observability/README.md`, Section 3.4 — DbHealthCheck
+
+**Description:**
+The design specifies (Section 3.4): "Applies a timeout of 5 seconds to prevent hanging." The `AddDbContextCheck<BlogDbContext>("database")` registration in `Program.cs` used the default timeout of `Timeout.InfiniteTimeSpan`. If the database server becomes unreachable or a connection hangs (e.g., firewall silently dropping packets), the health check would block indefinitely. Load balancers and Kubernetes probes polling `/health/ready` would time out on their side, but the server thread remains blocked, eventually exhausting the thread pool under sustained connectivity issues.
+
+**Fix applied:**
+- Added a post-configuration block using `Configure<HealthCheckServiceOptions>` that sets `Timeout = TimeSpan.FromSeconds(5)` on the `"database"` health check registration, matching the design's 5-second requirement.
+
+**Status:** FIXED
