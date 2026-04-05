@@ -2216,6 +2216,16 @@ Design 11 specifies a complete full-text search feature consisting of six compon
 
 As a result, any client (the search results page, the header autocomplete, or an API consumer) that calls the designed search or suggestions endpoints receives a 404. The entire public search capability is unavailable.
 
-**Status:** OPEN
+**Fix applied:**
+- Added `Task<(IReadOnlyList<Article> Articles, int TotalCount)> SearchAsync(string query, int page, int pageSize, CancellationToken)` and `Task<IReadOnlyList<Article>> GetSuggestionsAsync(string query, CancellationToken)` to `IArticleRepository` in `src/Blog.Domain/Interfaces/IArticleRepository.cs`.
+- Implemented both methods in `ArticleRepository` (`src/Blog.Infrastructure/Data/Repositories/ArticleRepository.cs`): `SearchAsync` uses `FromSqlRaw` with `CONTAINSTABLE` over `(Title, Abstract, Body)`, returns results ordered by FTS rank then `DatePublished DESC`, and retrieves the total count via `SqlQueryRaw<int>`. `GetSuggestionsAsync` uses `CONTAINS(Title, …)` to return up to 8 title matches. `BuildFtsQuery` converts a raw user string to a safe AND-joined prefix FTS predicate (e.g. `"term1*" AND "term2*"`) with double-quotes stripped to prevent FTS injection.
+- Created `src/Blog.Api/Services/ISearchHighlighter.cs` — interface with `Highlight(string text, string query)`.
+- Created `src/Blog.Api/Services/SearchHighlighter.cs` — singleton implementation that HTML-encodes the source text before performing case-insensitive regex replacement to wrap matched terms in `<mark>` tags, preventing XSS from existing HTML in article titles or abstracts.
+- Created `src/Blog.Api/Features/Articles/Queries/SearchArticles.cs` — `SearchResultDto` record, `SearchArticlesQuery` MediatR record, and `SearchArticlesHandler` that calls `SearchAsync`, maps results to `SearchResultDto` (including `TitleHighlighted` and `AbstractHighlighted`), and returns a `PagedResponse<SearchResultDto>`.
+- Created `src/Blog.Api/Features/Articles/Queries/GetSearchSuggestions.cs` — `SearchSuggestionDto` record, `GetSearchSuggestionsQuery` MediatR record, and `GetSearchSuggestionsHandler` that calls `GetSuggestionsAsync` and returns highlighted suggestion DTOs.
+- Added `GET /api/public/articles/search` and `GET /api/public/articles/suggestions` actions to `PublicArticlesController` with the validation rules specified in the design (400 when `q` is blank or >200 chars; suggestions returns `[]` for queries shorter than 2 characters).
+- Registered `ISearchHighlighter` → `SearchHighlighter` as a singleton in `Program.cs`.
+
+**Status:** FIXED
 
 ---

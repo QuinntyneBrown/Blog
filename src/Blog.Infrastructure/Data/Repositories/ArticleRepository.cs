@@ -1,7 +1,6 @@
 using Blog.Domain.Entities;
 using Blog.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Text.RegularExpressions;
 
 namespace Blog.Infrastructure.Data.Repositories;
 
@@ -84,7 +83,7 @@ public class ArticleRepository(BlogDbContext context) : IArticleRepository
             SELECT a.ArticleId, a.Title, a.Slug, a.Abstract,
                    a.FeaturedImageId, a.Published, a.DatePublished,
                    a.ReadingTimeMinutes, a.CreatedAt, a.UpdatedAt, a.Version,
-                   a.Body, a.BodyHtml, a.CreatedBy
+                   a.Body, a.BodyHtml
             FROM Articles a
             INNER JOIN CONTAINSTABLE(Articles, (Title, Abstract, Body), {0})
                 AS KEY_TBL ON a.ArticleId = KEY_TBL.[KEY]
@@ -122,7 +121,7 @@ public class ArticleRepository(BlogDbContext context) : IArticleRepository
                 SELECT TOP 8 ArticleId, Title, Slug,
                        Abstract, FeaturedImageId, Published,
                        DatePublished, ReadingTimeMinutes,
-                       CreatedAt, UpdatedAt, Version, Body, BodyHtml, CreatedBy
+                       CreatedAt, UpdatedAt, Version, Body, BodyHtml
                 FROM Articles
                 WHERE Published = 1
                   AND CONTAINS(Title, {0})
