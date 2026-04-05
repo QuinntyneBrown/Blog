@@ -163,6 +163,14 @@ builder.Services.AddHealthChecks()
     .AddDbContextCheck<BlogDbContext>("database")
     .AddCheck<Blog.Api.Common.HealthChecks.DiskSpaceHealthCheck>("diskSpace");
 
+// Database health check timeout (Design 09, Section 3.4: 5 seconds)
+builder.Services.Configure<Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckServiceOptions>(options =>
+{
+    foreach (var reg in options.Registrations)
+        if (reg.Name == "database")
+            reg.Timeout = TimeSpan.FromSeconds(5);
+});
+
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
