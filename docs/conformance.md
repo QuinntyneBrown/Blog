@@ -1435,3 +1435,18 @@ The design specifies (Section 6.3): LG/XL body typography is "18px font, 1.6 lin
 - Changed `.article-body` from `font-size: 17px; line-height: 1.8` to `font-size: 18px; line-height: 1.6` per the design.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Article body line-height remains 1.6 at MD/SM/XS breakpoints instead of design-specified 1.5
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 6.3 — Article Detail Body Width (L2-036)
+
+**Description:**
+The design specifies (Section 6.3): body `line-height` is 1.6 only at LG/XL (>=992px). At MD (>=768px) and XS/SM (<768px), the line-height should be **1.5**. The previous fix set the default `.article-body` to `line-height: 1.6` for LG/XL but no responsive override reduced it to 1.5 for smaller breakpoints. The `max-width: 767px` media query only overrode `font-size: 16px`, and the `max-width: 991px` query had no `.article-body` override at all. This meant all breakpoints below XL used the 1.6 line-height instead of the design-specified 1.5.
+
+**Fix applied:**
+- Added `.article-body { line-height: 1.5; }` to the `max-width: 991px` media query, covering both MD and SM/XS breakpoints.
+- Added `line-height: 1.5` alongside the existing `font-size: 16px` in the `max-width: 767px` `.article-body` override for explicit specificity.
+
+**Status:** FIXED
