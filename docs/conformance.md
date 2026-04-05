@@ -1404,3 +1404,17 @@ The design specifies (Section 6.3): "Images within the article body scale fluidl
 - Added `.article-body img { max-width: 100%; height: auto; }` to the layout stylesheet.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Article body typography uses 17px/1.8 instead of design-specified 18px/1.6
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 6.3 — Article Detail Body Width (L2-036)
+
+**Description:**
+The design specifies (Section 6.3): LG/XL body typography is "18px font, 1.6 line-height." The CSS rule for `.article-body` used `font-size: 17px` and `line-height: 1.8` — both values differ from the design specification. The 1px font size difference and altered line-height ratio produce a subtly different reading experience than the design intended.
+
+**Fix applied:**
+- Changed `.article-body` from `font-size: 17px; line-height: 1.8` to `font-size: 18px; line-height: 1.6` per the design.
+
+**Status:** FIXED
