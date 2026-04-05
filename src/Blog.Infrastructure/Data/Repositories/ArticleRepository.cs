@@ -46,6 +46,7 @@ public class ArticleRepository(BlogDbContext context) : IArticleRepository
     public async Task<IReadOnlyList<Article>> GetPublishedAsync(int page, int pageSize, CancellationToken cancellationToken = default)
         // Body and BodyHtml are nvarchar(max) columns excluded from list projections per design 02, Section 4.2.
         => await context.Articles
+            .AsNoTracking()
             .Where(a => a.Published)
             .OrderByDescending(a => a.DatePublished)
             .Skip((page - 1) * pageSize)
