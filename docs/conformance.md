@@ -2302,6 +2302,9 @@ public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
 ```
 The `PageSize > 0` guard is entirely absent. When `PageSize` is zero — which occurs for any default-initialized `new PagedResponse<T>()` (e.g., `SearchIndexModel` initializes `Results` as `new()` before the query executes) — the expression evaluates `(double)TotalCount / 0`. In C#'s floating-point arithmetic, `0.0 / 0 = NaN` and `(int)Math.Ceiling(NaN) = 0` (safe by accident when `TotalCount` is also 0), but when `TotalCount > 0` and `PageSize = 0`, the division yields `+Infinity` and `(int)Math.Ceiling(double.PositiveInfinity)` is `int.MinValue` in an unchecked context — an incorrect, potentially negative page count. Downstream, `HasNextPage => Page < TotalPages` would evaluate `1 < int.MinValue = false`, silently hiding all subsequent pages when results exist. The design's explicit conditional was added precisely to prevent this class of arithmetic anomaly; its absence violates the documented contract.
 
-**Status:** OPEN
+**Fix applied:**
+- Changed `TotalPages` in `src/Blog.Api/Common/Models/PagedResponse.cs` from `(int)Math.Ceiling((double)TotalCount / PageSize)` to `PageSize > 0 ? (int)Math.Ceiling((double)TotalCount / PageSize) : 0`, exactly matching the design's specification.
+
+**Status:** FIXED
 
 ---
