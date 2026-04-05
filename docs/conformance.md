@@ -1114,4 +1114,10 @@ The design specifies (Section 3.2): "Article pages emit a `Schema.org/Article` o
 
 A prior conformance fix ("JSON-LD structured data not implemented on any page") introduced the `<script type="application/ld+json">` block but did not include these two properties. Without `image` and `publisher.logo`, the article pages fail Google's Article rich result requirements and lose eligibility for enhanced search snippets.
 
-**Status:** OPEN
+**Fix applied:**
+- Added `"Site:PublisherLogoUrl"` to `appsettings.json` under the existing `Site` section, providing an operator-configurable logo URL (default: `https://localhost:5001/images/logo.png`).
+- In `Slug.cshtml`, moved the `@section Head` block to the top level of the view (outside the `@if/else` article-null guard) and added an `@if (Model.Article != null)` guard inside the section for correct Razor rendering.
+- Conditionally builds an `imageJson` variable containing `"image": "{siteUrl}{FeaturedImageUrl}"` (with trailing comma) when a featured image URL is present, or an empty string when absent. The JSON fragment is injected via `@Html.Raw(imageJson)` so articles without a featured image still produce valid JSON-LD.
+- Added the `publisher.logo` sub-object (`@type: "ImageObject"`, `url`) reading from `Configuration["Site:PublisherLogoUrl"]`, fulfilling the `JsonLdOrganization` contract specified in the design.
+
+**Status:** FIXED

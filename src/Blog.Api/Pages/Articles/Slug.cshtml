@@ -63,13 +63,6 @@ else
     </article>
 
 }
-@if (Model.Article != null)
-{
-    var publisherLogoUrl = Configuration["Site:PublisherLogoUrl"] ?? $"{siteUrl}/images/logo.png";
-    var imageJson = !string.IsNullOrEmpty(Model.Article.FeaturedImageUrl)
-        ? $"\"image\": \"{siteUrl}{Model.Article.FeaturedImageUrl}\","
-        : string.Empty;
-}
 @section Head {
     @if (Model.Article != null)
     {
