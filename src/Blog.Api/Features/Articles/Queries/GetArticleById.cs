@@ -8,6 +8,7 @@ namespace Blog.Api.Features.Articles.Queries;
 public record ArticleDto(
     Guid ArticleId, string Title, string Slug, string Abstract,
     string Body, string BodyHtml, Guid? FeaturedImageId, string? FeaturedImageUrl,
+    int? FeaturedImageWidth, int? FeaturedImageHeight,
     bool Published, DateTime? DatePublished,
     int ReadingTimeMinutes, DateTime CreatedAt, DateTime UpdatedAt, int Version);
 
@@ -24,6 +25,8 @@ public class GetArticleByIdHandler(IArticleRepository articles) : IRequestHandle
             article.ArticleId, article.Title, article.Slug, article.Abstract,
             article.Body, article.BodyHtml, article.FeaturedImageId,
             article.FeaturedImage != null ? $"/assets/{article.FeaturedImage.StoredFileName}" : null,
+            article.FeaturedImage?.Width > 0 ? article.FeaturedImage.Width : (int?)null,
+            article.FeaturedImage?.Height > 0 ? article.FeaturedImage.Height : (int?)null,
             article.Published, article.DatePublished,
             article.ReadingTimeMinutes, article.CreatedAt, article.UpdatedAt, article.Version);
     }

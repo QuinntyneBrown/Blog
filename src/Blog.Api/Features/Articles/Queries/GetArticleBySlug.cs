@@ -18,6 +18,8 @@ public class GetArticleBySlugHandler(IArticleRepository articles) : IRequestHand
             article.ArticleId, article.Title, article.Slug, article.Abstract,
             article.Body, article.BodyHtml, article.FeaturedImageId,
             article.FeaturedImage != null ? $"/assets/{article.FeaturedImage.StoredFileName}" : null,
+            article.FeaturedImage?.Width > 0 ? article.FeaturedImage.Width : (int?)null,
+            article.FeaturedImage?.Height > 0 ? article.FeaturedImage.Height : (int?)null,
             article.Published, article.DatePublished,
             article.ReadingTimeMinutes, article.CreatedAt, article.UpdatedAt, article.Version);
     }
