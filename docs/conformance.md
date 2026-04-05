@@ -322,6 +322,23 @@ The design specifies three Serilog configuration requirements that were all abse
 
 ---
 
+## 2026-04-04 — LogSanitizer not implemented; sensitive properties not redacted from logs
+
+**Design reference:** `docs/detailed-designs/09-observability/README.md`, Section 3.5 — LogSanitizer, Section 6.5 — Forbidden Fields
+
+**Description:**
+The design specifies a `LogSanitizer` (at `src/Blog.Api/Core/LogSanitizer.cs`) implemented as a Serilog `IDestructuringPolicy` and custom enricher that maintains a deny-list of property names (`Password`, `Token`, `Secret`, `Authorization`, `Cookie`, `CreditCard`, `SSN`, `Email`, plus variants) and replaces any matching property value with `"[REDACTED]"`, applied globally so no log sink ever receives raw sensitive data. No such component existed in the codebase — the entire PII/secret scrubbing layer specified by the design was absent. Any structured log entry containing a property named `Password`, `Token`, `Email`, etc. would be written verbatim to console and file sinks.
+
+**Fix applied:**
+- Created `src/Blog.Api/Core/LogSanitizer.cs` containing:
+  - `LogSanitizer` (`IDestructuringPolicy`) with the full deny-list: `Password`, `PasswordHash`, `NewPassword`, `Token`, `AccessToken`, `RefreshToken`, `Authorization`, `Secret`, `ApiKey`, `ConnectionString`, `Cookie`, `CreditCard`, `SSN`, `Email`, `PhoneNumber`.
+  - `LogSanitizingEnricher` (`ILogEventEnricher`) that iterates all properties on every log event and replaces matching values with `"[REDACTED]"`, including nested `StructureValue` properties.
+- Registered `LogSanitizingEnricher` globally in `Program.cs` via `.Enrich.With<LogSanitizingEnricher>()` in the Serilog configuration lambda.
+
+**Status:** FIXED
+
+---
+
 ## 2026-04-04 — CORS policy allows any origin instead of configured allowlist
 
 **Design reference:** `docs/detailed-designs/08-security-hardening/README.md`, Section 3.4 — CorsMiddleware

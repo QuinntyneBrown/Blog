@@ -8,7 +8,7 @@ namespace Blog.Api.Features.Articles.Commands;
 
 public record PublishArticleCommand(Guid Id, bool Published, string? IfMatch) : IRequest<ArticleDto>;
 
-public class PublishArticleCommandHandler(IUnitOfWork uow) : IRequestHandler<PublishArticleCommand, ArticleDto>
+public class PublishArticleCommandHandler(IUnitOfWork uow, ILogger<PublishArticleCommandHandler> logger) : IRequestHandler<PublishArticleCommand, ArticleDto>
 {
     public async Task<ArticleDto> Handle(PublishArticleCommand request, CancellationToken cancellationToken)
     {
@@ -27,6 +27,10 @@ public class PublishArticleCommandHandler(IUnitOfWork uow) : IRequestHandler<Pub
         article.Version++;
         uow.Articles.Update(article);
         await uow.SaveChangesAsync(cancellationToken);
+
+        if (request.Published)
+            logger.LogInformation("Business event {EventType} occurred: {@Details}",
+                "ArticlePublished", new { ArticleId = article.ArticleId, Slug = article.Slug });
 
         return new ArticleDto(
             article.ArticleId, article.Title, article.Slug, article.Abstract,
