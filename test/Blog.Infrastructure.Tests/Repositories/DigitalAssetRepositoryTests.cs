@@ -38,7 +38,7 @@ public class DigitalAssetRepositoryTests
         await repo.AddAsync(asset);
         await context.SaveChangesAsync();
 
-        var result = await repo.GetAllAsync();
+        var result = await repo.GetByCreatedByAsync(userId);
         result.Should().ContainSingle(a => a.OriginalFileName == "img.jpg");
     }
 }
