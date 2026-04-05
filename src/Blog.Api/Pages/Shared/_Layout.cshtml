@@ -50,8 +50,8 @@
         <meta name="twitter:image" content="@ogImage" />
     }
     <!-- Feeds -->
-    <link rel="alternate" type="application/rss+xml" title="Quinn Brown RSS Feed" href="/feed.xml" />
-    <link rel="alternate" type="application/atom+xml" title="Quinn Brown Atom Feed" href="/atom.xml" />
+    <link rel="alternate" type="application/rss+xml" title="@(Configuration["Site:SiteName"] ?? "Quinn Brown") RSS Feed" href="/feed.xml" />
+    <link rel="alternate" type="application/atom+xml" title="@(Configuration["Site:SiteName"] ?? "Quinn Brown") Atom Feed" href="/atom.xml" />
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -597,7 +597,7 @@
             <a href="/atom.xml">Atom Feed</a>
             <a href="/sitemap.xml">Sitemap</a>
         </div>
-        <p class="footer-copyright">© @DateTime.Now.Year Quinn Brown. All rights reserved.</p>
+        <p class="footer-copyright">© @DateTime.Now.Year @(Configuration["Site:SiteName"] ?? "Quinn Brown"). All rights reserved.</p>
     </footer>
     <script defer>
         const btn = document.getElementById('hamburger-btn');
