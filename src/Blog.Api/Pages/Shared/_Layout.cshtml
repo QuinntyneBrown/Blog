@@ -526,11 +526,21 @@
             border-radius: var(--radius-sm); transition: background 0.15s;
         }
         .btn-primary:hover { background: var(--accent-primary-hover); }
+        .skip-link {
+            position: absolute; left: -9999px; top: auto; width: 1px; height: 1px; overflow: hidden;
+            z-index: 1000; padding: 8px 16px; background: var(--accent-primary); color: var(--foreground-inverse);
+            font-size: 14px; font-weight: 600; text-decoration: none; border-radius: var(--radius-sm);
+        }
+        .skip-link:focus {
+            position: fixed; left: 16px; top: 16px; width: auto; height: auto; overflow: visible;
+        }
     </style>
     @RenderSection("Head", required: false)
 </head>
 <body>
-    <nav class="nav" id="main-nav">
+    <a href="#main-content" class="skip-link">Skip to content</a>
+    <header role="banner">
+    <nav class="nav" id="main-nav" aria-label="Main navigation">
         <a href="/" class="nav-logo">QB</a>
         <ul class="nav-links">
             <li><a href="/articles" class="@(ViewBag.ActiveNav == "articles" ? "active" : "")">Articles</a></li>
@@ -543,7 +553,7 @@
                 </a>
             </li>
         </ul>
-        <button class="nav-hamburger" id="hamburger-btn" aria-label="Menu" aria-expanded="false">
+        <button class="nav-hamburger" id="hamburger-btn" aria-label="Menu" aria-expanded="false" aria-controls="mobile-menu">
             <span></span><span></span><span></span>
         </button>
     </nav>
@@ -552,10 +562,11 @@
         <a href="/feed">Feed</a>
         <a href="/feed/rss">RSS Feed</a>
     </div>
-    <main>
+    </header>
+    <main role="main" id="main-content">
         @RenderBody()
     </main>
-    <footer class="footer">
+    <footer class="footer" role="contentinfo">
         <div class="footer-links">
             <a href="/feed/rss">RSS Feed</a>
             <a href="/feed/atom">Atom Feed</a>
