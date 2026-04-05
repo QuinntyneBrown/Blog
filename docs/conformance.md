@@ -1378,3 +1378,15 @@ The `SeoController` used `[ResponseCache(Duration = 3600)]` on **all** endpoints
 **Status:** FIXED
 
 ---
+
+## 2026-04-05 — Article listing grid shows 3 columns at LG breakpoint (992-1199px) instead of design-specified 2
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 6.2 — Article Listing Grid (L2-035)
+
+**Description:**
+The design specifies (Section 6.2, L2-035): "XL (>=1200px): 3 columns, LG (>=992px): 2 columns, MD (>=768px): 2 columns, SM/XS (<768px): 1 column." The CSS set the default grid to `repeat(3, 1fr)` (3 columns) and only switched to 2 columns at `max-width: 991px`. This left the LG breakpoint (992-1199px) showing 3 columns instead of the design-specified 2. At LG widths, article cards were squeezed into a 3-column layout with insufficient space, degrading readability.
+
+**Fix applied:**
+- Moved the `.article-grid { grid-template-columns: repeat(2, 1fr) }` rule from the `max-width: 991px` media query to the `max-width: 1199px` media query, so both LG (992-1199px) and MD (768-991px) display 2 columns.
+
+**Status:** FIXED
