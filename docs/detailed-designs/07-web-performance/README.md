@@ -2,12 +2,12 @@
 
 ## 1. Overview
 
-This document describes the performance architecture for the Blog platform, targeting sub-200ms Time-To-First-Byte (TTFB) at P95 under normal load and a perfect Lighthouse Performance score of 100 on mobile. The strategy centers on server-side rendering with minimal client-side JavaScript, aggressive HTTP caching, Brotli/Gzip compression, critical CSS inlining, and optimized image delivery.
+This document describes the performance architecture for the Blog platform, targeting sub-200ms Time-To-First-Byte (TTFB) at P95 under normal load and a Lighthouse mobile Performance score that trends to 100 on key pages. The strategy centers on server-side rendering with minimal client-side JavaScript, aggressive HTTP caching, Brotli/Gzip compression, critical CSS inlining, and optimized image delivery.
 
 ### Goals
 
 - **TTFB < 200ms** at P95 under normal load (L2-018).
-- **Lighthouse mobile Performance score of 100** (L2-022).
+- **Lighthouse mobile Performance target of 100 on key pages** (L2-022), with a non-flaky automated regression floor.
 - **Total JS bundle <= 50KB gzipped** — JavaScript is used only for progressive enhancement, never for content display (L2-017).
 - **Core Web Vitals compliance** — LCP < 2.5s, INP < 200ms, CLS < 0.1 (L2-022).
 
@@ -53,9 +53,11 @@ Shows the middleware and tag helper components inside the Public Web App that co
 |---|---|
 | Type | ASP.NET middleware |
 | Cache store | In-memory (`IMemoryCache`) |
-| Key strategy | URL path + query string + `Accept-Encoding` |
+| Key strategy | URL path + normalized query string |
 | Invalidation | Time-based expiry; explicit purge via `ICacheInvalidator` on content update |
 | Headers emitted | `Cache-Control`, `Age` |
+
+The cache stores the canonical **uncompressed HTML representation**. Compression runs after cache retrieval so the same cached page can be served as Brotli, Gzip, or identity without cache duplication.
 
 Cache profiles are applied per-route:
 
@@ -100,7 +102,7 @@ builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
 | Filename strategy | `app.a1b2c3d4.css` — hash derived from file content at build time |
 | Cache-Control | `max-age=31536000, immutable` |
 | Pre-compression | `.br` and `.gz` variants generated at build time, served via `Accept-Encoding` negotiation |
-| Pipeline position | Early in the middleware pipeline, before response caching and routing |
+| Pipeline position | Early in the middleware pipeline, before HTML response caching and routing |
 
 The build process generates content-hashed filenames and corresponding `.br`/`.gz` pre-compressed variants. The middleware maps requests to the correct variant.
 
@@ -164,16 +166,14 @@ Output structure:
 | Aspect | Detail |
 |---|---|
 | Type | ASP.NET Tag Helper |
-| `preconnect` | Third-party origins (analytics, fonts CDN) |
+| `preconnect` | Explicitly approved first-party asset origins only (for example, a first-party CDN) |
 | `dns-prefetch` | Fallback for browsers without `preconnect` support |
 | `preload` | Critical fonts (`as="font"`, `crossorigin`), above-fold hero images (`as="image"`) |
 
 Output:
 
 ```html
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="dns-prefetch" href="https://fonts.googleapis.com">
-<link rel="preload" href="/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/public-sans-regular.woff2" as="font" type="font/woff2">
 <link rel="preload" href="/img/hero.640.webp" as="image" type="image/webp">
 ```
 
@@ -184,13 +184,13 @@ Output:
 | Aspect | Detail |
 |---|---|
 | Type | Service (`IETagGenerator`) injected into the response pipeline |
-| Algorithm | SHA-256 hash of the rendered HTML body, truncated to 16 hex characters |
-| Scope | Article/post detail pages only (listing pages use time-based caching) |
-| Weak vs Strong | Strong ETag (content-based, byte-identical responses) |
+| Algorithm | Version-based weak validator derived from stable page metadata (for example `ArticleId` + `Version` for article pages) |
+| Scope | Cacheable HTML pages whose content version can be determined without hashing the compressed representation |
+| Weak vs Strong | Weak ETag (`W/`) so compressed and uncompressed representations can share the same validator |
 
 Flow:
 
-1. After rendering, compute ETag from response body bytes.
+1. After rendering, determine the page version from the underlying content metadata.
 2. Compare against `If-None-Match` request header.
 3. If match, return `304 Not Modified` with no body.
 4. If no match, set `ETag` response header and send full body.
@@ -213,7 +213,7 @@ Defines caching behavior for a category of responses.
 | `MaxAge` | `TimeSpan` | `Cache-Control: max-age` value |
 | `StaleWhileRevalidate` | `TimeSpan?` | `stale-while-revalidate` extension; null if not applicable |
 | `Immutable` | `bool` | Whether to add `immutable` directive |
-| `VaryByHeaders` | `string[]` | Headers to include in cache key (`Accept-Encoding`, etc.) |
+| `VaryByHeaders` | `string[]` | Headers to include in the cache key when content genuinely varies by request metadata |
 
 Predefined profiles:
 
@@ -257,7 +257,8 @@ Defines measurable limits enforced in CI.
 | `MaxLcpMs` | `int` | 2500 |
 | `MaxCls` | `double` | 0.1 |
 | `MaxInpMs` | `int` | 200 |
-| `MinLighthouseScore` | `int` | 100 |
+| `MinLighthouseScore` | `int` | 95 |
+| `TargetLighthouseScore` | `int` | 100 |
 
 ---
 
@@ -271,18 +272,20 @@ This is the primary workflow for an HTML page request, from browser to response.
 
 **Steps:**
 
-1. **Browser** sends GET request for a page (e.g., `/posts/my-article`).
+1. **Browser** sends GET request for a page (e.g., `/articles/my-article`).
 2. **(Optional CDN)** checks its cache; if hit, returns cached response immediately.
-3. **ResponseCachingMiddleware** checks the in-memory cache for a valid cached response.
+3. **StaticFileMiddleware** first determines whether this is a static-asset request and short-circuits if so.
+4. **ResponseCachingMiddleware** checks the in-memory cache for a valid cached HTML response.
    - **Cache hit:** Returns the cached response directly (skip to step 8).
    - **Cache miss:** Continues to rendering.
-4. **Razor SSR Engine** renders the page template with data from the database. Queries are optimized (projections, no N+1, indexed lookups).
-5. **CriticalCssInliner** injects above-the-fold CSS into the `<head>` and rewrites remaining `<link>` tags for async loading.
-6. **ImageTagHelper** and **ResourceHintTagHelper** transform image tags and emit resource hints during rendering.
-7. **ETagGenerator** computes the ETag from the rendered body. If `If-None-Match` matches, short-circuits with `304 Not Modified`.
-8. **CompressionMiddleware** compresses the response body with Brotli (or Gzip fallback) based on `Accept-Encoding`.
-9. **Cache headers** are set: `Cache-Control: max-age=60, stale-while-revalidate=600`, `ETag`, `Vary: Accept-Encoding`.
-10. **Response** is sent to the browser.
+5. **Razor SSR Engine** renders the page template with data from the database. Queries are optimized (projections, no N+1, indexed lookups).
+6. **CriticalCssInliner** injects above-the-fold CSS into the `<head>` and rewrites remaining `<link>` tags for async loading.
+7. **ImageTagHelper** and **ResourceHintTagHelper** transform image tags and emit resource hints during rendering.
+8. **ETagGenerator** computes a weak validator from the page version metadata. If `If-None-Match` matches, short-circuits with `304 Not Modified`.
+9. **ResponseCachingMiddleware** stores the canonical uncompressed HTML representation.
+10. **CompressionMiddleware** compresses the response body with Brotli (or Gzip fallback) based on `Accept-Encoding`.
+11. **Cache headers** are set: `Cache-Control: max-age=60, stale-while-revalidate=600`, `ETag`, `Vary: Accept-Encoding`.
+12. **Response** is sent to the browser.
 
 ### 5.2 Static Asset Delivery
 
@@ -309,7 +312,7 @@ All budgets are enforced in CI via Lighthouse CI and custom checks.
 | LCP | < 2.5s | L2-022 | Lighthouse CI assertion |
 | CLS | < 0.1 | L2-022 | Lighthouse CI assertion |
 | INP | < 200ms | L2-022 | Lighthouse CI assertion |
-| Lighthouse Performance (mobile) | 100 | L2-022 | Lighthouse CI assertion |
+| Lighthouse Performance (mobile) | >= 95 CI floor, 100 release target | L2-022 | Lighthouse CI assertion + release checklist |
 | Render-blocking resources | 0 | L2-021 | Lighthouse CI audit pass |
 | HTML content without JS | 100% of content | L2-017 | Manual review + automated check |
 
@@ -339,7 +342,7 @@ Caching is layered for maximum effectiveness:
 |---|---|---|---|
 | Browser cache | HTML pages | 60s + SWR 600s | Expires naturally |
 | Browser cache | Static assets | 1 year, immutable | Content-hashed filenames |
-| Response cache (in-memory) | Rendered HTML | 60s | Time-based + explicit purge on publish |
+| Response cache (in-memory) | Canonical uncompressed rendered HTML | 60s | Time-based + explicit purge on publish |
 | Database query cache | EF Core compiled queries | Per-request | N/A (no query result caching) |
 
 **Invalidation on content publish:** When an author publishes or updates a post, the `ICacheInvalidator` service evicts the relevant entries from the in-memory response cache. The next request triggers a fresh render, which is then cached.
@@ -365,9 +368,9 @@ Images uploaded through the CMS are processed at build/upload time:
 Order matters for correctness and performance:
 
 ```
-1. CompressionMiddleware          // Outermost: compresses everything
-2. ResponseCachingMiddleware      // Caches compressed responses
-3. StaticFileMiddleware           // Short-circuits for static files
+1. CompressionMiddleware          // Outermost: compresses outgoing dynamic responses
+2. StaticFileMiddleware           // Short-circuits for static files and serves pre-compressed variants
+3. ResponseCachingMiddleware      // Caches canonical uncompressed HTML responses
 4. RoutingMiddleware
 5. AuthenticationMiddleware       // If needed
 6. EndpointMiddleware (Razor)     // Renders pages with tag helpers

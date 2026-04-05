@@ -10,7 +10,7 @@ This feature provides JWT-based authentication and authorization for the Blog pl
 |-------------|-------------|
 | L1-006 | Authenticate and authorize back-office users with secure, industry-standard mechanisms |
 | L2-023 | JWT-based authentication with configurable expiration |
-| L2-024 | Password security with bcrypt/Argon2/PBKDF2 hashing (100k+ iterations) |
+| L2-024 | Password security with PBKDF2 hashing (100k+ iterations) |
 
 Per the UI design in `docs/ui-design-back-office.pen`, the login page uses a split layout at XL/LG breakpoints with gradient branding panel and centered form at smaller breakpoints.
 
@@ -47,9 +47,9 @@ The component diagram details the authentication-related components inside the A
 
 ### 3.1 AuthController
 
-- **Responsibility:** Exposes HTTP endpoints for login and token refresh.
-- **Endpoints:** `POST /api/auth/login`, `POST /api/auth/refresh`
-- **Behavior:** Delegates credential validation to `AuthService`, returns JWT on success, returns 401 on failure.
+- **Responsibility:** Exposes the HTTP login endpoint for the back-office.
+- **Endpoints:** `POST /api/auth/login`
+- **Behavior:** Delegates credential validation to `AuthService`, returns a short-lived JWT on success, returns 401 on failure.
 
 ### 3.2 AuthService
 
@@ -89,7 +89,6 @@ The component diagram details the authentication-related components inside the A
 | UserId | Guid | PK, auto-generated |
 | Email | string | Required, unique, max 256 chars |
 | PasswordHash | string | Required, max 512 chars |
-| Salt | string | Required, max 128 chars |
 | DisplayName | string | Required, max 128 chars |
 | CreatedAt | DateTime | UTC, set on creation |
 | LastLoginAt | DateTime? | UTC, updated on each successful login |
@@ -160,8 +159,11 @@ Content-Type: application/json
 
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "expiresAt": "2026-04-04T14:30:00Z"
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "expiresAt": "2026-04-04T14:30:00Z"
+  },
+  "timestamp": "2026-04-04T13:30:00Z"
 }
 ```
 
@@ -176,47 +178,33 @@ Content-Type: application/json
 }
 ```
 
-### 6.2 POST /api/auth/refresh
+### 6.2 Session Expiration Behavior
 
-**Request:**
-
-```http
-POST /api/auth/refresh
-Authorization: Bearer <current-valid-token>
-```
-
-**Success Response (200):**
-
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "expiresAt": "2026-04-04T15:00:00Z"
-}
-```
-
-**Error Response (401):** Returned if the current token is expired or invalid.
+- The initial release does **not** issue silent refresh tokens.
+- Access tokens are short-lived (default 60 minutes) and retained only within the authenticated Razor Pages admin session.
+- When the token expires, the back-office redirects the user to re-authenticate via `POST /api/auth/login`.
 
 ## 7. Security Considerations
 
 ### 7.1 Password Hashing
 
 - Passwords are hashed using PBKDF2-SHA256 with a minimum of 100,000 iterations (L2-024).
-- Each user has a unique cryptographically random salt (128-bit).
+- Each password hash embeds its own unique cryptographically random salt (128-bit); no separate `Salt` column is stored.
 - Passwords are never stored or logged in plaintext.
-- The hash format encodes the algorithm and parameters to support future migration to Argon2 or bcrypt.
+- The hash format encodes the algorithm and parameters to support future migration without schema changes.
 
 ### 7.2 Token Expiration
 
 - Access tokens have a configurable expiration (default: 60 minutes).
 - Token expiration is enforced on every request by `JwtMiddleware`.
-- The refresh endpoint issues a new token only if the current token is still valid (not expired).
+- The initial release does not provide silent token refresh. Expired sessions re-authenticate explicitly.
 - Token secrets are stored in configuration (environment variables in production, never in source control).
 
 ### 7.3 Rate Limiting on Login
 
-- The login endpoint is rate-limited to 5 attempts per email address per 15-minute window.
-- After exceeding the limit, the endpoint returns `429 Too Many Requests` with a `Retry-After` header.
-- Rate limiting is implemented via ASP.NET Core rate limiting middleware with a sliding window policy.
+- The login endpoint is protected by layered rate limits: 10 requests per minute per client IP address and 5 requests per 15 minutes per normalized email address.
+- After either limit is exceeded, the endpoint returns `429 Too Many Requests` with a `Retry-After` header.
+- Rate limiting is implemented via ASP.NET Core rate limiting middleware with sliding-window policies.
 - Failed login attempts are logged (without the password) for security monitoring.
 
 ### 7.4 Additional Measures
@@ -231,8 +219,8 @@ Authorization: Bearer <current-valid-token>
 
 | # | Question | Impact | Status |
 |---|----------|--------|--------|
-| 1 | Should we support refresh tokens with rotation (separate long-lived token stored server-side), or is short-lived access token + re-login sufficient for the back-office? | Token management complexity | Open |
-| 2 | Which password hashing algorithm should be the primary choice: PBKDF2, bcrypt, or Argon2id? L2-024 permits any of the three. | Security posture, dependency selection | Open |
+| 1 | Should we support rotating refresh tokens in a future release, or keep explicit re-authentication only for the back-office? | Token management complexity | Resolved for v1: explicit re-authentication |
+| 2 | Which password hashing algorithm is the primary choice? | Security posture, dependency selection | Resolved: PBKDF2-SHA256 |
 | 3 | Should account lockout be implemented after N failed attempts, or is rate limiting sufficient? | Security vs. usability tradeoff | Open |
 | 4 | Will the External Identity Provider (OAuth/OIDC) integration be needed in a near-term release, and should we design the auth abstraction to accommodate it now? | Architecture extensibility | Open |
-| 5 | What is the required token expiration duration for the back-office? Default is 60 minutes. | Security vs. convenience | Open |
+| 5 | What is the required token expiration duration for the back-office? Default is 60 minutes. | Security vs. convenience | Resolved: 60 minutes default, configurable |

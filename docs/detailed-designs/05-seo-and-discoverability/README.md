@@ -42,8 +42,8 @@ The container diagram shows the deployable units involved in serving SEO-optimiz
 
 ![C4 Container Diagram](diagrams/c4_container.png)
 
-- **Public Web App (Razor Pages / MVC)** renders all public pages server-side with embedded SEO metadata, structured data, and social tags. It also serves the sitemap, feeds, robots.txt, and llms.txt endpoints.
-- **API Server** provides article data to the public web app for rendering.
+- **Public Web App (Razor Pages)** renders all public pages server-side with embedded SEO metadata, structured data, and social tags. It also serves the sitemap, feeds, robots.txt, and llms.txt endpoints.
+- **Published Content Services / API Endpoints** provide article data to the public web app and any approved non-HTML consumers, reusing the same application-layer queries.
 - **Database** stores articles, metadata, and slugs used to generate SEO content.
 
 ### 2.3 C4 Component Diagram
@@ -81,7 +81,7 @@ The component diagram details the SEO-related components inside the Public Web A
 - **Behavior:**
   - Queries all published articles from the database.
   - Produces an XML document conforming to the Sitemap 0.9 protocol.
-  - Each `<url>` entry includes `<loc>` (absolute canonical URL), `<lastmod>` (article's last modified date in W3C format), `<changefreq>` (weekly for articles, daily for the homepage), and `<priority>` (1.0 for homepage, 0.8 for articles).
+  - Each `<url>` entry includes `<loc>` (absolute canonical URL built from configured `SiteUrl`), `<lastmod>` (article's last modified date in W3C format), `<changefreq>` (weekly for articles, daily for the homepage), and `<priority>` (1.0 for homepage, 0.8 for articles).
   - Sets `Content-Type: application/xml` and appropriate cache headers (short TTL, e.g., 10 minutes).
 - **Endpoint:** Registered as a minimal API endpoint or middleware at `/sitemap.xml`.
 
@@ -94,9 +94,9 @@ The component diagram details the SEO-related components inside the Public Web A
   Allow: /
   Disallow: /admin
   Disallow: /api/
-  Sitemap: https://{host}/sitemap.xml
+Sitemap: https://{host}/sitemap.xml
   ```
-- **Behavior:** The middleware intercepts requests to `/robots.txt` and returns a plain text response. The `Sitemap` directive uses the request's host to construct the absolute URL.
+- **Behavior:** The middleware intercepts requests to `/robots.txt` and returns a plain text response. The `Sitemap` directive uses the configured `SiteUrl` to construct the absolute URL rather than trusting the incoming request host.
 
 ### 3.5 FeedGenerator
 
@@ -211,7 +211,7 @@ Configuration values used across all SEO components, loaded from `appsettings.js
 1. A request arrives at `/articles/{slug}`.
 2. `SlugRedirectMiddleware` checks if the slug is lowercase and has no trailing slash. If not, it returns a 301 redirect to the corrected URL.
 3. If the URL is valid, the request proceeds to the Razor page handler.
-4. The page handler fetches the article data from the API/database.
+4. The page handler fetches the article data from shared published-content services and the database.
 5. The page handler constructs an `SeoMetadata` record from the article data and `SiteConfiguration`.
 6. During Razor view rendering, `SeoMetaTagHelper` reads the `SeoMetadata` and emits all `<meta>`, `<link>`, and `<title>` tags into the `<head>`.
 7. `JsonLdGenerator` produces a JSON-LD `<script>` block from the article data and injects it into the page.
@@ -254,7 +254,7 @@ Configuration values used across all SEO components, loaded from `appsettings.js
 | L2-010 Canonical URLs | SeoMetaTagHelper, SlugRedirectMiddleware | Canonical URL is always absolute, lowercase, no trailing slash. SlugRedirectMiddleware enforces this with 301 redirects. |
 | L2-011 XML Sitemap | SitemapGenerator | Dynamic generation on every request with short cache TTL. Includes all published articles. |
 | L2-012 Meta Title & Description | SeoMetaTagHelper | Title pattern: `{Article Title} \| {Site Name}`. If combined length exceeds 60 chars, the article title is truncated with ellipsis. Description is truncated at 160 chars at the nearest word boundary. |
-| L2-013 robots.txt | RobotsTxtMiddleware | Static content served by middleware. Disallows /admin and /api/ paths. Includes Sitemap directive. |
+| L2-013 robots.txt | RobotsTxtMiddleware | Static content served by middleware. Disallows /admin and /api/ paths. Includes Sitemap directive built from configured `SiteUrl`. |
 | L2-014 RSS/Atom Feed | FeedGenerator | Two endpoints: /feed.xml (RSS 2.0) and /atom.xml (Atom). Both serve the 20 most recent published articles. |
 | L2-015 Clean URLs | SlugRedirectMiddleware, routing config | Routes are configured as `/articles/{slug}`. Middleware issues 301 for uppercase. No file extensions or IDs in URLs. |
 | L2-016 llms.txt | LlmsTxtMiddleware | Serves a plain text summary of the site including available endpoints, content structure, and links to feeds and sitemap. |
@@ -292,7 +292,7 @@ The SEO-related middleware must be registered in the correct order in `Program.c
 ### 7.3 Canonical URL Integrity
 
 - Canonical URLs must always point to the correct, authoritative version of the page to prevent SEO poisoning or duplicate content penalties.
-- The canonical URL is constructed server-side from the known base URL in configuration, not from the incoming request's Host header, to prevent host header injection.
+- Canonical URLs, sitemap URLs, feed URLs, and the `robots.txt` sitemap directive are constructed server-side from the known base URL in configuration, not from the incoming request's `Host` header, to prevent host header injection.
 
 ### 7.4 Feed Content Sanitization
 

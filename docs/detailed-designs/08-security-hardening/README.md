@@ -55,7 +55,7 @@ Within the API server, security is implemented as a series of middleware compone
 - **Responsibility:** Injects security-related HTTP response headers on every response.
 - **Headers applied:**
   - `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload`
-  - `Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`
+  - `Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'`
   - `X-Content-Type-Options: nosniff`
   - `X-Frame-Options: DENY`
   - `Referrer-Policy: strict-origin-when-cross-origin`
@@ -66,7 +66,7 @@ Within the API server, security is implemented as a series of middleware compone
 
 - **Responsibility:** Throttles requests to prevent brute-force attacks and abuse.
 - **Policies:**
-  - **Authentication endpoints** (`/api/auth/*`): Maximum 10 requests per minute per client IP address.
+  - **Authentication endpoints** (`/api/auth/*`): Maximum 10 requests per minute per client IP address **and** 5 requests per 15 minutes per normalized email address.
   - **Write endpoints** (POST, PUT, PATCH, DELETE): Maximum 60 requests per minute per authenticated user.
 - **Behavior:** Uses a sliding window counter. When the limit is exceeded, returns HTTP 429 Too Many Requests with a `Retry-After` header indicating the number of seconds until the window resets.
 - **Implementation:** Built on ASP.NET Core's `System.Threading.RateLimiting` with the `SlidingWindowRateLimiter`.
@@ -74,7 +74,7 @@ Within the API server, security is implemented as a series of middleware compone
 ### 3.4 CorsMiddleware
 
 - **Responsibility:** Enforces a strict Cross-Origin Resource Sharing policy.
-- **Behavior:** Only origins explicitly listed in configuration are allowed. Preflight (OPTIONS) requests receive correct `Access-Control-Allow-Origin`, `Access-Control-Allow-Methods`, and `Access-Control-Allow-Headers` responses. Credentials are supported for configured origins. Requests from unlisted origins receive no CORS headers, causing the browser to block the response.
+- **Behavior:** Only origins explicitly listed in configuration are allowed. Preflight (OPTIONS) requests receive correct `Access-Control-Allow-Origin`, `Access-Control-Allow-Methods`, and `Access-Control-Allow-Headers` responses. Credentialed CORS is disabled by default because bearer tokens sent in the `Authorization` header do not require browser credential mode. Requests from unlisted origins receive no CORS headers, causing the browser to block the response.
 - **Configuration:** Allowed origins are loaded from `appsettings.json` under `Cors:AllowedOrigins`. Same-origin requests are unaffected by CORS and proceed normally.
 
 ### 3.5 AuthMiddleware
@@ -89,7 +89,7 @@ Within the API server, security is implemented as a series of middleware compone
 - **Error format:**
   ```json
   {
-    "type": "ValidationError",
+    "type": "https://tools.ietf.org/html/rfc7231#section-6.5.1",
     "title": "One or more validation errors occurred.",
     "status": 400,
     "errors": {
@@ -102,13 +102,13 @@ Within the API server, security is implemented as a series of middleware compone
 ### 3.7 HtmlSanitizer
 
 - **Responsibility:** Sanitizes article body HTML content to prevent stored XSS attacks.
-- **Behavior:** Strips or escapes dangerous elements (`<script>`, `<iframe>`, `<object>`, `<embed>`, event handler attributes such as `onclick`, `onerror`) while preserving safe formatting tags (`<p>`, `<h1>`-`<h6>`, `<a>`, `<img>`, `<ul>`, `<ol>`, `<li>`, `<strong>`, `<em>`, `<code>`, `<pre>`, `<blockquote>`). Runs at write time (create and update article) so that stored content is always safe.
+- **Behavior:** Strips or escapes dangerous elements (`<script>`, `<iframe>`, `<object>`, `<embed>`, event handler attributes such as `onclick`, `onerror`) while preserving safe formatting tags (`<p>`, `<h1>`-`<h6>`, `<a>`, `<img>`, `<ul>`, `<ol>`, `<li>`, `<strong>`, `<em>`, `<code>`, `<pre>`, `<blockquote>`, `<figure>`, `<figcaption>`). Runs at write time (create and update article) so that stored content is always safe.
 - **Implementation:** Uses the `HtmlSanitizer` NuGet package (Ganss.Xss) with a configured allow-list of tags and attributes.
 
 ### 3.8 AntiforgeryMiddleware
 
 - **Responsibility:** Protects state-changing operations from Cross-Site Request Forgery (CSRF) attacks.
-- **Behavior:** For API endpoints using cookie-based authentication, validates the antiforgery token. For JWT-only endpoints, CSRF protection is inherently provided by the bearer token pattern (tokens are not automatically sent by the browser). This component is present for defense-in-depth should cookie-based sessions be introduced.
+- **Behavior:** Razor Pages forms and same-origin browser POSTs validate antiforgery tokens by default. Bearer-token API clients do not rely on ambient browser credentials, so CSRF protection is not required for pure `Authorization: Bearer` calls. This component remains part of the baseline because the platform uses Razor Pages forms for back-office interactions.
 
 ## 4. Data Model
 
@@ -147,7 +147,7 @@ Within the API server, security is implemented as a series of middleware compone
 | AllowedOrigins | `string[]` | List of permitted origins (e.g., `["https://blog.example.com"]`) |
 | AllowedMethods | `string[]` | Permitted HTTP methods. Default: `["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]` |
 | AllowedHeaders | `string[]` | Permitted request headers. Default: `["Authorization", "Content-Type"]` |
-| AllowCredentials | `bool` | Whether to allow credentials. Default: true |
+| AllowCredentials | `bool` | Whether to allow credentials. Default: false |
 | PreflightMaxAgeSeconds | `int` | Cache duration for preflight responses. Default: 7200 |
 
 ### 4.5 RateLimitKeyType Enum
@@ -206,7 +206,7 @@ Every inbound request traverses the full middleware pipeline in order. Each laye
 | OWASP Risk | Mitigation |
 |------------|------------|
 | A01: Broken Access Control | JWT authentication on all protected endpoints. Role-based authorization via `[Authorize]` attributes. X-Frame-Options: DENY prevents clickjacking. CORS restricts cross-origin access. |
-| A02: Cryptographic Failures | HTTPS enforced with HSTS. Passwords hashed with bcrypt. JWT secrets stored in environment variables, not in code. |
+| A02: Cryptographic Failures | HTTPS enforced with HSTS. Passwords hashed with PBKDF2-SHA256. JWT secrets stored in environment variables, not in code. |
 | A03: Injection | All database queries parameterized via Entity Framework Core. Article body sanitized with HtmlSanitizer to prevent stored XSS. FluentValidation rejects malformed input at the boundary. |
 | A04: Insecure Design | Security middleware pipeline enforces controls regardless of application code. Defense-in-depth with multiple independent layers. |
 | A05: Security Misconfiguration | Security headers set by default via middleware. Server header removed. Permissions-Policy disables unused browser features. Strict CSP policy. |
@@ -221,7 +221,7 @@ Every inbound request traverses the full middleware pipeline in order. Each laye
 | Header | Value | Rationale |
 |--------|-------|-----------|
 | Strict-Transport-Security | `max-age=31536000; includeSubDomains; preload` | Forces browsers to use HTTPS for one year. Prevents protocol downgrade attacks and cookie hijacking. |
-| Content-Security-Policy | `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'` | Restricts resource loading to same origin. Prevents inline script execution (XSS). Blocks framing (clickjacking). `unsafe-inline` for styles is a pragmatic concession for CSS-in-JS frameworks. |
+| Content-Security-Policy | `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'` | Restricts resource loading to same origin. Prevents inline script execution (XSS). Blocks framing and embedded plugin content. `unsafe-inline` for styles is a pragmatic concession for server-rendered critical CSS and small inline style fragments emitted by Razor Pages. |
 | X-Content-Type-Options | `nosniff` | Prevents browsers from MIME-sniffing responses, which can lead to XSS via content type confusion. |
 | X-Frame-Options | `DENY` | Prevents the page from being embedded in frames or iframes. Defense against clickjacking. Supplements `frame-ancestors 'none'` in CSP for older browsers. |
 | Referrer-Policy | `strict-origin-when-cross-origin` | Sends the full URL as referrer for same-origin requests but only the origin for cross-origin requests. Balances analytics needs with privacy. |
@@ -229,7 +229,7 @@ Every inbound request traverses the full middleware pipeline in order. Each laye
 
 ## 8. Open Questions
 
-1. **CSP policy strictness:** Should `style-src 'unsafe-inline'` be replaced with nonce-based or hash-based style injection? This depends on the front-end framework's CSS strategy. Nonce-based CSP is more secure but requires server-side nonce generation per request.
+1. **CSP policy strictness:** Should `style-src 'unsafe-inline'` be replaced with nonce-based or hash-based style injection? This depends on the Razor Pages layout and critical-CSS strategy. Nonce-based CSP is more secure but requires server-side nonce generation per request.
 
 2. **Rate limit storage:** Should rate limit counters be stored in-memory (`MemoryCache`) or in a distributed store (Redis)? In-memory is simpler but does not work across multiple server instances. Redis provides consistency in a scaled deployment but adds an infrastructure dependency.
 

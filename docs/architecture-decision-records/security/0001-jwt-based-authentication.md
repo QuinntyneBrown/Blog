@@ -7,13 +7,13 @@
 
 ## Context
 
-The blog platform has two distinct access patterns: a public site that is entirely anonymous (no authentication) and a back-office Razor Pages administration interface that requires authentication for all administrative operations (L1-006). The authentication mechanism must protect content management, user management, and digital asset operations while keeping the protected API stateless.
+The blog platform has two distinct access patterns: a public site that is entirely anonymous (no authentication) and a back-office Razor Pages administration interface that requires authentication for all administrative operations (L1-006). The authentication mechanism must protect content management, user management, and digital asset operations while keeping protected API calls bearer-token based.
 
 The back-office Razor Pages application communicates with the API server over HTTPS. The authentication mechanism must work well with server-rendered admin pages that still need to invoke protected API endpoints for administrative operations.
 
 ## Decision
 
-We will authenticate back-office users via **JSON Web Tokens (JWT)**. Tokens are issued by the API server upon successful email/password authentication and validated on every request to protected endpoints. The Razor Pages administration application is responsible for retaining the token within the authenticated admin session and using it for subsequent protected API requests.
+We will authenticate back-office users via **short-lived JSON Web Tokens (JWT)**. Tokens are issued by the API server upon successful email/password authentication and validated on every request to protected endpoints. The Razor Pages administration application retains the token only within the authenticated admin session and uses it for subsequent protected API requests. The initial release does **not** implement silent refresh tokens; expired admin sessions must re-authenticate.
 
 ## Options Considered
 
@@ -44,16 +44,16 @@ We will authenticate back-office users via **JSON Web Tokens (JWT)**. Tokens are
 - JWT payload is not encrypted — sensitive data should not be placed in claims.
 
 ### Risks
-- If immediate token revocation is needed (e.g., after a security incident), a token blacklist or short expiration with refresh tokens would be required. Refresh token implementation is deferred (see open questions in Feature 01).
+- If uninterrupted long-running admin sessions are needed later, rotating refresh tokens with server-side revocation can be added as a follow-on enhancement. The initial release intentionally avoids a partial refresh design.
 
 ## Implementation Notes
 
 - Login endpoint: `POST /api/auth/login` with `{ email, password }` → returns `{ token, expiresAt }`.
-- Refresh endpoint: `POST /api/auth/refresh` with current valid token → returns new token.
 - Token claims: `sub` (user ID), `email`, `displayName`, `iat`, `exp`.
 - JWT signing: HMAC-SHA256 with a key of at least 256 bits, configured via environment variables.
 - Validation: signature, expiration, issuer, audience checked on every request by `JwtMiddleware`.
 - Token retained by the Razor Pages administration application as part of the authenticated admin session rather than browser-local JavaScript storage.
+- Expired tokens are not silently refreshed in v1; the admin session re-authenticates through the login flow.
 
 ## References
 

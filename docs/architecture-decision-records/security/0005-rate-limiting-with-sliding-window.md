@@ -9,7 +9,7 @@
 
 The blog platform must protect authentication endpoints from brute-force attacks and write endpoints from abuse (L2-027). Without rate limiting, an attacker could attempt unlimited password guesses or flood the API with write requests, degrading service for legitimate users.
 
-Rate limiting must be granular: authentication endpoints should be limited per client IP (to prevent credential stuffing), while write endpoints should be limited per authenticated user (to prevent abuse by a compromised account).
+Rate limiting must be granular: authentication endpoints should be limited per client IP and per normalized email address (to slow credential stuffing and targeted password guessing), while write endpoints should be limited per authenticated user (to prevent abuse by a compromised account).
 
 ## Decision
 
@@ -18,9 +18,10 @@ We will enforce **rate limiting** using ASP.NET Core's built-in `System.Threadin
 | Policy | Scope | Limit | Window |
 |--------|-------|-------|--------|
 | Authentication endpoints (`/api/auth/*`) | Per client IP address | 10 requests | 1 minute |
+| Authentication endpoints (`/api/auth/*`) | Per normalized email address | 5 requests | 15 minutes |
 | Write endpoints (POST, PUT, PATCH, DELETE) | Per authenticated user | 60 requests | 1 minute |
 
-When the limit is exceeded, the server returns **429 Too Many Requests** with a `Retry-After` header indicating seconds until the window resets.
+When either applicable limit is exceeded, the server returns **429 Too Many Requests** with a `Retry-After` header indicating seconds until the window resets.
 
 ## Options Considered
 
@@ -43,7 +44,7 @@ When the limit is exceeded, the server returns **429 Too Many Requests** with a 
 ## Consequences
 
 ### Positive
-- Brute-force password attacks are throttled to 10 attempts per minute per IP.
+- Brute-force password attacks are throttled both per IP and per target account identifier.
 - Write endpoint abuse is limited to 60 requests per minute per user.
 - `Retry-After` header tells legitimate clients when to retry, enabling graceful degradation.
 - Sliding window prevents the "boundary burst" problem of fixed windows (where 2x requests occur at the window boundary).
@@ -52,6 +53,7 @@ When the limit is exceeded, the server returns **429 Too Many Requests** with a 
 ### Negative
 - In-memory counters are per-instance — scaling to multiple instances requires a distributed counter store (Redis).
 - Shared IP addresses (NAT, corporate networks) may cause legitimate users to be rate-limited together on auth endpoints.
+- Email-based limits must normalize input (trim + lowercase) to avoid trivial bypasses.
 
 ### Risks
 - If the platform scales horizontally, rate limit counters must be moved to Redis or another distributed store. This is a known migration path documented in Feature 08 open questions.
@@ -59,9 +61,11 @@ When the limit is exceeded, the server returns **429 Too Many Requests** with a 
 ## Implementation Notes
 
 - Policies registered in `Program.cs` via `AddRateLimiter()` with named policies.
-- Auth policy: `SlidingWindowRateLimiter` with `PermitLimit = 10, Window = TimeSpan.FromMinutes(1), SegmentsPerWindow = 6`.
+- Auth IP policy: `SlidingWindowRateLimiter` with `PermitLimit = 10, Window = TimeSpan.FromMinutes(1), SegmentsPerWindow = 6`.
+- Auth email policy: `SlidingWindowRateLimiter` with `PermitLimit = 5, Window = TimeSpan.FromMinutes(15), SegmentsPerWindow = 5`.
 - Write policy: `SlidingWindowRateLimiter` with `PermitLimit = 60, Window = TimeSpan.FromMinutes(1), SegmentsPerWindow = 6`.
 - IP extraction: `HttpContext.Connection.RemoteIpAddress` (respects `X-Forwarded-For` behind reverse proxy).
+- Email extraction: normalized login identifier from the deserialized login request body.
 - User extraction: `HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)`.
 - 429 response includes `Retry-After` header with seconds remaining.
 

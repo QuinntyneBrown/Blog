@@ -38,8 +38,8 @@ The container diagram shows the deployable units involved in serving public arti
 
 ![C4 Container Diagram](diagrams/c4_container.png)
 
-- **Public Web App (SSR)** is an ASP.NET Core Razor Pages application that server-renders HTML for every page request. It communicates with the API Server to fetch published article data.
-- **API Server (.NET)** provides RESTful endpoints for querying published articles. It applies the publication status filter so that only published articles are returned to the public site.
+- **Public Web App (ASP.NET Core Razor Pages)** server-renders HTML for every page request and uses shared published-content services directly within the same ASP.NET Core application boundary.
+- **Published Content API (.NET)** exposes optional HTTP endpoints for integrations and non-HTML consumers. It reuses the same publication filters and service layer as the Razor Pages site.
 - **Database** stores all article content, metadata, and digital assets.
 - **CDN (optional)** caches and serves static assets (images, CSS) for improved load times.
 
@@ -65,7 +65,7 @@ The component diagram details the internal structure of the Public Web App and t
 - **Route:** `/` and `/articles` (with optional `?page=N` query parameter)
 - **Responsibility:** Renders a paginated grid of published article cards ordered by `DatePublished` descending.
 - **Behavior:** Calls `PublicArticleService.GetArticlesAsync(page, pageSize)` during the SSR page model `OnGetAsync`. Renders ArticleCard components in a CSS Grid layout. Displays a Pagination component when total articles exceed the page size. Shows an EmptyState component with a friendly message when no articles exist.
-- **UI Reference:** Per the XL (1440px) design, the page shows a hero section with "Latest Articles" heading followed by a 3-column grid of ArticleCard components. The grid adapts to 2 columns at LG/MD and 1 column at SM/XS. A Pagination component appears below the grid. SkeletonCard components are rendered as placeholders during loading states when JavaScript-enhanced progressive loading is enabled.
+- **UI Reference:** Per the XL (1440px) design, the page shows a hero section with "Latest Articles" heading followed by a 3-column grid of ArticleCard components. The grid adapts to 2 columns at LG/MD and 1 column at SM/XS. A Pagination component appears below the grid.
 
 ### 3.2 ArticleDetailPage
 
@@ -88,7 +88,7 @@ The component diagram details the internal structure of the Public Web App and t
 ### 3.5 ArticleCard
 
 - **Responsibility:** Renders a single article preview within the listing grid.
-- **UI Reference:** Per the design, each card contains: a featured image placeholder (aspect ratio maintained), a category tag, the article title, an abstract/excerpt, meta information (formatted date and "X min read"), and a "Read more" link. The card uses `$surface-primary` background, `$border-subtle` border, and `$foreground-primary` text color from the design system.
+- **UI Reference:** Per the design, each card contains: a featured image placeholder (aspect ratio maintained), the article title, an abstract/excerpt, meta information (formatted date and "X min read"), and a "Read more" link. The card uses `$surface-primary` background, `$border-subtle` border, and `$foreground-primary` text color from the design system.
 - **Behavior:** The entire card or the "Read more" link navigates to `/articles/{slug}`. Images use `loading="lazy"` for performance. Alt text is derived from the article title when no explicit alt text is provided.
 
 ### 3.6 Pagination
@@ -108,8 +108,8 @@ The component diagram details the internal structure of the Public Web App and t
 
 - **Responsibility:** Business logic for querying published articles.
 - **Behavior:**
-  - `GetArticlesAsync(int page, int pageSize)` -- Queries articles where `Status == Published`, orders by `DatePublished` descending, applies pagination, maps to `PublicArticleDto`, and returns an `ArticleListResponse`.
-  - `GetArticleBySlugAsync(string slug)` -- Queries a single article by slug where `Status == Published`. Returns `null` if not found or not published.
+  - `GetArticlesAsync(int page, int pageSize)` -- Queries articles where `Published == true`, orders by `DatePublished` descending, applies pagination, maps to `PublicArticleDto`, and returns an `ArticleListResponse`.
+  - `GetArticleBySlugAsync(string slug)` -- Queries a single article by slug where `Published == true`. Returns `null` if not found or not published.
 - **Dependencies:** `DbContext` (EF Core), maps `Article` entities to `PublicArticleDto`.
 
 ## 4. Data Model
@@ -158,7 +158,7 @@ The component diagram details the internal structure of the Public Web App and t
 1. Browser requests `/articles?page=1` (or `/` for the homepage).
 2. The SSR Razor Page `ArticleListPage.OnGetAsync` is invoked by the ASP.NET Core routing middleware.
 3. The page model calls `PublicArticleService.GetArticlesAsync(page, pageSize)`.
-4. `PublicArticleService` queries the database via EF Core: selects articles where `Status == Published`, orders by `DatePublished` descending, applies `Skip` and `Take` for pagination, and projects to `PublicArticleDto` (excluding the `Body` field).
+4. `PublicArticleService` queries the database via EF Core: selects articles where `Published == true`, orders by `DatePublished` descending, applies `Skip` and `Take` for pagination, and projects to `PublicArticleDto` (excluding the `Body` field).
 5. A `COUNT` query determines the total number of published articles for pagination metadata.
 6. The service returns an `ArticleListResponse` containing the article DTOs, total count, page, and page size.
 7. The Razor Page engine renders the HTML using the layout (NavBar + Footer), ArticleCard partial views for each article, and the Pagination component.
@@ -172,7 +172,7 @@ The component diagram details the internal structure of the Public Web App and t
 1. Browser requests `/articles/{slug}` (e.g., `/articles/building-a-blog-with-dotnet`).
 2. The SSR Razor Page `ArticleDetailPage.OnGetAsync` is invoked with the `slug` route parameter.
 3. The page model calls `PublicArticleService.GetArticleBySlugAsync(slug)`.
-4. `PublicArticleService` queries the database for an article matching the slug where `Status == Published`.
+4. `PublicArticleService` queries the database for an article matching the slug where `Published == true`.
 5. **Happy path:** The article is found. The service maps the entity to a `PublicArticleDto` (including the `Body` field) and returns it.
 6. The Razor Page renders the article with: featured image (full-width hero), title, publication date (formatted), reading time ("X min read" per L2-038), and the full body content.
 7. The fully rendered HTML is returned to the browser.
@@ -271,10 +271,10 @@ The public site targets WCAG 2.1 Level AA compliance across all pages and breakp
 
 | # | Question | Impact | Status |
 |---|----------|--------|--------|
-| 1 | Should the Public Web App call the API Server over HTTP, or should it share the same process and call `PublicArticleService` directly (in-process)? The in-process approach reduces latency but couples the deployments. | Architecture, performance, deployment | Open |
+| 1 | Should the Public Web App call the API Server over HTTP, or should it share the same process and call `PublicArticleService` directly (in-process)? | Architecture, performance, deployment | Resolved: in-process shared service |
 | 2 | What is the desired page size for the article listing? Common values are 9 (fills a 3-column grid evenly) or 12. | UX, pagination behavior | Open |
 | 3 | Should we implement output caching or response caching for the SSR-rendered pages? If so, what cache duration is acceptable for published content? | Performance, content freshness | Open |
 | 4 | Is a CDN required for the initial release, or is serving static assets directly from the application server acceptable? | Infrastructure, performance | Open |
 | 5 | Should the article body content be stored as raw HTML, Markdown (rendered at serve time), or a structured format? This affects the rendering pipeline in `ArticleDetailPage`. | Content authoring, rendering complexity | Open |
-| 6 | Are category tags on ArticleCards purely visual labels from article metadata, or do they link to a category-filtered listing? The UI designs show category tags but the current requirements do not specify category filtering. | Scope, navigation | Open |
-| 7 | Should SkeletonCard loading states be implemented given that SSR delivers fully rendered HTML? They may only be relevant if client-side pagination is added later. | UX, implementation complexity | Open |
+| 6 | Are category tags on ArticleCards part of the public article data model? | Scope, navigation | Resolved: no category taxonomy in v1 |
+| 7 | Should SkeletonCard loading states be implemented given that SSR delivers fully rendered HTML? | UX, implementation complexity | Resolved: not included in SSR v1 |

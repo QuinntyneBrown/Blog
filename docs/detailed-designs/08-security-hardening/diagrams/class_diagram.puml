@@ -30,7 +30,7 @@ class CorsConfig {
     + AllowedOrigins : string[]
     + AllowedMethods : string[]
     + AllowedHeaders : string[]
-    + AllowCredentials : bool = true
+    + AllowCredentials : bool = false
     + PreflightMaxAgeSeconds : int = 7200
 }
 
