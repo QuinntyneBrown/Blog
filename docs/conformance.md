@@ -2035,3 +2035,19 @@ Both values are already present in `appsettings.json` under `Site:SiteName` and 
 - Changed the hardcoded hero subtitle `<p>` to read `Configuration["Site:SiteDescription"]` with the original string as fallback.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Article Version property not marked as EF Core concurrency token in ArticleConfiguration
+
+**Design reference:** `docs/detailed-designs/10-data-persistence/README.md`, Section 3.2 — Entity Configurations (ArticleConfiguration)
+
+**Description:**
+The design specifies (Section 3.2): "`Version`: required concurrency token, default 1." In EF Core, marking a property as a concurrency token causes the generated SQL `UPDATE` and `DELETE` statements to include a `WHERE Version = @originalVersion` predicate. If the row has been modified by another writer since the entity was read, EF Core detects the `0 rows affected` result and throws a `DbUpdateConcurrencyException`, enforcing optimistic concurrency at the database level.
+
+`ArticleConfiguration` in `src/Blog.Infrastructure/Data/Configurations/ArticleConfiguration.cs` only configures `.HasDefaultValue(1)` for the `Version` property — the `.IsConcurrencyToken()` call is entirely absent. As a result, EF Core's generated `UPDATE` statements for `Article` entities include only `WHERE ArticleId = @id` with no version predicate. The application-level `If-Match` / ETag checks in the command handlers provide a first line of defence, but two concurrent requests that both pass the `If-Match` check in a race between the header check and `SaveChangesAsync` will both succeed at the database level with no detection. Any code path that bypasses the HTTP layer (seeder, `MigrationRunner`, future internal services) also has no database-level protection against lost updates.
+
+**Fix applied:**
+- Added `.IsConcurrencyToken()` to the `Version` property configuration in `src/Blog.Infrastructure/Data/Configurations/ArticleConfiguration.cs`, so EF Core includes `WHERE "Version" = @p_original_Version` in all generated `UPDATE` and `DELETE` SQL statements for `Article` entities. If a concurrent write has already incremented `Version`, EF Core will detect `0 rows affected` and throw `DbUpdateConcurrencyException`, enforcing the optimistic concurrency guarantee the design requires at the database level.
+
+**Status:** FIXED

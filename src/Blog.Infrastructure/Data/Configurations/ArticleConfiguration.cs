@@ -16,7 +16,7 @@ public class ArticleConfiguration : IEntityTypeConfiguration<Article>
         builder.Property(a => a.Body).IsRequired();
         builder.Property(a => a.BodyHtml).IsRequired();
         builder.Property(a => a.ReadingTimeMinutes).HasDefaultValue(1);
-        builder.Property(a => a.Version).HasDefaultValue(1);
+        builder.Property(a => a.Version).HasDefaultValue(1).IsConcurrencyToken();
         builder.Property(a => a.Published).HasDefaultValue(false);
 
         builder.HasIndex(a => a.Slug).IsUnique().HasDatabaseName("IX_Articles_Slug");
