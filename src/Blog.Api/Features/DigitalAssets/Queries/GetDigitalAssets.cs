@@ -5,7 +5,7 @@ using MediatR;
 namespace Blog.Api.Features.DigitalAssets.Queries;
 
 public record DigitalAssetDto(
-    Guid DigitalAssetId, string OriginalFileName, string StoredFileName,
+    Guid DigitalAssetId, string OriginalFileName,
     string ContentType, long FileSizeBytes, int Width, int Height,
     string Url, DateTime CreatedAt);
 
@@ -17,7 +17,7 @@ public class GetDigitalAssetsHandler(IDigitalAssetRepository assets) : IRequestH
     {
         var items = await assets.GetByCreatedByAsync(request.UserId, cancellationToken);
         return items.Select(d => new DigitalAssetDto(
-            d.DigitalAssetId, d.OriginalFileName, d.StoredFileName,
+            d.DigitalAssetId, d.OriginalFileName,
             d.ContentType, d.FileSizeBytes, d.Width, d.Height,
             $"/assets/{d.StoredFileName}", d.CreatedAt)).ToList();
     }

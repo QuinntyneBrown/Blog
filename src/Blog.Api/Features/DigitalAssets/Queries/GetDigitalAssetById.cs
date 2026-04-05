@@ -15,7 +15,7 @@ public class GetDigitalAssetByIdHandler(IDigitalAssetRepository assets) : IReque
             ?? throw new NotFoundException($"Digital asset with ID '{request.Id}' was not found.");
 
         return new DigitalAssetDto(
-            asset.DigitalAssetId, asset.OriginalFileName, asset.StoredFileName,
+            asset.DigitalAssetId, asset.OriginalFileName,
             asset.ContentType, asset.FileSizeBytes, asset.Width, asset.Height,
             $"/assets/{asset.StoredFileName}", asset.CreatedAt);
     }
