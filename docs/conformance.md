@@ -2254,3 +2254,12 @@ Without the search input, the global search feature added by design 11 (the serv
 **Status:** FIXED
 
 ---
+
+## 2026-04-04 — Search results page (`/search`) entirely absent; `robots.txt` missing `Disallow: /search`
+
+**Design reference:** `docs/detailed-designs/13-search-results-page/README.md`, Sections 3.1–3.4
+
+**Description:**
+Design 13 specifies a dedicated server-rendered Razor Page at `/search` (`Pages/Search/Index.cshtml` and `Pages/Search/Index.cshtml.cs`) that accepts `?q=` and `?page=` query parameters, dispatches to `SearchArticlesQuery` via MediatR, and renders up to 10 `<article>` result cards per page with highlighted titles and excerpts, pagination, and an empty state. Neither `Pages/Search/Index.cshtml` nor `Pages/Search/Index.cshtml.cs` exists anywhere in the codebase. The search form added by design 12 (`<form action="/search" method="get">`) submits to `/search`, but because the page does not exist, every search form submission results in a 404. The entire public search feature — despite having a fully-implemented backend (`SearchArticlesQuery`, `SearchArticlesHandler`, `SearchHighlighter`, `GET /api/public/articles/search`) — is unreachable from the public UI via the designed SSR path. Additionally, design 13 Section 3.4 specifies that `robots.txt` must include `Disallow: /search` to prevent search engines from indexing result pages (duplicate content risk), but `SeoController.Robots()` only disallows `/admin` and `/api/`.
+
+**Status:** OPEN
