@@ -161,9 +161,10 @@ The component diagram details the digital-asset-related components inside the AP
 6. `DigitalAssetService` calls `FileValidator.ValidateContentType()` to inspect file magic bytes. If invalid type, returns 400.
 7. `DigitalAssetService` generates a unique stored filename (GUID-based with original extension).
 8. `DigitalAssetService` calls `ImageProcessor.GetDimensions()` to extract width and height.
-9. `DigitalAssetService` calls `AssetStorage.SaveAsync()` to persist the original file.
-10. `DigitalAssetService` creates a `DigitalAsset` entity and calls `AssetRepository.AddAsync()` to save metadata.
-11. `DigitalAssetController` returns 201 Created with the `UploadResponse` containing the asset ID and public URL.
+9. `DigitalAssetService` calls `FileValidator.ValidateDimensions()` to reject oversized or abusive images.
+10. `DigitalAssetService` calls `AssetStorage.SaveAsync()` to persist the original file.
+11. `DigitalAssetService` creates a `DigitalAsset` entity and calls `AssetRepository.AddAsync()` to save metadata.
+12. `DigitalAssetController` returns 201 Created with the `UploadResponse` containing the asset ID and public URL.
 
 ### 5.2 Serve with Optimization Flow
 

@@ -53,6 +53,7 @@ The component diagram details the persistence-related components inside the API 
 - **Behavior:**
   - Applies all `IEntityTypeConfiguration<T>` implementations via `OnModelCreating` using `modelBuilder.ApplyConfigurationsFromAssembly()`.
   - Overrides `SaveChangesAsync` to automatically set `CreatedAt` and `UpdatedAt` timestamps on tracked entities.
+  - Increments the article `Version` concurrency token on successful article updates so API `ETag` validators remain monotonic.
   - Registered as a scoped service in the DI container.
 
 ### 3.2 Entity Configurations

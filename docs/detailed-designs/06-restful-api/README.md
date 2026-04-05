@@ -16,7 +16,7 @@ This feature defines the RESTful API design conventions, request pipeline, error
 
 - **Plural nouns** for resource collections (`/api/articles`, `/api/digital-assets`).
 - **Standard HTTP methods** with correct semantics: GET reads, POST creates, PUT replaces, PATCH partially updates, DELETE removes.
-- **Consistent status codes**: 200 OK, 201 Created, 204 No Content, 400 Bad Request, 401 Unauthorized, 404 Not Found, 409 Conflict, 413 Payload Too Large, 429 Too Many Requests.
+- **Consistent status codes**: 200 OK, 201 Created, 204 No Content, 400 Bad Request, 401 Unauthorized, 404 Not Found, 409 Conflict, 412 Precondition Failed, 413 Payload Too Large, 429 Too Many Requests, 503 Service Unavailable.
 - **RFC 7807 Problem Details** for all error responses.
 - **Uniform JSON response envelopes** for predictable client-side parsing.
 
@@ -75,7 +75,7 @@ The component diagram details the internal structure of the API server relevant 
 - **Behavior:**
   - Accepts `PaginationParameters` (page number, page size) and a total count from the database query.
   - Computes `TotalPages`, `HasPreviousPage`, `HasNextPage`.
-  - Generates `NextPageUrl` and `PreviousPageUrl` using the current request URI.
+  - Generates `NextPageUrl` and `PreviousPageUrl` using ASP.NET Core link generation from route values and configured application URLs rather than blindly echoing raw host headers.
   - Enforces constraints: page size minimum 1, maximum 100, default 20.
   - Calculates SQL OFFSET as `(Page - 1) * PageSize`.
 
@@ -227,9 +227,13 @@ Authorization: Bearer <token>
         "articleId": "a1b2c3d4-...",
         "title": "Getting Started with .NET",
         "slug": "getting-started-with-dotnet",
-        "status": "Published",
-        "publishedAt": "2026-03-15T10:00:00Z",
-        "author": "Admin User"
+        "abstract": "A practical introduction to building and shipping with .NET.",
+        "featuredImageId": "b2c3d4e5-...",
+        "published": true,
+        "datePublished": "2026-03-15T10:00:00Z",
+        "readingTimeMinutes": 5,
+        "updatedAt": "2026-03-15T10:00:00Z",
+        "version": 3
       }
     ],
     "page": 1,
@@ -256,8 +260,9 @@ Authorization: Bearer <token>
 
 {
   "title": "My New Article",
+  "abstract": "A concise summary of the article.",
   "body": "<p>Article content here...</p>",
-  "tags": ["dotnet", "api"]
+  "featuredImageId": "b2c3d4e5-..."
 }
 ```
 
@@ -266,14 +271,21 @@ Authorization: Bearer <token>
 ```http
 HTTP/1.1 201 Created
 Location: /api/articles/a1b2c3d4-...
+ETag: W/"article-a1b2c3d4-v1"
 
 {
   "data": {
     "articleId": "a1b2c3d4-...",
     "title": "My New Article",
     "slug": "my-new-article",
-    "status": "Draft",
-    "createdAt": "2026-04-04T13:30:00Z"
+    "abstract": "A concise summary of the article.",
+    "featuredImageId": "b2c3d4e5-...",
+    "published": false,
+    "datePublished": null,
+    "readingTimeMinutes": 1,
+    "createdAt": "2026-04-04T13:30:00Z",
+    "updatedAt": "2026-04-04T13:30:00Z",
+    "version": 1
   },
   "timestamp": "2026-04-04T13:30:00Z"
 }
@@ -305,19 +317,24 @@ Authorization: Bearer <token>
 
 **Success Response (200):**
 
-```json
+```http
+HTTP/1.1 200 OK
+ETag: W/"article-a1b2c3d4-v3"
+
 {
   "data": {
     "articleId": "a1b2c3d4-...",
     "title": "Getting Started with .NET",
     "slug": "getting-started-with-dotnet",
+    "abstract": "A practical introduction to building and shipping with .NET.",
     "body": "<p>Full article content...</p>",
-    "status": "Published",
-    "tags": ["dotnet", "api"],
-    "publishedAt": "2026-03-15T10:00:00Z",
+    "featuredImageId": "b2c3d4e5-...",
+    "published": true,
+    "datePublished": "2026-03-15T10:00:00Z",
+    "readingTimeMinutes": 5,
     "createdAt": "2026-03-10T08:00:00Z",
     "updatedAt": "2026-03-14T16:00:00Z",
-    "author": "Admin User"
+    "version": 3
   },
   "timestamp": "2026-04-04T13:30:00Z"
 }
@@ -342,30 +359,40 @@ Authorization: Bearer <token>
 PUT /api/articles/a1b2c3d4-...
 Content-Type: application/json
 Authorization: Bearer <token>
+If-Match: W/"article-a1b2c3d4-v3"
 
 {
   "title": "Updated Article Title",
+  "abstract": "An updated summary.",
   "body": "<p>Updated content...</p>",
-  "tags": ["dotnet", "api", "rest"]
+  "featuredImageId": "b2c3d4e5-..."
 }
 ```
 
 **Success Response (200):**
 
-```json
+```http
+HTTP/1.1 200 OK
+ETag: W/"article-a1b2c3d4-v4"
+
 {
   "data": {
     "articleId": "a1b2c3d4-...",
     "title": "Updated Article Title",
     "slug": "updated-article-title",
-    "status": "Draft",
-    "updatedAt": "2026-04-04T14:00:00Z"
+    "abstract": "An updated summary.",
+    "featuredImageId": "b2c3d4e5-...",
+    "published": false,
+    "datePublished": null,
+    "readingTimeMinutes": 2,
+    "updatedAt": "2026-04-04T14:00:00Z",
+    "version": 4
   },
   "timestamp": "2026-04-04T14:00:00Z"
 }
 ```
 
-**Error Responses:** 400 (validation), 401 (unauthorized), 404 (not found).
+**Error Responses:** 400 (validation), 401 (unauthorized), 404 (not found), 412 (stale `If-Match` token).
 
 ### 6.6 DELETE /api/articles/{id}
 
@@ -374,11 +401,12 @@ Authorization: Bearer <token>
 ```http
 DELETE /api/articles/a1b2c3d4-...
 Authorization: Bearer <token>
+If-Match: W/"article-a1b2c3d4-v4"
 ```
 
 **Success Response (204):** No body.
 
-**Error Responses:** 401 (unauthorized), 404 (not found).
+**Error Responses:** 401 (unauthorized), 404 (not found), 412 (stale `If-Match` token).
 
 ### 6.7 PATCH /api/articles/{id}/publish
 
@@ -387,48 +415,34 @@ Authorization: Bearer <token>
 ```http
 PATCH /api/articles/a1b2c3d4-.../publish
 Authorization: Bearer <token>
+If-Match: W/"article-a1b2c3d4-v4"
+Content-Type: application/json
+
+{
+  "published": true
+}
 ```
 
 **Success Response (200):**
 
-```json
+```http
+HTTP/1.1 200 OK
+ETag: W/"article-a1b2c3d4-v5"
+
 {
   "data": {
     "articleId": "a1b2c3d4-...",
-    "status": "Published",
-    "publishedAt": "2026-04-04T14:30:00Z"
+    "published": true,
+    "datePublished": "2026-04-04T14:30:00Z",
+    "version": 5
   },
   "timestamp": "2026-04-04T14:30:00Z"
 }
 ```
 
-**Error Responses:** 401 (unauthorized), 404 (not found), 409 (conflict, e.g., article already published).
+**Error Responses:** 401 (unauthorized), 404 (not found), 412 (stale `If-Match` token).
 
-### 6.8 PATCH /api/articles/{id}/unpublish
-
-**Request:**
-
-```http
-PATCH /api/articles/a1b2c3d4-.../unpublish
-Authorization: Bearer <token>
-```
-
-**Success Response (200):**
-
-```json
-{
-  "data": {
-    "articleId": "a1b2c3d4-...",
-    "status": "Draft",
-    "unpublishedAt": "2026-04-04T15:00:00Z"
-  },
-  "timestamp": "2026-04-04T15:00:00Z"
-}
-```
-
-**Error Responses:** 401 (unauthorized), 404 (not found), 409 (conflict, e.g., article already in draft).
-
-### 6.9 POST /api/digital-assets
+### 6.8 POST /api/digital-assets
 
 **Request:**
 
@@ -452,7 +466,7 @@ Location: /api/digital-assets/b2c3d4e5-...
     "fileName": "hero-image.jpg",
     "contentType": "image/jpeg",
     "contentLength": 245760,
-    "url": "/uploads/b2c3d4e5-hero-image.jpg",
+    "url": "/assets/b2c3d4e5-hero-image.jpg",
     "createdAt": "2026-04-04T13:30:00Z"
   },
   "timestamp": "2026-04-04T13:30:00Z"
@@ -461,19 +475,36 @@ Location: /api/digital-assets/b2c3d4e5-...
 
 **Error Responses:** 400 (invalid file), 401 (unauthorized), 413 (payload too large).
 
-### 6.10 GET /api/digital-assets/{id}
+### 6.9 GET /api/digital-assets/{id}
 
 **Request:**
 
 ```http
 GET /api/digital-assets/b2c3d4e5-...
+Authorization: Bearer <token>
 ```
 
-**Success Response (200):** Returns the file binary with appropriate `Content-Type` and `Content-Disposition` headers.
+**Success Response (200):**
+
+```json
+{
+  "data": {
+    "digitalAssetId": "b2c3d4e5-...",
+    "originalFileName": "hero-image.jpg",
+    "url": "/assets/b2c3d4e5-hero-image.jpg",
+    "contentType": "image/jpeg",
+    "fileSizeBytes": 245760,
+    "width": 1920,
+    "height": 1080,
+    "createdAt": "2026-04-04T13:30:00Z"
+  },
+  "timestamp": "2026-04-04T13:31:00Z"
+}
+```
 
 **Error Response (404):** Asset not found.
 
-### 6.11 GET /health
+### 6.10 GET /health
 
 **Request:**
 
@@ -485,10 +516,34 @@ GET /health
 
 ```json
 {
-  "status": "Healthy",
+  "status": "healthy"
+}
+```
+
+**Error Response (503):**
+
+```json
+{
+  "status": "unhealthy"
+}
+```
+
+### 6.11 GET /health/ready
+
+**Request:**
+
+```http
+GET /health/ready
+```
+
+**Success Response (200):**
+
+```json
+{
+  "status": "healthy",
   "checks": {
-    "database": "Healthy",
-    "diskSpace": "Healthy"
+    "database": "healthy",
+    "diskSpace": "healthy"
   }
 }
 ```
@@ -497,10 +552,10 @@ GET /health
 
 ```json
 {
-  "status": "Unhealthy",
+  "status": "unhealthy",
   "checks": {
-    "database": "Unhealthy",
-    "diskSpace": "Healthy"
+    "database": "unhealthy",
+    "diskSpace": "healthy"
   }
 }
 ```
@@ -547,6 +602,7 @@ The `ExceptionHandlingMiddleware` catches all unhandled exceptions and maps them
 | UnauthorizedAccessException | 401 | Unauthorized |
 | NotFoundException | 404 | Not Found |
 | ConflictException | 409 | Conflict |
+| PreconditionFailedException | 412 | Precondition Failed |
 | FileTooLargeException | 413 | Payload Too Large |
 | RateLimitExceededException | 429 | Too Many Requests |
 | All other exceptions | 500 | Internal Server Error |
@@ -563,9 +619,11 @@ In production, 500 responses omit exception details and stack traces. In develop
 | 400 | Bad Request | Validation failure or malformed request |
 | 401 | Unauthorized | Missing or invalid authentication token |
 | 404 | Not Found | Requested resource does not exist |
-| 409 | Conflict | State conflict (e.g., publishing an already-published article) |
+| 409 | Conflict | State conflict (e.g., duplicate slug) |
+| 412 | Precondition Failed | Optimistic concurrency token is stale |
 | 413 | Payload Too Large | Uploaded file exceeds size limit |
 | 429 | Too Many Requests | Rate limit exceeded |
+| 503 | Service Unavailable | Health or readiness dependency failure |
 | 500 | Internal Server Error | Unexpected server-side error |
 
 ## 8. Open Questions
@@ -577,4 +635,4 @@ In production, 500 responses omit exception details and stack traces. In develop
 | 3 | Should the API support content negotiation (Accept header) or always return JSON? | API flexibility, implementation complexity | Open |
 | 4 | What is the appropriate maximum request body size for non-file-upload endpoints? | Security, server resource constraints | Open |
 | 5 | Should API versioning be introduced from the start (e.g., `/api/v1/articles`), or deferred until a breaking change is needed? | Long-term API evolution, URL design | Open |
-| 6 | Should ETag-based caching headers be generated for GET responses to support conditional requests (If-None-Match)? | Performance, caching strategy | Open |
+| 6 | Should ETag-based caching headers be generated for GET responses to support conditional requests (If-None-Match)? | Performance, caching strategy | Resolved: weak validators on cacheable GET responses |

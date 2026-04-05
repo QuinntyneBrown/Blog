@@ -46,6 +46,25 @@ Goal: close the major consistency, performance, security, and best-practice gaps
 | DI-034 | Data persistence | Default-admin seeding via `HasData()` was unsafe and operationally misleading. | Replaced it with deployment-time admin bootstrap/provisioning guidance and removed privileged-account seeding from migrations. | Complete |
 | DI-035 | Digital assets | File-size limits were documented, but decompression/pixel-count abuse was still an open gap. | Added maximum dimension/pixel-count validation guidance in the asset pipeline. | Complete |
 
+## Outstanding Issues
+
+Validated against `docs/design-audit.md` after excluding findings that are already resolved in the current detailed designs.
+
+| ID | Area | Issue | Needed Resolution | Status |
+|----|------|-------|-------------------|--------|
+| DI-036 | Repo-wide consistency | `README.md` and `docs/specs/L2.md` still use `/api/posts` while the detailed designs and ADRs use `/api/articles`. | Pick one canonical public API path and update `README.md`, specs, and supporting docs to match. | Open |
+| DI-037 | Repo-wide consistency | `README.md` still documents `POST /api/users/authenticate` while the accepted auth design uses `POST /api/auth/login`. | Update `README.md` and any related summary docs to the canonical auth endpoint. | Open |
+| DI-038 | Repo-wide consistency | `README.md` still documents `POST /api/digital-assets/upload` while the detailed designs and ADRs use `POST /api/digital-assets`. | Update `README.md` and any related summary docs to the canonical digital-asset upload route. | Open |
+| DI-039 | Repo-wide consistency | `README.md` still presents `XL 1440px` as if it were the responsive breakpoint, while the actual XL breakpoint is `>= 1200px` and 1440px is the design reference canvas. | Clarify the breakpoint table in `README.md` so implementation breakpoints and design-reference widths are not conflated. | Open |
+| DI-040 | Security | The platform still has no JWT revocation design. A compromised access token remains valid until expiry. | Define a revocation strategy, such as rotating refresh tokens with server-side session tracking or an access-token deny-list for emergency invalidation. | Open |
+| DI-041 | Security | Uploaded assets are validated by content type and size, but there is still no malware-scanning design. | Add an upload scanning strategy for production environments, including quarantine/fail behavior and operational ownership. | Open |
+| DI-042 | Security | The current design set does not define user roles or permission boundaries beyond authenticated admin access. | Define the authorization model for admin users, including roles/claims and least-privilege boundaries. | Open |
+| DI-043 | API maturity | The API versioning approach is still explicitly deferred and not documented as a concrete plan. | Document the versioning strategy to be used when a breaking API change is introduced. | Open |
+| DI-044 | API maturity | There is no OpenAPI/Swagger generation strategy in the design set. | Add API contract publication/generation guidance so the documented API can be validated and consumed consistently. | Open |
+| DI-045 | Operations | There is no backup and disaster-recovery strategy covering backup cadence, retention, restore procedures, or target RTO/RPO. | Add an operations design covering backup, restore verification, retention, and recovery objectives. | Open |
+| DI-046 | Operations | Monitoring and alerting strategy is still undefined beyond health endpoints and structured logs. | Define alert thresholds, escalation paths, and the target log/metrics platform for production operations. | Open |
+| DI-047 | Operations | Deployment topology and operational runbook are not documented. | Add infrastructure/deployment guidance covering topology, scaling assumptions, rollout model, and operator procedures. | Open |
+
 ## Residual Notes
 
 - Rendered diagram PNG artifacts were not regenerated in this audit pass. Source documentation was updated; image regeneration can be handled separately when PlantUML/Graphviz is available.
