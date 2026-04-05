@@ -1829,3 +1829,18 @@ The design specifies (Section 7.1): "At the LG breakpoint (992px), the sidebar n
 - Changed `.sidebar { width: 200px; }` to `.sidebar { width: 220px; }` in the `max-width: 991px` media query.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Admin articles table shows all four columns at MD breakpoint instead of compacting to three
+
+**Design reference:** `docs/detailed-designs/02-article-management/README.md`, Section 7.2 — Articles List — Tablet (MD Breakpoint)
+
+**Description:**
+The design specifies (Section 7.2): "At 768px, the sidebar is removed. The table is compacted to three columns: Title, Status, and Actions." The admin article listing showed all four columns (Title, Status, Date, Actions) at every breakpoint with no responsive CSS to hide the Date column. At tablet widths (768-991px) where the sidebar is already narrowed, the four-column table is cramped, and the design explicitly calls for compacting to three columns by removing Date.
+
+**Fix applied:**
+- Added `date-col` class to the Date `<th>` and `<td>` elements in `Admin/Articles/Index.cshtml`.
+- Added `.date-col { display: none; }` to the `max-width: 991px` media query in `_AdminLayout.cshtml`, hiding the Date column at MD and below.
+
+**Status:** FIXED
