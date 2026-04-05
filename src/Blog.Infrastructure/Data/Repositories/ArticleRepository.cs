@@ -14,7 +14,7 @@ public class ArticleRepository(BlogDbContext context) : IArticleRepository
 
     public async Task<(List<Article> Items, int TotalCount)> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken = default)
     {
-        var query = context.Articles.OrderByDescending(a => a.CreatedAt);
+        var query = context.Articles.Include(a => a.FeaturedImage).OrderByDescending(a => a.CreatedAt);
         var total = await query.CountAsync(cancellationToken);
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
         return (items, total);
@@ -22,6 +22,7 @@ public class ArticleRepository(BlogDbContext context) : IArticleRepository
 
     public async Task<IReadOnlyList<Article>> GetPublishedAsync(int page, int pageSize, CancellationToken cancellationToken = default)
         => await context.Articles
+            .Include(a => a.FeaturedImage)
             .Where(a => a.Published)
             .OrderByDescending(a => a.DatePublished)
             .Skip((page - 1) * pageSize)

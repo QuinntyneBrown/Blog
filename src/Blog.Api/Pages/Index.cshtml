@@ -31,9 +31,9 @@
             {
                 <article class="article-card">
                     <div class="article-card-image">
-                        @if (article.FeaturedImageId.HasValue)
+                        @if (!string.IsNullOrEmpty(article.FeaturedImageUrl))
                         {
-                            <img src="/assets/@article.FeaturedImageId" alt="@article.Title" loading="lazy" decoding="async" />
+                            <img src="@article.FeaturedImageUrl" alt="@article.Title" loading="lazy" decoding="async" />
                         }
                         else
                         {

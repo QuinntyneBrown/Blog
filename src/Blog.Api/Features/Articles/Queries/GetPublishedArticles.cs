@@ -17,7 +17,8 @@ public class GetPublishedArticlesHandler(IArticleRepository articles) : IRequest
         {
             Items = items.Select(a => new ArticleListDto(
                 a.ArticleId, a.Title, a.Slug, a.Abstract,
-                a.FeaturedImageId, a.Published, a.DatePublished,
+                a.FeaturedImageId, a.FeaturedImage != null ? $"/assets/{a.FeaturedImage.StoredFileName}" : null,
+                a.Published, a.DatePublished,
                 a.ReadingTimeMinutes, a.CreatedAt, a.UpdatedAt, a.Version)).ToList(),
             Page = request.Page,
             PageSize = request.PageSize,
