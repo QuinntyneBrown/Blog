@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using RedisRateLimiting;
 using Serilog;
 using StackExchange.Redis;
 using System.Threading.RateLimiting;
@@ -72,6 +73,7 @@ builder.Services.AddSingleton<ISearchHighlighter, SearchHighlighter>();
 builder.Services.AddSingleton<ICriticalCssService, CriticalCssService>();
 builder.Services.AddSingleton<IContentHashService, ContentHashService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // MediatR + Validation
 builder.Services.AddMediatR(cfg =>

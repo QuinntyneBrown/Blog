@@ -1,7 +1,3 @@
-using Blog.Domain.Interfaces;
-using Blog.Api.Common.Exceptions;
-using Blog.Api.Common.Models;
-
 using Blog.Api.Services;
 using FluentValidation;
 using MediatR;
@@ -22,47 +18,10 @@ public class LoginCommandValidator : AbstractValidator<LoginCommand>
     }
 }
 
-public class LoginCommandHandler(
-    IUserRepository userRepository,
-    IPasswordHasher passwordHasher,
-    ITokenService tokenService,
-    IEmailRateLimitService emailRateLimitService,
-    IUnitOfWork uow,
-    ILogger<LoginCommandHandler> logger) : IRequestHandler<LoginCommand, LoginResponse>
+public class LoginCommandHandler(IAuthService authService) : IRequestHandler<LoginCommand, LoginResponse>
 {
     public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        if (!emailRateLimitService.TryAcquire(request.Email, out var retryAfterSeconds))
-            throw new RateLimitExceededException(
-                "Too many login attempts for this email address. Please try again later.",
-                retryAfterSeconds);
-
-        var user = await userRepository.GetByEmailAsync(request.Email, cancellationToken);
-        if (user == null)
-        {
-            logger.LogInformation("Business event {EventType} occurred: {@Details}",
-                "UserAuthenticationFailed", new { Reason = "UserNotFound" });
-            throw new UnauthorizedException("Invalid email or password.");
-        }
-
-        if (!passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
-        {
-            logger.LogInformation("Business event {EventType} occurred: {@Details}",
-                "UserAuthenticationFailed", new { Reason = "InvalidPassword", UserId = user.UserId });
-            throw new UnauthorizedException("Invalid email or password.");
-        }
-
-        user.LastLoginAt = DateTime.UtcNow;
-        userRepository.Update(user);
-
-        await uow.SaveChangesAsync(cancellationToken);
-
-        var token = tokenService.GenerateToken(user);
-        var expiresAt = tokenService.GetExpiration();
-
-        logger.LogInformation("Business event {EventType} occurred: {@Details}",
-            "UserAuthenticated", new { UserId = user.UserId });
-
-        return new LoginResponse(token, expiresAt);
+        return await authService.LoginAsync(request.Email, request.Password, cancellationToken);
     }
 }
