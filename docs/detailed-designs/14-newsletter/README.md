@@ -74,7 +74,7 @@ The Newsletter feature allows the blog author to compose and send email newslett
 | `UpdateNewsletterHandler` | `UpdateNewsletterCommand` | Updates draft; returns 409 if sent (L2-058.2) or if `version` mismatches (optimistic concurrency) |
 | `DeleteNewsletterHandler` | `DeleteNewsletterCommand` | Deletes draft; returns 409 if sent (L2-059.2) |
 | `SendNewsletterHandler` | `SendNewsletterCommand` | Sets `status=Sent`, `dateSent=UtcNow`; enqueues emails (L2-060) |
-| `SubscribeHandler` | `SubscribeCommand` | Upserts subscriber record; sends confirmation email (L2-054) |
+| `SubscribeHandler` | `SubscribeCommand` | Upserts subscriber record; sends confirmation email (L2-054). The `Email` column has a unique index; if two concurrent requests for the same email both pass the initial existence check and both attempt insert, the second will hit a unique constraint violation — the handler must catch this exception and treat it as a successful no-op (returning 202), not bubble a 500. |
 | `ConfirmSubscriptionHandler` | `ConfirmSubscriptionCommand` | Validates token (48h window); returns 422 if token not found, already used, or expired; marks `confirmed=true` on success (L2-055) |
 | `UnsubscribeHandler` | `UnsubscribeCommand` | Sets `isActive=false` by unsubscribe token (L2-056) |
 
@@ -104,7 +104,8 @@ The Newsletter feature allows the blog author to compose and send email newslett
 - **Responsibility**: Abstraction over the transactional email provider. Implementations may use SMTP, SendGrid, or similar.
 - **Key methods**: `SendConfirmationEmailAsync(email, confirmUrl)`, `SendNewsletterEmailAsync(email, subject, bodyHtml, unsubscribeUrl)`
 - **Notes**: `SendNewsletterHandler` enqueues one Azure Service Bus message per confirmed subscriber and returns HTTP 202 immediately. A background `IHostedService` dequeues and calls `IEmailSender` per message with dead-letter retry.
-- **Service Bus consumer idempotency**: Azure Service Bus delivers messages at-least-once; a transient failure after `IEmailSender` succeeds but before the lock is released causes the same message to be redelivered. To prevent duplicate emails, each Service Bus message payload includes both `newsletterID` and `subscriberID`. The consumer checks a `NewsletterSendLog` table (columns: `NewsletterID`, `SubscriberID`, unique composite index `UQ_NewsletterSendLog_Newsletter_Subscriber`) before sending; if a row already exists, the message is completed without re-sending. The log row is inserted atomically with message completion via `ServiceBusReceiver.CompleteMessageAsync`.
+- **Service Bus consumer idempotency**: Azure Service Bus delivers messages at-least-once; a transient failure after `IEmailSender` succeeds but before the lock is released causes the same message to be redelivered. To prevent duplicate emails, each Service Bus message payload includes both `newsletterID` and `subscriberID`. The consumer checks a `NewsletterSendLog` table (columns: `NewsletterID`, `SubscriberID`, `SentAt datetime2`, unique composite index `UQ_NewsletterSendLog_Newsletter_Subscriber`) before sending; if a row already exists, the message is completed without re-sending. The log row is inserted atomically with message completion via `ServiceBusReceiver.CompleteMessageAsync`. The `SentAt` column enables a scheduled retention job to purge log rows older than a configurable threshold (e.g. 90 days) so the table does not grow unbounded.
+- **Service Bus enqueue failure**: `SendNewsletterHandler` persists `status=Sent` and the slug in a single DB transaction before beginning the enqueue loop. If the Service Bus enqueue subsequently fails (e.g. the queue is unavailable), the newsletter remains `Sent` in the DB but no messages were dispatched. To recover: a compensating back-office endpoint (or operator runbook) must be able to re-enqueue messages for a `Sent` newsletter by replaying `StreamConfirmedSubscriberIdsAsync()` and re-pushing to the queue. The consumer's idempotency check (`NewsletterSendLog`) ensures subscribers who already received the email are not emailed again during a replay. This failure mode must be surfaced as a structured log event `newsletter.enqueue_failed` at `Error` level with the `newsletterID` and the exception, so operators are alerted promptly.
 - **Recommended DB indexes**: `IX_NewsletterSubscriber_ConfirmationToken` on `ConfirmationToken` (filtered index, non-NULL rows only) and `IX_NewsletterSubscriber_UnsubscribeToken` on `UnsubscribeToken` — both are lookup keys in hot paths. `IX_Newsletter_Status` on `Newsletter.Status` to support the `?status` filter on the back-office list endpoint efficiently.
 
 ---
@@ -161,6 +162,7 @@ Key points:
 - The confirmation token is valid for 48 hours (L2-055.2).
 - On confirmation, `ConfirmationToken` is set to `null` and `TokenExpiresAt` is cleared — tokens are single-use and cannot be replayed.
 - Emails include `List-Unsubscribe` and `List-Unsubscribe-Post` headers with the unsubscribe token URL (L2-056.3).
+- **Expired token cleanup**: Subscriber rows whose `Confirmed = false` and `TokenExpiresAt < UtcNow` are never automatically removed by any request handler. A scheduled background job (e.g. a nightly `IHostedService` or Hangfire job) must delete rows where `Confirmed = false AND TokenExpiresAt < UtcNow` to prevent indefinite accumulation of unconfirmed records. Until the cleanup job is implemented, operators should document this as a known operational gap.
 
 ### 5.2 Send Newsletter
 
@@ -168,7 +170,7 @@ Key points:
 
 Key points:
 - Guard conditions: must be Draft status, must have ≥1 confirmed active subscriber. Returns 422 otherwise.
-- Status transitions from `Draft` to `Sent` atomically with the `dateSent` timestamp and `Slug` generation before any messages are enqueued.
+- Status transitions from `Draft` to `Sent` atomically with the `dateSent` timestamp and `Slug` generation before any messages are enqueued. If `ISlugGenerator` produces an empty or blank slug (e.g. the `Subject` contains only non-ASCII characters), `SendNewsletterHandler` must fall back to the newsletter's `NewsletterID` (formatted as a lowercase hex string without hyphens) as the slug, ensuring uniqueness without blocking the send.
 - Subscriber IDs are streamed via `IAsyncEnumerable` and enqueued to Azure Service Bus in batches of 100 to avoid memory pressure on large lists.
 - Each outbound email includes the subscriber's personal `unsubscribeToken` in the footer URL.
 
@@ -183,7 +185,7 @@ Key points:
 | `POST` | `/api/newsletters` | `{ subject, body }` | 201 + `NewsletterDto` | 400, 401 |
 | `PUT` | `/api/newsletters/{id}` | `{ subject, body, version }` | 200 + `NewsletterDto` | 400, 401, 404, 409 |
 | `DELETE` | `/api/newsletters/{id}` | — | 204 | 401, 404, 409 |
-| `POST` | `/api/newsletters/{id}/send` | — | 202 | 401, 404, 409, 422 |
+| `POST` | `/api/newsletters/{id}/send` | — | 202 | 401, 404, 409, 422, 503 (Service Bus unavailable — newsletter status is rolled back to Draft if the failure occurs before the DB commit; if it occurs after DB commit the failure is logged as `newsletter.enqueue_failed` and requires operator replay) |
 | `GET` | `/api/newsletters?page&pageSize&status` (default pageSize=20, max 50) | — | 200 + `PagedResponse<NewsletterListDto>` | 401 |
 
 ### Subscription endpoints (public)
@@ -226,10 +228,12 @@ SubscriberDto              { subscriberID, email, confirmed, isActive, confirmed
 - **Sent newsletter protection**: Update and delete operations are rejected with 409 once `status=Sent`. This prevents accidental data mutation of historical records.
 - **Rate limiting**: The `POST /api/newsletter-subscriptions` and `POST /api/newsletter-subscriptions/confirm` endpoints are covered by an IP-based rate limit to prevent abuse (same `write-endpoints` sliding-window policy used elsewhere). Rate limiting the confirm endpoint prevents brute-force token enumeration.
 - **Input length validation**: Command handlers enforce the DB column limits as server-side validation rules: `Subject` ≤ 512 chars, `Email` ≤ 256 chars (per RFC 5321 §4.5.3). Requests that exceed these limits are rejected with 400 before any persistence occurs.
+- **Pagination bounds**: `page` must be ≥ 1 and `pageSize` must be ≥ 1 and ≤ 50. Requests outside these bounds are rejected with 400. Zero or negative values cause division-by-zero or negative offsets in pagination math and must not be forwarded to the repository.
+- **Content-Type enforcement**: All `POST` and `PUT` endpoints must require `Content-Type: application/json`. Requests with a missing or mismatched `Content-Type` are rejected with 415 (Unsupported Media Type). This prevents silent null-model-binding failures when clients send `application/x-www-form-urlencoded` or other content types.
 - **HTML sanitisation**: `BodyHtml` is produced by `IMarkdownConverter` which wraps Markdig + HtmlSanitizer — XSS-safe.
 - **Token URL security**: Confirmation and unsubscribe links are only ever sent over HTTPS. The `confirmUrl` and `unsubscribeUrl` passed to `IEmailSender` are always constructed with `https://` scheme. Tokens are invalidated immediately on first use.
 - **GDPR — right to erasure**: Unsubscribing sets `IsActive = false` and clears `ConfirmationToken` but retains the subscriber row and email address. If a subscriber invokes the right to erasure, `SubscribeHandler`'s upsert logic must detect a hard-deleted row cannot be re-used. The system must support a hard-delete path: a back-office action that physically removes the `NewsletterSubscriber` row, nulls any `NewsletterSendLog` references, and removes the email address. This path is not exposed publicly — it is an admin operation. Until implemented, operators must document the erasure procedure in a Data Protection Impact Assessment.
-- **Observability**: Key lifecycle operations must emit structured log events at `Information` level: `subscriber.subscribed` (email hash only, never plaintext), `subscriber.confirmed`, `subscriber.unsubscribed`, `newsletter.sent` (newsletterID, recipientCount), `newsletter.send_failed` (newsletterID, subscriberID, error). Tokens and plaintext emails must never appear in log output.
+- **Observability**: Key lifecycle operations must emit structured log events at `Information` level: `subscriber.subscribed` (email hash only, never plaintext), `subscriber.confirmed`, `subscriber.unsubscribed`, `newsletter.sent` (newsletterID, recipientCount), `newsletter.send_failed` (newsletterID, subscriberID, error). `newsletter.enqueue_failed` (newsletterID, exception) must be emitted at `Error` level when the Service Bus enqueue loop fails after the newsletter status has been committed as Sent — this is an actionable alert requiring operator replay. Tokens and plaintext emails must never appear in log output.
 
 ---
 

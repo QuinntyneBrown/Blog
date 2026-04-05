@@ -60,7 +60,7 @@ The About Page feature provides a publicly visible biography for the site author
 
 - **Responsibility**: Reverts the live about content to a prior revision identified by `historyId`.
 - **Dependencies**: `AboutContentRepository`, `IMarkdownConverter`, `ICacheInvalidator`
-- **Steps**: (1) Load history record by `historyId`; return 404 if not found. (2) Verify `AboutContentId` matches the singleton — prevents cross-resource access. (3) Load the current live row; if the supplied `currentVersion` does not match the stored `Version`, return 409 (prevents a restore from silently overwriting concurrent edits). (4) Snapshot the current live row into `AboutContentHistory`. (5) Overwrite live row with the history snapshot fields; increment `Version`. (6) Call `ICacheInvalidator.InvalidateAsync("/about")`.
+- **Steps**: (1) Load history record by `historyId`; return 404 if not found. (2) Verify `AboutContentId` matches the singleton — prevents cross-resource access. (3) Load the current live row; if the supplied `currentVersion` does not match the stored `Version`, return 409 (prevents a restore from silently overwriting concurrent edits). (4) Snapshot the current live row into `AboutContentHistory`. (5) Overwrite live row with the history snapshot fields; increment `Version`. (6) Call `ICacheInvalidator.InvalidateAsync("/about")`. Steps 4 and 5 must execute within a single DB transaction so that a failure between them cannot produce an orphaned history snapshot with no corresponding live-row update.
 
 ### 3.4 GetAboutHistoryHandler
 
@@ -105,7 +105,7 @@ The About Page feature provides a publicly visible biography for the site author
 | `UpdatedAt` | `datetime2` | UTC, updated on save |
 | `Version` | `int` | Optimistic concurrency |
 
-**Design note**: The table is treated as a singleton. `UpsertAboutContentHandler` calls `GetCurrentAsync()` — if null, it inserts; otherwise it copies the current row to `AboutContentHistory` then updates. No unique constraints beyond the PK are needed.
+**Design note**: The table is treated as a singleton. `UpsertAboutContentHandler` calls `GetCurrentAsync()` — if null, it inserts; otherwise it copies the current row to `AboutContentHistory` then updates within a single DB transaction. No unique constraints beyond the PK are needed.
 
 #### AboutContentHistory
 
@@ -201,6 +201,9 @@ AboutContentHistoryDto  {
 - **Cache invalidation**: `ICacheInvalidator.InvalidateAsync("/about")` is called after both a successful PUT and a successful restore, ensuring visitors see updated content promptly.
 - **Optimistic concurrency**: `PUT /api/about` requires `version` in the request body. A mismatch returns 409 to prevent lost-update conflicts when the author has the page open in two tabs simultaneously. `PUT /api/about/restore/{historyId}` likewise requires `currentVersion` in the request body and returns 409 on mismatch, preventing a restore from silently overwriting a concurrent edit.
 - **Input length validation**: `UpsertAboutContentHandler` enforces DB column limits server-side: `Heading` ≤ 256 chars. Requests exceeding this limit are rejected with 400 before any persistence occurs. `Body` is `nvarchar(max)` and is bounded instead by the Kestrel 1 MB request body limit (see §6-restful-api global config).
+- **Pagination bounds**: `page` must be ≥ 1 and `pageSize` must be ≥ 1 and ≤ 50. Requests outside these bounds are rejected with 400. Zero or negative values cause division-by-zero or negative offsets in pagination math and must not be forwarded to the repository.
+- **Content-Type enforcement**: The `PUT /api/about` and `PUT /api/about/restore/{historyId}` endpoints must require `Content-Type: application/json`. Requests with a missing or mismatched `Content-Type` are rejected with 415 (Unsupported Media Type). This prevents silent null-model-binding failures.
+- **First-insert concurrency**: `UpsertAboutContentHandler` performs a read-then-write (check for existing row → insert if null, update if found). Two simultaneous first-ever saves will both read null and both attempt insert, causing a primary key violation on the second writer. The handler must either: (a) catch the resulting `DbUpdateException` and retry as an update, or (b) wrap the check and insert in a serializable DB transaction. Option (a) (catch-and-retry) is preferred as it avoids elevated isolation level overhead on every save.
 - **Observability**: Key operations must emit structured log events at `Information` level: `about.upserted` (version), `about.restored` (historyId, restoredVersion). Cache invalidation failures are logged at `Warning` level with the cache key so operators can manually evict stale entries.
 
 ---
