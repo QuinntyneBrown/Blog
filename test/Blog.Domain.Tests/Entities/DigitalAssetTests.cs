@@ -11,8 +11,8 @@ public class DigitalAssetTests
     {
         var asset = new DigitalAsset();
 
-        asset.Width.Should().BeNull();
-        asset.Height.Should().BeNull();
+        asset.Width.Should().Be(0);
+        asset.Height.Should().Be(0);
     }
 
     [Fact]

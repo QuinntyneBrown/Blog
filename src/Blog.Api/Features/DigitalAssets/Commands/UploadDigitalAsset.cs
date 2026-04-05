@@ -30,21 +30,15 @@ public class UploadDigitalAssetCommandHandler(IUnitOfWork uow, IWebHostEnvironme
         Directory.CreateDirectory(assetsPath);
         var filePath = Path.Combine(assetsPath, storedFileName);
 
-        int? width = null, height = null;
-
         using (var stream = request.File.OpenReadStream())
         {
             using var fileStream = File.Create(filePath);
             await stream.CopyToAsync(fileStream, cancellationToken);
         }
 
-        try
-        {
-            using var image = await Image.LoadAsync(filePath, cancellationToken);
-            width = image.Width;
-            height = image.Height;
-        }
-        catch { /* Not an image we can inspect */ }
+        using var image = await Image.LoadAsync(filePath, cancellationToken);
+        var width = image.Width;
+        var height = image.Height;
 
         var asset = new DigitalAsset
         {
