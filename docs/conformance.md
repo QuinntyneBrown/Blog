@@ -574,3 +574,18 @@ The design specifies (Section 3.6): "Uses `<nav aria-label="Pagination">` for ac
 - Added `aria-label="Pagination"` to the `<nav class="pagination">` element in `Articles/Index.cshtml`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — IArticleRepository.GetPublishedAsync returns a tuple instead of IReadOnlyList<Article>; GetPublishedCountAsync missing
+
+**Design reference:** `docs/detailed-designs/10-data-persistence/README.md`, Section 3.3 — Repository Pattern (IArticleRepository)
+
+**Description:**
+The design specifies two separate members on `IArticleRepository` for querying published articles:
+1. `Task<IReadOnlyList<Article>> GetPublishedAsync(int page, int pageSize)` — returns only the page of items as a read-only list.
+2. `Task<int> GetPublishedCountAsync()` — a dedicated method that returns the total count of published articles for pagination metadata.
+
+The implementation collapsed both into a single method with a tuple return type: `Task<(List<Article> Items, int TotalCount)> GetPublishedAsync(int page, int pageSize)`. This diverges from the design in two ways: the return type is `List<Article>` (not `IReadOnlyList<Article>`), and `GetPublishedCountAsync()` does not exist on the interface at all. Any code that relies on the designed interface contract (e.g., test doubles, future implementations) will not find the expected method signature. `GetPublishedArticlesHandler` uses tuple destructuring to read both values, coupling it to the non-standard tuple shape instead of calling the two methods the design defines.
+
+**Status:** OPEN
