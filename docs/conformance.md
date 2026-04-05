@@ -1762,3 +1762,20 @@ The design specifies (Section 3.6): "**Disables** the previous link on page 1 an
 - Added `.pagination-btn.disabled { color: var(--foreground-disabled); cursor: default; pointer-events: none; }` CSS rule.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Article editor page missing Delete button with confirmation modal
+
+**Design reference:** `docs/detailed-designs/02-article-management/README.md`, Section 7.4 — Article Editor
+
+**Description:**
+The design specifies (Section 7.4): the editor metadata sidebar contains "action buttons: Publish/Save (`Comp/Btn/Primary`) and Delete (`Comp/Btn/Destructive`)" and "Destructive actions (delete) trigger a `Comp/Modal` confirmation dialog." The editor page had Save Draft and Publish buttons but no Delete button. An admin wanting to delete an article from the editor had to navigate back to the article listing page to find the delete action — inconsistent with the design's intent for the editor to be a complete article management surface.
+
+**Fix applied:**
+- Added a "Delete Article" button (`btn-destructive`) to the editor sidebar in `Edit.cshtml`, shown only when editing an existing article.
+- Added a `Comp/Modal` confirmation dialog with Cancel and Delete buttons, matching the pattern already used on the article listing page.
+- Added JS for `showDeleteModal()`/`closeDeleteModal()` with backdrop-click-to-dismiss.
+- Added `OnPostDeleteAsync` handler in `Edit.cshtml.cs` that sends a `DeleteArticleCommand` with the article's `If-Match` version token and redirects to the listing on success.
+
+**Status:** FIXED
