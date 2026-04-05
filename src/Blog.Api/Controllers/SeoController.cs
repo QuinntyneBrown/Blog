@@ -102,6 +102,7 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
                 new XElement("link", $"{BaseUrl}/articles/{a.Slug}"),
                 new XElement("description", a.Abstract),
                 new XElement("pubDate", a.DatePublished?.ToString("R")),
+                new XElement(dc + "creator", "Quinn Brown"),
                 new XElement("guid", $"{BaseUrl}/articles/{a.Slug}")));
 
         var channel = new XElement("channel",
@@ -142,7 +143,9 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
                 new XElement(atom + "link",
                     new XAttribute("href", $"{BaseUrl}/articles/{a.Slug}"),
                     new XAttribute("rel", "alternate")),
-                new XElement(atom + "updated", a.DatePublished?.ToString("O") ?? a.CreatedAt.ToString("O"))));
+                new XElement(atom + "published", a.DatePublished?.ToString("O") ?? a.CreatedAt.ToString("O")),
+                new XElement(atom + "updated", a.UpdatedAt.ToString("O")),
+                new XElement(atom + "author", new XElement(atom + "name", "Quinn Brown"))));
 
         var feed = new XElement(atom + "feed",
             new XElement(atom + "id", BaseUrl),
