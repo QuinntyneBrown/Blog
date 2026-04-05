@@ -47,10 +47,11 @@ The About Page feature provides a publicly visible biography for the site author
   - `GET /api/about/history` — paginated revision history (requires `[Authorize]`)
   - `PUT /api/about/restore/{historyId}` — restore a prior revision (requires `[Authorize]`)
 - **Caching**: The public GET response is served with `Cache-Control: public, max-age=60, stale-while-revalidate=600` (L2-071.3). The `ICacheInvalidator` is called on a successful PUT or restore to bust the cached response.
-- **Empty state**: If no about content has been authored, `GET /api/about` returns `null` in the body with HTTP 200. The public Razor Page renders a default message (L2-071.2).
+- **Empty state**: If no about content has been authored, `GET /api/about` returns `null` in the body with HTTP 200. The public Razor Page renders a default message (L2-071.2). `404` is intentionally avoided here — a 404 on a well-known singleton endpoint would look like a routing or server error rather than a legitimate empty-content state, and would require special-casing in the Razor Page and any API client that checks for 404 vs 200. Returning `200 + null` makes the absence of content a normal, handled state rather than an error. Clients should treat a null body as "no content yet authored" and render an empty state accordingly.
 
 ### 3.2 UpsertAboutContentHandler
 
+- **Validator**: `UpsertAboutContentCommandValidator` (ADR-0005 FluentValidation pipeline behaviour; validates `Heading` ≤ 256 chars, `Body` non-empty, `version` ≥ 1 on update path)
 - **Responsibility**: Creates the about record if it does not exist; updates it if it does. This is the only mutation handler for about content.
 - **Dependencies**: `AboutContentRepository`, `IMarkdownConverter`, `ICacheInvalidator`, `DigitalAssetRepository` (to validate `profileImageId` and verify asset ownership matches the requesting user)
 - **Pre-render**: Markdown `Body` is converted to sanitized HTML at save time and stored in `BodyHtml`. Runtime rendering is not performed (same pattern as articles).
@@ -59,6 +60,7 @@ The About Page feature provides a publicly visible biography for the site author
 
 ### 3.3 RestoreAboutContentHandler
 
+- **Validator**: `RestoreAboutContentCommandValidator` (validates `historyId` non-empty, `currentVersion` ≥ 1)
 - **Responsibility**: Reverts the live about content to a prior revision identified by `historyId`.
 - **Dependencies**: `AboutContentRepository`, `IMarkdownConverter`, `ICacheInvalidator`
 - **Steps**: (1) Load history record by `historyId`; return 404 if not found. (2) Verify `AboutContentId` matches the singleton — prevents cross-resource access. (3) Load the current live row; if the supplied `currentVersion` does not match the stored `Version`, return 409 (prevents a restore from silently overwriting concurrent edits). (4) Snapshot the current live row into `AboutContentHistory`. (5) Overwrite live row with the history snapshot fields; increment `Version`. (6) Call `ICacheInvalidator.InvalidateAsync("/about")`. Steps 4 and 5 must execute within a single DB transaction so that a failure between them cannot produce an orphaned history snapshot with no corresponding live-row update.
@@ -108,7 +110,9 @@ The About Page feature provides a publicly visible biography for the site author
 
 **Design note**: The table is treated as a singleton. `UpsertAboutContentHandler` calls `GetCurrentAsync()` — if null, it inserts; otherwise it copies the current row to `AboutContentHistory` then updates within a single DB transaction. No unique constraints beyond the PK are needed.
 
-**Initial version value**: The `Version` field is set to `1` on the first insert (not `0`). This makes the first PUT after creation intuitive: the client receives `version: 1` in the `201` response and sends `version: 1` back on the first update. Using `0` for the initial insert would require clients to distinguish a "never-updated" state from a standard version counter, which adds unnecessary complexity. The `Version` in `AboutContentHistory` snapshots reflects the version number copied from the parent at the time of the snapshot — so the history row for the first edit will carry `version: 1`, corresponding to the state being replaced.
+**Initial version value**: The `Version` field is set to `1` on the first insert (not `0`). This makes the first PUT after creation intuitive: the client receives `version: 1` in the `200` response and sends `version: 1` back on the first update. Using `0` for the initial insert would require clients to distinguish a "never-updated" state from a standard version counter, which adds unnecessary complexity. The `Version` in `AboutContentHistory` snapshots reflects the version number copied from the parent at the time of the snapshot — so the history row for the first edit will carry `version: 1`, corresponding to the state being replaced.
+
+**Upsert response code**: `PUT /api/about` returns `200` for both the first-ever insert and subsequent updates. REST convention suggests `201 Created` for an initial insert via PUT, but since the About content is a singleton and clients do not discover the URL from a Location header, `200` is simpler and consistent. A client that needs to distinguish create from update can compare `createdAt == updatedAt` in the response body (they are equal on first insert and diverge on subsequent saves).
 
 #### AboutContentHistory
 
@@ -126,6 +130,8 @@ The About Page feature provides a publicly visible biography for the site author
 **Recommended index**: `IX_AboutContentHistory_AboutContentId_ArchivedAt` on `(AboutContentId, ArchivedAt DESC)` to support the paginated history query efficiently.
 
 **Cascade delete**: The FK from `AboutContentHistory.AboutContentId` → `AboutContent.AboutContentId` must be configured with `ON DELETE CASCADE`. Because `AboutContent` is a singleton its row is never expected to be deleted in normal operation, but without cascade the constraint would block any future hard-delete of the singleton and leave orphaned history rows.
+
+**Retention**: `AboutContentHistory` has no automatic retention policy. For a single-author blog the table is expected to remain small (one row per save) and unbounded growth is not a practical concern. No scheduled purge job is required. If the table does grow large (e.g. frequent programmatic saves), a manual or operator-triggered cleanup of rows older than a chosen threshold is sufficient. This is intentionally left as a low-priority operational task rather than a design obligation, in contrast to `NewsletterSendLog` (which grows proportional to subscriber count × newsletter count and warrants the documented 90-day retention job).
 
 ---
 

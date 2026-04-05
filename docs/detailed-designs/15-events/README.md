@@ -58,20 +58,20 @@ The Events feature allows the blog author to manage a list of speaking engagemen
 
 ### 3.2 Command Handlers
 
-| Handler | Command | Effect |
-|---------|---------|--------|
-| `CreateEventHandler` | `CreateEventCommand` | Generates slug, persists with `published=false` |
-| `UpdateEventHandler` | `UpdateEventCommand` | Updates all mutable fields; regenerates slug from new title; calls `ICacheInvalidator` if the event is currently `Published = true` |
-| `DeleteEventHandler` | `DeleteEventCommand` | Removes event; returns 409 if `Published = true` (must unpublish first) |
-| `PublishEventHandler` | `PublishEventCommand` | Sets `published=true`; calls `ICacheInvalidator` to bust the public events cache |
-| `UnpublishEventHandler` | `UnpublishEventCommand` | Sets `published=false`; calls `ICacheInvalidator` to bust the public events cache |
+| Handler | Command | Validator | Effect |
+|---------|---------|-----------|--------|
+| `CreateEventHandler` | `CreateEventCommand` | `CreateEventCommandValidator` | Generates slug, persists with `published=false` |
+| `UpdateEventHandler` | `UpdateEventCommand` | `UpdateEventCommandValidator` | Updates all mutable fields; regenerates slug from new title; calls `ICacheInvalidator` if the event is currently `Published = true` |
+| `DeleteEventHandler` | `DeleteEventCommand` | — | Removes event; returns 409 if `Published = true` (must unpublish first) |
+| `PublishEventHandler` | `PublishEventCommand` | — | Sets `published=true`; calls `ICacheInvalidator` to bust the public events cache |
+| `UnpublishEventHandler` | `UnpublishEventCommand` | — | Sets `published=false`; calls `ICacheInvalidator` to bust the public events cache |
 
 ### 3.3 Query Handlers
 
 | Handler | Query | Returns |
 |---------|-------|---------|
 | `GetEventsHandler` | `GetEventsQuery(page, pageSize)` | Paginated list, all statuses, descending by `StartDate` |
-| `GetPublishedEventsHandler` | `GetPublishedEventsQuery(upcomingPage, pastPage, pageSize)` | `{ upcoming: PagedResult<PublicEventDto>, past: PagedResult<PublicEventDto> }` split by `StartDate` vs `UtcNow` |
+| `GetPublishedEventsHandler` | `GetPublishedEventsQuery(upcomingPage, pastPage, pageSize)` | `{ upcoming: PagedResponse<PublicEventDto>, past: PagedResponse<PublicEventDto> }` split by `StartDate` vs `UtcNow` |
 | `GetEventBySlugHandler` | `GetEventBySlugQuery(slug)` | Single published event; 404 if not found or not published |
 | `GetEventByIdHandler` | `GetEventByIdQuery(eventId)` | Admin detail by ID |
 
@@ -110,7 +110,7 @@ The Events feature allows the blog author to manage a list of speaking engagemen
 | `EventId` | `Guid` | PK |
 | `Title` | `nvarchar(256)` | Required |
 | `Slug` | `nvarchar(256)` | Unique index; generated from `Title` |
-| `Description` | `nvarchar(max)` | Required |
+| `Description` | `nvarchar(max)` | Required; application layer enforces ≤ 4000 chars |
 | `StartDate` | `datetime2` | Required; drives upcoming/past split |
 | `EndDate` | `datetime2?` | Optional |
 | `Location` | `nvarchar(512)` | Required |
@@ -176,7 +176,7 @@ Key points:
 EventDto         { eventId, title, slug, description, startDate, endDate?, location, externalUrl?, published, createdAt, updatedAt, version }
 EventListDto     { eventId, title, slug, startDate, location, published }
 PublicEventDto   { title, slug, description, startDate, endDate?, location, externalUrl? }  // eventId omitted — public consumers navigate by slug; exposing PK enables GUID enumeration. Strips internal fields (published, version, updatedAt)
-PublicEventsDto  { upcoming: PagedResult<PublicEventDto>, past: PagedResult<PublicEventDto> }
+PublicEventsDto  { upcoming: PagedResponse<PublicEventDto>, past: PagedResponse<PublicEventDto> }
 ```
 
 ---
@@ -191,7 +191,7 @@ PublicEventsDto  { upcoming: PagedResult<PublicEventDto>, past: PagedResult<Publ
 - **Unpublished event access**: `GetEventBySlugHandler` explicitly checks `Published == true` before returning the event, ensuring draft events are not accessible to public visitors (L2-070.2).
 - **HTTP caching**: The `GET /api/events/published` and `GET /api/events/by-slug/{slug}` endpoints are served with `Cache-Control: public, max-age=60, stale-while-revalidate=300`. Publish and unpublish operations must call `ICacheInvalidator` to bust the public events cache. `UpdateEventHandler` must also call `ICacheInvalidator` when the event being updated is currently published, so that title, date, or location changes are reflected immediately. **Slug change invalidation**: because the slug is regenerated from the title on every update (see OQ1), a title change produces a new slug. When this occurs, `UpdateEventHandler` must invalidate **both** the old slug's cache entry (`/api/events/by-slug/{oldSlug}`) and the published-list cache entry (`/api/events/published`). The old slug must be read from the existing entity before the update is applied so that the stale cache key is known. Failing to invalidate the old slug leaves a ghost cache entry that serves a 200 response for up to `max-age=60` seconds after the slug has changed, which is incorrect (a subsequent request for the old slug once the cache expires will return 404).
 - **Optimistic concurrency**: `PUT /api/events/{id}` requires `version` in the request body. A mismatch returns 409 to prevent lost-update conflicts.
-- **Input length validation**: Command handlers enforce DB column limits as server-side validation: `Title` ≤ 256 chars, `Location` ≤ 512 chars, `ExternalUrl` ≤ 2048 chars. Requests exceeding these limits are rejected with 400 before any persistence occurs.
+- **Input length validation**: Command handlers enforce DB column limits as server-side validation: `Title` ≤ 256 chars, `Description` ≤ 4000 chars (event blurb; `nvarchar(max)` is retained in the schema for migration flexibility but the application layer enforces this cap — equivalent to the Kestrel 1 MB limit applied to Newsletter/About `Body`), `Location` ≤ 512 chars, `ExternalUrl` ≤ 2048 chars. Requests exceeding these limits are rejected with 400 before any persistence occurs.
 - **Pagination bounds**: `page`, `upcomingPage`, and `pastPage` must be ≥ 1 and `pageSize` must be ≥ 1 and ≤ 50. Requests outside these bounds are rejected with 400. Zero or negative values cause division-by-zero or negative offsets in pagination math and must not be forwarded to the repository.
 - **Content-Type enforcement**: All `POST` and `PUT` endpoints must require `Content-Type: application/json`. Requests with a missing or mismatched `Content-Type` are rejected with 415 (Unsupported Media Type). This prevents silent null-model-binding failures when clients send `application/x-www-form-urlencoded` or other content types.
 - **Slug generation failure**: If `ISlugGenerator` produces an empty or blank slug (e.g. `Title` contains only non-ASCII characters), `CreateEventHandler` and `UpdateEventHandler` must fall back to the event's `EventId` (formatted as a lowercase hex string without hyphens) as the slug, ensuring uniqueness without failing the operation.
@@ -203,5 +203,5 @@ PublicEventsDto  { upcoming: PagedResult<PublicEventDto>, past: PagedResult<Publ
 ## 8. Open Questions
 
 1. **Slug regeneration on update**: ~~Consider freezing the slug after first publish.~~ **Resolved**: The slug is regenerated on every update from the current title. Bookmarked URLs may break on title changes; this is accepted. `UpdateEventHandler` regenerates the slug and returns 409 if it conflicts with a different event.
-2. **Pagination on public events**: ~~L2-069 does not mention pagination.~~ **Resolved**: Pagination is added to the public events page. Both the upcoming and past sections are paginated independently. `GetPublishedEventsQuery` accepts `upcomingPage`, `pastPage`, and `pageSize` parameters. The public API response is updated to `{ upcoming: PagedResult<PublicEventDto>, past: PagedResult<PublicEventDto> }`.
+2. **Pagination on public events**: ~~L2-069 does not mention pagination.~~ **Resolved**: Pagination is added to the public events page. Both the upcoming and past sections are paginated independently. `GetPublishedEventsQuery` accepts `upcomingPage`, `pastPage`, and `pageSize` parameters. The public API response is updated to `{ upcoming: PagedResponse<PublicEventDto>, past: PagedResponse<PublicEventDto> }`.
 3. **Time zone handling**: ~~Should the time zone be a field on the event, a site-wide setting, or always UTC?~~ **Resolved**: `StartDate` is stored and displayed as UTC. No time zone conversion is performed. The public page renders dates with an explicit "UTC" suffix so visitors understand the reference.

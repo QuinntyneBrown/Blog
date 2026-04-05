@@ -53,6 +53,7 @@ The Newsletter feature allows the blog author to compose and send email newslett
   - `PUT /api/newsletters/{id}` — update draft
   - `DELETE /api/newsletters/{id}` — delete draft
   - `POST /api/newsletters/{id}/send` — send newsletter
+  - `GET /api/newsletters/{id}` — back-office detail by PK; used by the edit form to pre-populate fields
   - `GET /api/newsletters` — paginated list (with optional `status` filter)
 - **Dependencies**: MediatR dispatcher, JWT middleware (all endpoints require `[Authorize]`)
 
@@ -60,24 +61,24 @@ The Newsletter feature allows the blog author to compose and send email newslett
 
 - **Responsibility**: Public endpoints for subscription lifecycle — sign-up, confirmation, unsubscribe.
 - **Interfaces**:
-  - `POST /api/newsletter-subscriptions` — subscribe (anonymous); returns 202 (confirmation email enqueued)
+  - `POST /api/newsletter-subscriptions` — subscribe (anonymous); returns 202 (confirmation email sent synchronously; 202 signals "accepted, check your email" rather than implying async processing)
   - `POST /api/newsletter-subscriptions/confirm` — confirm subscription via token in request body (anonymous); POST prevents link prefetchers from accidentally activating the confirmation
   - `DELETE /api/newsletter-subscriptions/{token}` — unsubscribe (anonymous, token-based); returns 204; idempotent — if the subscriber is already inactive the endpoint still returns 204 (prevents status enumeration)
-  - `GET /api/subscribers` — paginated subscriber list (auth-guarded, for back office)
+  - `GET /api/subscribers` — paginated subscriber list (auth-guarded, for back office). The route lives on `SubscriptionsController` rather than a separate admin controller because the subscriber lifecycle (subscribe, confirm, unsubscribe, list) is cohesive within this controller. A future back-office controller split is straightforward — the route path itself is not coupled to the controller class name.
 - **Security**: No authentication required for sign-up/confirm/unsubscribe. Tokens are opaque random values (not guessable). The sign-up endpoint never reveals whether an email is already subscribed (L2-054.2). The confirmation endpoint uses POST (not GET) to prevent HTTP proxies and link-preview crawlers from pre-fetching and unintentionally confirming subscriptions (OWASP A01 — using GET for state-changing operations is unsafe).
 - **Unsubscribe token Referer leakage**: The unsubscribe token appears in the URL path (`DELETE /api/newsletter-subscriptions/{token}`). When a user visits a page containing third-party resources (analytics, fonts, images), browsers may send the full URL — including the token — in the `Referer` request header to those third-party origins. Mitigation: the Razor Page that renders the unsubscribe confirmation must set `Referrer-Policy: no-referrer` (or `strict-origin-when-cross-origin`) in its HTTP response headers so the token is not forwarded to third-party origins. Additionally, unsubscribe confirmation links sent in emails should be loaded as the sole navigation on that page rather than embedded in pages with external resource loads. The token itself remains sufficient as proof of intent since it is a 256-bit CSPRNG value; the Referer risk is about token disclosure, not forgery.
 
 ### 3.3 Command Handlers
 
-| Handler | Command | Effect |
-|---------|---------|--------|
-| `CreateNewsletterHandler` | `CreateNewsletterCommand` | Persists newsletter with `status=Draft` |
-| `UpdateNewsletterHandler` | `UpdateNewsletterCommand` | Updates draft; returns 409 if sent (L2-058.2) or if `version` mismatches (optimistic concurrency) |
-| `DeleteNewsletterHandler` | `DeleteNewsletterCommand` | Deletes draft; returns 409 if sent (L2-059.2) |
-| `SendNewsletterHandler` | `SendNewsletterCommand` | Sets `status=Sent`, `dateSent=UtcNow`; enqueues emails (L2-060); calls `ICacheInvalidator` to bust the public archive list cache after status is committed |
-| `SubscribeHandler` | `SubscribeCommand` | Upserts subscriber record; sends confirmation email (L2-054). The `Email` column has a unique index; if two concurrent requests for the same email both pass the initial existence check and both attempt insert, the second will hit a unique constraint violation — the handler must catch this exception and treat it as a successful no-op (returning 202), not bubble a 500. |
-| `ConfirmSubscriptionHandler` | `ConfirmSubscriptionCommand` | Validates token (48h window); returns 422 if token not found, already used, or expired; marks `confirmed=true` on success (L2-055). The expiry check must use strict less-than (`TokenExpiresAt < UtcNow`), meaning a token submitted at exactly the boundary instant is still accepted. This avoids penalising users who click a link in the final second of the window due to clock skew or network delay. |
-| `UnsubscribeHandler` | `UnsubscribeCommand` | Sets `isActive=false` by unsubscribe token (L2-056) |
+| Handler | Command | Validator | Effect |
+|---------|---------|-----------|--------|
+| `CreateNewsletterHandler` | `CreateNewsletterCommand` | `CreateNewsletterCommandValidator` | Persists newsletter with `status=Draft` |
+| `UpdateNewsletterHandler` | `UpdateNewsletterCommand` | `UpdateNewsletterCommandValidator` | Updates draft; returns 409 if sent (L2-058.2) or if `version` mismatches (optimistic concurrency) |
+| `DeleteNewsletterHandler` | `DeleteNewsletterCommand` | — | Deletes draft; returns 409 if sent (L2-059.2) |
+| `SendNewsletterHandler` | `SendNewsletterCommand` | — | Sets `status=Sent`, `dateSent=UtcNow`; enqueues emails (L2-060); calls `ICacheInvalidator` to bust the public archive list cache after status is committed |
+| `SubscribeHandler` | `SubscribeCommand` | `SubscribeCommandValidator` | Upserts subscriber record; sends confirmation email synchronously via `IEmailSender` (L2-054). Sending one transactional email per sign-up is acceptable here — this is a single SendGrid call, not a bulk dispatch; the 202 response is held open only for that duration. If synchronous latency becomes a concern, the confirmation email can be enqueued to Service Bus in a later iteration. The `Email` column has a unique index; if two concurrent requests for the same email both pass the initial existence check and both attempt insert, the second will hit a unique constraint violation — the handler must catch this exception and treat it as a successful no-op (returning 202), not bubble a 500. |
+| `ConfirmSubscriptionHandler` | `ConfirmSubscriptionCommand` | `ConfirmSubscriptionCommandValidator` | Validates token (48h window); returns 422 if token not found, already used, or expired; marks `confirmed=true` on success (L2-055). The expiry check must use strict less-than (`TokenExpiresAt < UtcNow`), meaning a token submitted at exactly the boundary instant is still accepted. This avoids penalising users who click a link in the final second of the window due to clock skew or network delay. |
+| `UnsubscribeHandler` | `UnsubscribeCommand` | — | Sets `isActive=false` by unsubscribe token (L2-056) |
 
 ### 3.4 NewsletterRepository
 
@@ -90,6 +91,7 @@ The Newsletter feature allows the blog author to compose and send email newslett
 | Handler | Query | Returns |
 |---------|-------|---------|
 | `GetNewslettersHandler` | `GetNewslettersQuery(page, pageSize, status?)` | Paginated list for back office |
+| `GetNewsletterByIdHandler` | `GetNewsletterByIdQuery(newsletterId)` | Single newsletter by PK (back office); 404 if not found |
 | `GetNewsletterArchiveHandler` | `GetNewsletterArchiveQuery(page, pageSize)` | Paginated list of sent newsletters for public archive |
 | `GetNewsletterBySlugHandler` | `GetNewsletterBySlugQuery(slug)` | Single sent newsletter by slug; 404 if not found or not Sent |
 
@@ -149,6 +151,7 @@ The Newsletter feature allows the blog author to compose and send email newslett
 | `IsActive` | `bit` | False after unsubscribe |
 | `ResubscribedAt` | `datetime2?` | UTC timestamp of most recent reactivation; null on first sign-up |
 | `CreatedAt` | `datetime2` | UTC, set on insert |
+| `UpdatedAt` | `datetime2` | UTC, updated whenever the row changes (confirm, unsubscribe, resubscribe). Provides a single "last modified" timestamp useful for change-feed auditing and as a cache-busting signal on the subscriber management UI. |
 
 ---
 
@@ -188,6 +191,7 @@ Key points:
 | `PUT` | `/api/newsletters/{id}` | `{ subject, body, version }` | 200 + `NewsletterDto` | 400, 401, 404, 409 |
 | `DELETE` | `/api/newsletters/{id}` | — | 204 | 401, 404, 409 |
 | `POST` | `/api/newsletters/{id}/send` | — | 202 | 401, 404, 409, 422, 503 (Service Bus unavailable — newsletter status is rolled back to Draft if the failure occurs before the DB commit; if it occurs after DB commit the failure is logged as `newsletter.enqueue_failed` and requires operator replay) |
+| `GET` | `/api/newsletters/{id}` | — | 200 + `NewsletterDto` | 401, 404 |
 | `GET` | `/api/newsletters?page&pageSize&status` (default pageSize=20, max 50) | — | 200 + `PagedResponse<NewsletterListDto>` | 401 |
 
 ### Subscription endpoints (public)
