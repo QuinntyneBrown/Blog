@@ -54,6 +54,8 @@ builder.Services.AddSingleton<ICacheInvalidator, CacheInvalidator>();
 builder.Services.AddSingleton<IETagGenerator, ETagGenerator>();
 builder.Services.AddSingleton<IImageVariantGenerator, ImageVariantGenerator>();
 builder.Services.AddSingleton<ISearchHighlighter, SearchHighlighter>();
+builder.Services.AddSingleton<ICriticalCssService, CriticalCssService>();
+builder.Services.AddSingleton<IContentHashService, ContentHashService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
 // MediatR + Validation
@@ -261,6 +263,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<SlugRedirectMiddleware>();
+app.UseMiddleware<ContentHashRewriteMiddleware>();
 app.UseStaticFiles(new StaticFileOptions
 {
     OnPrepareResponse = ctx =>
