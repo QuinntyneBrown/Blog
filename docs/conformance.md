@@ -1087,6 +1087,8 @@ The design specifies (Section 7.1): "File: Development — Rolling file logs in 
 
 ## 2026-04-05 — DeleteArticleCommandHandler does not invalidate response cache
 
+
+
 **Design reference:** `docs/detailed-designs/07-web-performance/README.md`, Section 3.1 — ResponseCachingMiddleware, Section 7.2 — Caching Strategy
 
 **Description:**
@@ -1097,3 +1099,19 @@ The design specifies (Section 7.2): "When an author publishes or updates a post,
 - Captured the article's `Slug` before removal and called `cacheInvalidator.InvalidateArticle(slug)` after `SaveChangesAsync`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — JSON-LD Article structured data missing `image` and `publisher.logo` properties
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.2 — JsonLdGenerator; Section 4.3 — JsonLdArticle
+
+**Description:**
+The design specifies (Section 3.2): "Article pages emit a `Schema.org/Article` object with: `headline`, `datePublished`, `dateModified`, `author` (Person), `description`, `image`, `publisher` (Organization with logo), `mainEntityOfPage`." The `JsonLdArticle` data model (Section 4.3) explicitly defines two fields that are missing from the `Slug.cshtml` implementation:
+
+1. **`image`** (`string?`) — the featured image URL. `Slug.cshtml` has `FeaturedImageUrl` available on `Model.Article` but the JSON-LD `<script>` block has no `image` property at all. Google's Article rich result validator requires `image` to be present for the page to be eligible for article rich snippets in search results.
+2. **`publisher.logo`** — the design specifies the `publisher` object as `JsonLdOrganization` with `@type "Organization"`, `name`, **and `logo`**. The implementation only emits `@type` and `name` — the `logo` URL is entirely absent. Google's structured data guidelines for `Article` require a `publisher.logo` to qualify for rich results in Google Search.
+
+A prior conformance fix ("JSON-LD structured data not implemented on any page") introduced the `<script type="application/ld+json">` block but did not include these two properties. Without `image` and `publisher.logo`, the article pages fail Google's Article rich result requirements and lose eligibility for enhanced search snippets.
+
+**Status:** OPEN
