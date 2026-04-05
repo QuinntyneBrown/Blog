@@ -17,6 +17,7 @@ on:
 env:
   STAGING_APP: blog-staging-api
   STAGING_RG: rg-blog-staging
+  STAGING_LOCATION: canadacentral
   PROD_APP: blog-production-api
   PROD_RG: rg-blog-production
   DOTNET_VERSION: '8.0.x'
