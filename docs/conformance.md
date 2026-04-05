@@ -409,9 +409,16 @@ The design resolves Open Question 4: "Resolved: 1 MB. Enforced via Kestrel's `Ma
 **Design reference:** `docs/detailed-designs/10-data-persistence/README.md`, Section 3.5 — Migration Runner; Open Question 4 (resolved: IHostedService on startup)
 
 **Description:**
-The design resolves Open Question 4 with: "IHostedService on startup. Simplest deployment model — app self-migrates before accepting traffic." Section 3.5 specifies that `MigrationRunner` is a hosted service that calls `GetPendingMigrationsAsync()`, logs each pending migration by name, applies them via `MigrateAsync()`, logs the total duration, and terminates the application on failure. The `MigrationRunner` class at `src/Blog.Infrastructure/Data/MigrationRunner.cs` exists as a plain class with a `RunAsync()` method but is never registered or invoked. Instead, `Program.cs` contains an ad-hoc startup scope that calls `db.Database.MigrateAsync()` directly — bypassing `MigrationRunner` entirely, logging only a generic success message (not individual migration names), and not using the structured per-migration timing the design requires. Because `MigrationRunner` is never registered in DI, any code path that resolves it would fail at runtime, and the migration contract described in the design is not enforced.
+The design resolves Open Question 4 with: "IHostedService on startup. Simplest deployment model — app self-migrates before accepting traffic." Section 3.5 specifies that `MigrationRunner` is a hosted service that calls `GetPendingMigrationsAsync()`, logs each pending migration by name, applies them via `MigrateAsync()`, logs the total duration, and terminates the application on failure. The `MigrationRunner` class at `src/Blog.Infrastructure/Data/MigrationRunner.cs` existed as a plain class with a `RunAsync()` method but was never registered or invoked. Instead, `Program.cs` contained an ad-hoc startup scope that called `db.Database.MigrateAsync()` directly — bypassing `MigrationRunner` entirely, logging only a generic success message (not individual migration names), and not using the structured per-migration timing the design requires. Because `MigrationRunner` was never registered in DI, the migration contract described in the design was not enforced.
 
-**Status:** OPEN
+**Fix applied:**
+- Rewrote `src/Blog.Infrastructure/Data/MigrationRunner.cs` to implement `IHostedService`: uses `IServiceScopeFactory` to resolve `BlogDbContext`, calls `GetPendingMigrationsAsync()`, logs each pending migration by name, applies them via `MigrateAsync()` with per-run timing, logs the total duration, and propagates exceptions (causing application termination on migration failure).
+- Added `Microsoft.Extensions.Hosting.Abstractions` package reference to `Blog.Infrastructure.csproj` to support `IHostedService`.
+- Created `src/Blog.Infrastructure/Data/SeedDataHostedService.cs` — wraps the existing `SeedData` class as a second `IHostedService` so seed data runs after migrations (registration order guarantees sequencing).
+- Removed the ad-hoc startup scope block from `Program.cs` that previously called `db.Database.MigrateAsync()` and `SeedData.SeedAsync()` directly.
+- Registered both `MigrationRunner` and `SeedDataHostedService` in `Program.cs` via `AddHostedService<T>()`, with `MigrationRunner` registered first.
+
+**Status:** FIXED
 
 ---
 
