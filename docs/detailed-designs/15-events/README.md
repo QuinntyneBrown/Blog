@@ -146,6 +146,7 @@ Key points:
 - Once published, the event appears on `/events` in the appropriate upcoming or past section based on `StartDate` relative to the current UTC time.
 - Unpublishing an event removes it from the public site immediately.
 - Both `PublishEventHandler` and `UnpublishEventHandler` call `ICacheInvalidator` to bust the public events cache after the state change.
+- **Idempotency**: Both endpoints are idempotent. Calling `POST /api/events/{id}/publish` on an already-published event returns `200 + EventDto` without error; calling `POST /api/events/{id}/unpublish` on an already-unpublished event likewise returns `200 + EventDto`. This prevents spurious 409 responses when a client retries due to a network timeout and avoids requiring the caller to check current state before acting. `ICacheInvalidator` is only called when the state actually changes, not on no-op invocations.
 
 ---
 

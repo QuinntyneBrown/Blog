@@ -124,7 +124,7 @@ The About Page feature provides a publicly visible biography for the site author
 | `Heading` | `nvarchar(256)` | Snapshot at time of save |
 | `Body` | `nvarchar(max)` | Raw Markdown snapshot |
 | `BodyHtml` | `nvarchar(max)` | Pre-rendered HTML snapshot |
-| `ProfileImageId` | `Guid?` | FK snapshot |
+| `ProfileImageId` | `Guid?` | Snapshot value — **no FK constraint**. Storing this as a live FK to `DigitalAssets` would cause `ON DELETE RESTRICT` to block asset deletion whenever a history snapshot references that asset. Since history rows are immutable records of past state, the `ProfileImageId` value here is informational only; the corresponding asset may no longer exist. |
 | `Version` | `int` | Version number copied from parent at time of snapshot |
 | `ArchivedAt` | `datetime2` | UTC timestamp when snapshot was created |
 
