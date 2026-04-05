@@ -811,6 +811,23 @@ The design specifies (Section 6.1): invalid file type returns "Error Response (4
 
 ---
 
+## 2026-04-04 — ASP.NET Core rate limiter middleware returns 429 without Retry-After header
+
+**Design reference:** `docs/detailed-designs/08-security-hardening/README.md`, Section 3.3 — RateLimitingMiddleware
+
+**Description:**
+The design specifies (Section 3.3): "When the limit is exceeded, returns HTTP 429 Too Many Requests with a `Retry-After` header indicating the number of seconds until the window resets." The `AddRateLimiter` configuration in `Program.cs` set `RejectionStatusCode = 429` but did not configure an `OnRejected` callback. ASP.NET Core's built-in rate limiter middleware does not automatically emit a `Retry-After` header — it returns a bare 429 with an empty body. Without `Retry-After`, well-behaved clients have no guidance on when to retry, leading to either immediate retries (worsening the load) or arbitrary backoff (degrading user experience). The response body was also empty instead of the RFC 7807 Problem Details format used by all other error responses.
+
+**Fix applied:**
+- Added an `OnRejected` callback to the rate limiter options that:
+  1. Reads `RetryAfter` metadata from the `RateLimitLease` if available, falling back to 60 seconds.
+  2. Sets the `Retry-After` response header.
+  3. Writes an RFC 7807 JSON problem details body matching the format used by `ExceptionHandlingMiddleware`.
+
+**Status:** FIXED
+
+---
+
 ## 2026-04-04 — 429 responses missing Retry-After header
 
 **Design reference:** `docs/detailed-designs/01-authentication/README.md`, Section 7.3 — Rate Limiting on Login; `docs/detailed-designs/08-security-hardening/README.md`, Section 3.3 — RateLimitingMiddleware
