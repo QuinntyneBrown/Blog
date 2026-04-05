@@ -101,7 +101,8 @@ builder.Services.AddRazorPages();
 
 // Health Checks
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<BlogDbContext>("database");
+    .AddDbContextCheck<BlogDbContext>("database")
+    .AddCheck<Blog.Api.Common.HealthChecks.DiskSpaceHealthCheck>("diskSpace");
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
