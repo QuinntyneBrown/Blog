@@ -2153,3 +2153,24 @@ The design specifies (Section 7.3): "At 576px and below, the table is replaced w
 - Added a `.article-mobile-cards` block in `Admin/Articles/Index.cshtml` alongside the existing table, iterating the same `Model.Articles.Items` collection. Each card renders: article title and slug (left side), edit icon button (right side), and below that a row with the status badge and formatted date — matching the four elements the design specifies.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Password hash format does not encode the algorithm name; future algorithm migration requires a schema change
+
+**Design reference:** `docs/detailed-designs/01-authentication/README.md`, Section 3.4 — PasswordHasher, Section 7.1 — Password Hashing
+
+**Description:**
+The design states (Section 3.4): "The hash format encodes algorithm parameters so future upgrades are backward-compatible." Section 7.1 reinforces this: "The hash format encodes the algorithm and parameters to support future migration without schema changes." The intent is that each stored hash carries enough metadata to be re-verified regardless of which algorithm the current code uses — so that if the algorithm is ever upgraded, old hashes can still be verified during a transitional period.
+
+The `PasswordHasher.HashPassword` implementation stores hashes in the format `{salt}:{iterations}:{derivedKey}` — only three fields, none of which identifies the hashing algorithm. `VerifyPassword` always calls `Rfc2898DeriveBytes.Pbkdf2` with the hardcoded constant `HashAlgorithmName.SHA256`. If the algorithm is changed in a future release (e.g., to SHA-512 or Argon2), the `VerifyPassword` method will apply the new algorithm to all stored hashes, including those that were originally hashed with SHA-256. The derived keys will never match for pre-migration passwords, forcing every existing user to reset their password. The design's guarantee of backward-compatible future migration is broken.
+
+The fix is to include the algorithm identifier in the stored hash format, making it a four-field value: `{algorithm}:{salt}:{iterations}:{derivedKey}`. The `VerifyPassword` method reads the algorithm field and dispatches to the correct algorithm accordingly.
+
+**Fix applied:**
+- Updated `HashPassword` in `src/Blog.Api/Services/PasswordHasher.cs` to prepend the algorithm name as the first colon-delimited field: `{algorithmName}:{base64Salt}:{iterations}:{base64DerivedKey}`. New hashes produced from this point forward include the algorithm identifier.
+- Updated `VerifyPassword` to detect both formats: if four fields are present, the first field is read as the algorithm name and passed to `Rfc2898DeriveBytes.Pbkdf2`. If three fields are present (the legacy format), `SHA256` is assumed — this allows all passwords hashed before this fix to continue verifying correctly without a data migration. `Convert.FromBase64String` exceptions are caught and treated as a failed verification.
+
+**Status:** FIXED
+
+---
