@@ -1585,3 +1585,18 @@ The design specifies (Section 3.3): "Serves static assets (CSS, JS, images, font
 - Configured `StaticFileOptions` with an `OnPrepareResponse` callback that sets `Cache-Control: public, max-age=31536000, immutable` on every static file response.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Article pages missing article:published_time and article:modified_time Open Graph tags
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 4.2 — SeoMetadata
+
+**Description:**
+The design's `SeoMetadata` record (Section 4.2) specifies `ArticlePublishedTime` (DateTime?) and `ArticleModifiedTime` (DateTime?) fields, corresponding to the Open Graph `article:published_time` and `article:modified_time` meta tags. These are standard OG article properties that search engines and social platforms use to display publication dates in search results and link previews, and to assess content freshness. Neither tag was rendered on any page. The article detail page had `DatePublished` and `UpdatedAt` available but didn't pass them to the layout.
+
+**Fix applied:**
+- `Slug.cshtml`: Set `ViewBag.ArticlePublishedTime` and `ViewBag.ArticleModifiedTime` (ISO 8601 format) when the article is found.
+- `_Layout.cshtml`: Added conditional `<meta property="article:published_time">` and `<meta property="article:modified_time">` tags in the OG section, rendered only on article pages.
+
+**Status:** FIXED
