@@ -506,3 +506,20 @@ The design specifies the meta title pattern as `{Article Title} | {Site Name}` u
 The design specifies that when an author publishes or updates an article, the `ICacheInvalidator` service evicts the relevant entries from the in-memory response cache so the next request triggers a fresh render. Section 3.1 documents this under "Invalidation: Time-based expiry; explicit purge via `ICacheInvalidator` on content update." Section 7.2 states explicitly: "When an author publishes or updates a post, the `ICacheInvalidator` service evicts the relevant entries from the in-memory response cache." Neither an `ICacheInvalidator` interface nor any concrete implementation existed anywhere in the codebase. `PublishArticleCommandHandler` and `UpdateArticleCommandHandler` both save changes and return without calling any cache invalidation. As a result, after an article is published or its content is updated, the in-memory response cache continues serving the stale pre-change HTML for up to the 60-second TTL — meaning live readers may see outdated content immediately after a publish action, and a newly-published article's page may show draft content until the cache naturally expires.
 
 **Status:** OPEN
+
+---
+
+## 2026-04-04 — Canonical URLs never set on public pages; `<link rel="canonical">` tag never rendered
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.1 — SeoMetaTagHelper, L2-010 — Canonical URLs
+
+**Description:**
+The design requires (L2-010): "Canonical URLs — absolute, lowercase, no trailing slashes" and (Section 3.1): "`<link rel="canonical">` with absolute, lowercase URL, no trailing slash." The layout (`_Layout.cshtml`) correctly renders `<link rel="canonical" href="...">` when `ViewBag.CanonicalUrl` is non-empty, but no Razor page ever set this property. As a result, the canonical tag was never emitted on any page. Search engines that crawl the site via different URL variants (www vs non-www, trailing slash vs none, mixed case) would see duplicate content with no canonical signal, risking SEO penalties and diluted ranking signals.
+
+**Fix applied:**
+- `Pages/Articles/Slug.cshtml`: Injected `IConfiguration`, set `ViewBag.CanonicalUrl` to `{SiteUrl}/articles/{slug}` when the article is found.
+- `Pages/Articles/Index.cshtml`: Injected `IConfiguration`, set `ViewBag.CanonicalUrl` to `{SiteUrl}/articles`.
+- `Pages/Index.cshtml`: Injected `IConfiguration`, set `ViewBag.CanonicalUrl` to `{SiteUrl}` (homepage).
+- All canonical URLs are built from the configured `Site:SiteUrl` (not the request Host header), absolute, lowercase, and without trailing slashes.
+
+**Status:** FIXED

@@ -1,9 +1,11 @@
 @page
 @model IndexModel
+@inject IConfiguration Configuration
 @{
     ViewBag.Title = "Quinn Brown | Personal Blog";
     ViewBag.Description = "Thoughts on software engineering, .NET architecture, and building systems that last.";
     ViewBag.ActiveNav = "articles";
+    ViewBag.CanonicalUrl = Configuration["Site:SiteUrl"]?.TrimEnd('/');
 }
 
 <section class="hero">
