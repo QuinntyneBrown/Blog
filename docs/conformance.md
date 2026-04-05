@@ -1227,7 +1227,14 @@ The design specifies that after saving the original uploaded file, `DigitalAsset
 
 The `UploadDigitalAssetCommandHandler` saved the original file to disk and recorded dimensions but never called any variant generation logic — no WebP or AVIF variants were ever created. The `AssetsController.Serve` method performed no content negotiation and no variant resolution; it served only the exact filename given in the URL path, ignoring the `Accept` header and any `?w=` parameter entirely. As a result, every article image was served in its original format at full resolution regardless of the client's capabilities, violating the modern-format delivery and responsive image delivery requirements (L2-020, L2-029).
 
-**Status:** OPEN
+**Fix applied:**
+- Created `src/Blog.Api/Services/IImageVariantGenerator.cs` — interface with `GenerateVariantsAsync(sourceFilePath, assetId, originalWidth, cancellationToken)`.
+- Created `src/Blog.Api/Services/ImageVariantGenerator.cs` — singleton using SixLabors.ImageSharp. Loads the source once, then for each breakpoint in [320, 640, 960, 1280, 1920] narrower than the original, clones and resizes, saves as `{assetId}-{width}w.webp`. Individual variant failures are caught and logged as warnings without aborting the upload. (AVIF is omitted: `SixLabors.ImageSharp` 3.1.x has no built-in AVIF encoder; the serve endpoint gracefully falls through to WebP.)
+- Updated `UploadDigitalAssetCommandHandler`: uses the same GUID for both `DigitalAssetId` and the stored filename so variant filenames are derivable from the entity ID alone; injects `IImageVariantGenerator`; calls `GenerateVariantsAsync` after dimension validation and before persisting the entity.
+- Updated `AssetsController.Serve`: accepts `?w=` query parameter; inspects `Accept` header for `image/avif` and `image/webp`; resolves the nearest breakpoint variant (`{assetId}-{width}w.avif` or `.webp`); serves it when it exists. Falls back to the exact filename when no variant matches. `Vary: Accept` header set on all responses.
+- Registered `IImageVariantGenerator` → `ImageVariantGenerator` as a singleton in `Program.cs`.
+
+**Status:** FIXED
 
 ---
 
