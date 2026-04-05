@@ -8,7 +8,6 @@ public class BlogDbContext(DbContextOptions<BlogDbContext> options) : DbContext(
     public DbSet<User> Users => Set<User>();
     public DbSet<Article> Articles => Set<Article>();
     public DbSet<DigitalAsset> DigitalAssets => Set<DigitalAsset>();
-    public DbSet<AboutContent> AboutContents => Set<AboutContent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,8 +33,6 @@ public class BlogDbContext(DbContextOptions<BlogDbContext> options) : DbContext(
                     entry.Property("UpdatedAt").CurrentValue = now;
                 if (entry.Entity is Article article)
                     article.Version++;
-                if (entry.Entity is AboutContent aboutContent)
-                    aboutContent.Version++;
             }
         }
         return base.SaveChangesAsync(cancellationToken);
