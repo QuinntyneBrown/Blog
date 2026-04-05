@@ -1,9 +1,12 @@
+using Blog.Api.Services;
 using Blog.Domain.Entities;
 using Blog.Infrastructure.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 
 namespace Blog.Integration.Tests;
 
@@ -27,7 +30,7 @@ public class BlogWebApplicationFactory : WebApplicationFactory<Program>
 
             // Remove hosted services that require a real database.
             var hostedServices = services.Where(
-                d => d.ServiceType == typeof(Microsoft.Extensions.Hosting.IHostedService) &&
+                d => d.ServiceType == typeof(IHostedService) &&
                      d.ImplementationType != null &&
                      (d.ImplementationType == typeof(MigrationRunner) ||
                       d.ImplementationType == typeof(SeedDataHostedService)))
@@ -40,6 +43,10 @@ public class BlogWebApplicationFactory : WebApplicationFactory<Program>
         });
     }
 
+    /// <summary>
+    /// Seeds the database with a default published article ("Hello World").
+    /// Safe to call multiple times; only seeds once per factory instance.
+    /// </summary>
     public void EnsureSeeded()
     {
         if (_seeded) return;
@@ -48,7 +55,21 @@ public class BlogWebApplicationFactory : WebApplicationFactory<Program>
         using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<BlogDbContext>();
 
+        var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+
         var now = DateTime.UtcNow;
+
+        // Seed a test user for auth tests.
+        db.Users.Add(new User
+        {
+            UserId = Guid.NewGuid(),
+            Email = "admin@blog.dev",
+            PasswordHash = passwordHasher.HashPassword("Admin1234!"),
+            DisplayName = "Test Admin",
+            CreatedAt = now
+        });
+
+        // Seed a published article.
         db.Articles.Add(new Article
         {
             ArticleId = Guid.NewGuid(),
@@ -64,6 +85,49 @@ public class BlogWebApplicationFactory : WebApplicationFactory<Program>
             CreatedAt = now.AddDays(-5),
             UpdatedAt = now.AddDays(-5)
         });
+
+        // Seed a draft article.
+        db.Articles.Add(new Article
+        {
+            ArticleId = Guid.NewGuid(),
+            Title = "Draft Article",
+            Slug = "draft-article",
+            Abstract = "This is a draft.",
+            Body = "# Draft\n\nNot published yet.",
+            BodyHtml = "<h1>Draft</h1><p>Not published yet.</p>",
+            Published = false,
+            ReadingTimeMinutes = 1,
+            Version = 1,
+            CreatedAt = now.AddDays(-1),
+            UpdatedAt = now.AddDays(-1)
+        });
+
         db.SaveChanges();
+    }
+
+    /// <summary>
+    /// Creates an authenticated HttpClient by logging in with the seeded test user.
+    /// </summary>
+    public async Task<HttpClient> CreateAuthenticatedClientAsync()
+    {
+        EnsureSeeded();
+        var client = CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+
+        var loginPayload = new StringContent(
+            System.Text.Json.JsonSerializer.Serialize(new { email = "admin@blog.dev", password = "Admin1234!" }),
+            System.Text.Encoding.UTF8,
+            "application/json");
+
+        var response = await client.PostAsync("/api/auth/login", loginPayload);
+        response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadAsStringAsync();
+        using var doc = System.Text.Json.JsonDocument.Parse(json);
+        var token = doc.RootElement.GetProperty("token").GetString()!;
+
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        return client;
     }
 }
