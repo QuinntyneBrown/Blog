@@ -74,9 +74,9 @@ The Newsletter feature allows the blog author to compose and send email newslett
 | `CreateNewsletterHandler` | `CreateNewsletterCommand` | Persists newsletter with `status=Draft` |
 | `UpdateNewsletterHandler` | `UpdateNewsletterCommand` | Updates draft; returns 409 if sent (L2-058.2) or if `version` mismatches (optimistic concurrency) |
 | `DeleteNewsletterHandler` | `DeleteNewsletterCommand` | Deletes draft; returns 409 if sent (L2-059.2) |
-| `SendNewsletterHandler` | `SendNewsletterCommand` | Sets `status=Sent`, `dateSent=UtcNow`; enqueues emails (L2-060) |
+| `SendNewsletterHandler` | `SendNewsletterCommand` | Sets `status=Sent`, `dateSent=UtcNow`; enqueues emails (L2-060); calls `ICacheInvalidator` to bust the public archive list cache after status is committed |
 | `SubscribeHandler` | `SubscribeCommand` | Upserts subscriber record; sends confirmation email (L2-054). The `Email` column has a unique index; if two concurrent requests for the same email both pass the initial existence check and both attempt insert, the second will hit a unique constraint violation — the handler must catch this exception and treat it as a successful no-op (returning 202), not bubble a 500. |
-| `ConfirmSubscriptionHandler` | `ConfirmSubscriptionCommand` | Validates token (48h window); returns 422 if token not found, already used, or expired; marks `confirmed=true` on success (L2-055) |
+| `ConfirmSubscriptionHandler` | `ConfirmSubscriptionCommand` | Validates token (48h window); returns 422 if token not found, already used, or expired; marks `confirmed=true` on success (L2-055). The expiry check must use strict less-than (`TokenExpiresAt < UtcNow`), meaning a token submitted at exactly the boundary instant is still accepted. This avoids penalising users who click a link in the final second of the window due to clock skew or network delay. |
 | `UnsubscribeHandler` | `UnsubscribeCommand` | Sets `isActive=false` by unsubscribe token (L2-056) |
 
 ### 3.4 NewsletterRepository
@@ -133,7 +133,7 @@ The Newsletter feature allows the blog author to compose and send email newslett
 | `DateSent` | `datetime2?` | Set when status transitions to Sent |
 | `CreatedAt` | `datetime2` | UTC, set on insert |
 | `UpdatedAt` | `datetime2` | UTC, updated on save |
-| `Version` | `int` | Optimistic concurrency |
+| `Version` | `int` | Optimistic concurrency; starts at `1` on first insert, incremented by `1` on each update |
 
 #### NewsletterSubscriber
 
@@ -205,11 +205,15 @@ Key points:
 | `GET` | `/api/newsletters/archive` | `?page&pageSize` | 200 + `PagedResponse<NewsletterArchiveDto>` | — |
 | `GET` | `/api/newsletters/archive/{slug}` | — | 200 + `NewsletterArchiveDetailDto` | 404 |
 
+**Caching**: Both public archive endpoints are served with `Cache-Control: public, max-age=300, stale-while-revalidate=600`. The newsletter archive is append-only (new newsletters are added but existing ones are immutable once sent), so a 5-minute TTL with a 10-minute stale window is safe. When a new newsletter is sent, `SendNewsletterHandler` must call `ICacheInvalidator` to bust the `/api/newsletters/archive` list cache so the new entry is visible within the TTL window. The detail endpoint cache (`/api/newsletters/archive/{slug}`) need not be invalidated on send — the detail page for a slug does not exist until it is sent, so there is no stale entry to evict.
+
 ### Subscriber management (requires `Authorization`)
 
 | Method | Path | Params | Success | Errors |
 |--------|------|--------|---------|--------|
 | `GET` | `/api/subscribers` | `?page&pageSize&status` (status: `confirmed` \| `unconfirmed` \| `inactive`; default pageSize=20, max 50) | 200 + `PagedResponse<SubscriberDto>` | 401 |
+
+**Subscriber count for send confirmation UI**: The `PagedResponse<SubscriberDto>` envelope includes a `totalCount` field (total rows matching the current `status` filter). The back-office "send newsletter" flow must call `GET /api/subscribers?status=confirmed&pageSize=1` to obtain the `totalCount` of confirmed active subscribers and display "You are about to send to N subscribers" before the author confirms the send. A dedicated count endpoint is not needed — the paginated list with `pageSize=1` returns the total without fetching subscriber rows.
 
 ### DTOs
 
@@ -244,4 +248,4 @@ SubscriberDto              { subscriberID, email, confirmed, isActive, confirmed
 1. **Email sending at scale**: ~~Calling `IEmailSender` in a tight loop holds the HTTP request open.~~ **Resolved**: Bulk sends use Azure Service Bus. `SendNewsletterHandler` enqueues one message per subscriber onto an Azure Service Bus queue and returns immediately (HTTP 202). A background `IHostedService` dequeues messages and calls `IEmailSender` per subscriber with built-in retry via Service Bus dead-letter handling.
 2. **Newsletter slug for archive**: ~~Should the slug be auto-generated or a separate editable field?~~ **Resolved**: The slug is auto-generated from `Subject` at send time using `ISlugGenerator`, matching the Article pattern. If the generated slug conflicts, a numeric suffix is appended (e.g. `-2`). The slug is frozen after send and cannot be changed.
 3. **Email provider**: ~~No concrete `IEmailSender` implementation specified.~~ **Resolved**: SendGrid. A `SendGridEmailSender` class implements `IEmailSender` using the `SendGrid` NuGet package. The API key is stored in `appsettings` under `SendGrid:ApiKey` and injected via `IOptions<SendGridOptions>`.
-4. **Re-subscribe flow**: ~~New record or reactivate existing?~~ **Resolved**: The existing record is reactivated. `SubscribeHandler` checks for an existing row with the same email; if found with `IsActive = false`, it sets `IsActive = true`, clears `ConfirmationToken`, resets `TokenExpiresAt`, and updates `ResubscribedAt`. A new confirmation email is sent. No duplicate records are created.
+4. **Re-subscribe flow**: ~~New record or reactivate existing?~~ **Resolved**: The existing record is reactivated. `SubscribeHandler` checks for an existing row with the same email; if found with `IsActive = false`, it sets `IsActive = true`, generates a **new** CSPRNG confirmation token (overwriting any stale `ConfirmationToken`), resets `TokenExpiresAt` to 48 hours from now, and updates `ResubscribedAt`. A new confirmation email is sent with the new token. No duplicate records are created. The old token must not be reused — it may have already expired or been observed by an attacker who intercepted the original confirmation email.

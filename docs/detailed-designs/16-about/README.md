@@ -104,9 +104,11 @@ The About Page feature provides a publicly visible biography for the site author
 | `ProfileImageId` | `Guid?` | FK → `DigitalAssets.DigitalAssetId`; nullable |
 | `CreatedAt` | `datetime2` | UTC, set on first insert |
 | `UpdatedAt` | `datetime2` | UTC, updated on save |
-| `Version` | `int` | Optimistic concurrency |
+| `Version` | `int` | Optimistic concurrency; starts at `1` on first insert, incremented by `1` on each update |
 
 **Design note**: The table is treated as a singleton. `UpsertAboutContentHandler` calls `GetCurrentAsync()` — if null, it inserts; otherwise it copies the current row to `AboutContentHistory` then updates within a single DB transaction. No unique constraints beyond the PK are needed.
+
+**Initial version value**: The `Version` field is set to `1` on the first insert (not `0`). This makes the first PUT after creation intuitive: the client receives `version: 1` in the `201` response and sends `version: 1` back on the first update. Using `0` for the initial insert would require clients to distinguish a "never-updated" state from a standard version counter, which adds unnecessary complexity. The `Version` in `AboutContentHistory` snapshots reflects the version number copied from the parent at the time of the snapshot — so the history row for the first edit will carry `version: 1`, corresponding to the state being replaced.
 
 #### AboutContentHistory
 
@@ -153,6 +155,7 @@ Key points:
    - `og:title`, `og:description`, `og:type` Open Graph tags (L2-073.2)
    - `og:image` referencing the profile image URL when set (L2-073.3)
 6. `Cache-Control: public, max-age=60, stale-while-revalidate=600` is applied via the page's `[ResponseCache]` attribute.
+7. **Error handling**: Because the Razor Page and the API layer run in the same process and communicate via MediatR (no HTTP hop), a total API failure is equivalent to an unhandled exception in `GetAboutContentHandler`. The Razor Page must wrap the MediatR dispatch in a try/catch; if an exception is thrown (e.g. the database is unreachable), it must render a generic error message with HTTP 500 rather than surfacing a stack trace. The `stale-while-revalidate=600` window on the cached response provides partial resilience: a reverse-proxy or CDN may serve a stale copy during a brief outage, deferring the user-visible error.
 
 ---
 
@@ -163,7 +166,7 @@ Key points:
 | `GET` | `/api/about` | None | — | 200 + `AboutContentDto?` | — |
 | `PUT` | `/api/about` | Bearer token | `{ heading, body, profileImageId?, version }` | 200 + `AboutContentDto` | 400, 401, 403, 409 |
 | `GET` | `/api/about/history` | Bearer token | `?page&pageSize` (default pageSize=20, max 50) | 200 + `PagedResponse<AboutContentHistoryDto>` | 401 |
-| `PUT` | `/api/about/restore/{historyId}` | Bearer token | `{ currentVersion }` | 200 + `AboutContentDto` | 401, 404, 409 |
+| `PUT` | `/api/about/restore/{historyId}` | Bearer token | `{ currentVersion }` | 200 + `AboutContentDto` | 401, 403, 404, 409 |
 
 ### DTOs
 
