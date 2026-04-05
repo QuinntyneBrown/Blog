@@ -84,3 +84,15 @@
         }
     }
 </section>
+
+@section Head {
+    <script type="application/ld+json">
+    {
+        "@@context": "https://schema.org",
+        "@@type": "Blog",
+        "name": "Quinn Brown",
+        "description": "Personal blog about software engineering, .NET architecture, and building systems that last.",
+        "url": "@(Configuration["Site:SiteUrl"]?.TrimEnd('/'))"
+    }
+    </script>
+}
