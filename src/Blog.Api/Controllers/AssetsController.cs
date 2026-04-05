@@ -1,4 +1,5 @@
 using Blog.Api.Common.Attributes;
+using Blog.Domain.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Blog.Api.Controllers;
@@ -7,24 +8,34 @@ namespace Blog.Api.Controllers;
 /// Serves uploaded digital assets with content negotiation (WebP/AVIF preferred based on
 /// Accept header) and optional width-based variant selection via the ?w= query parameter.
 /// Design reference: docs/detailed-designs/04-digital-asset-management/README.md,
+/// Section 3.6 — AssetRepository (GetByStoredFileNameAsync),
 /// Section 5.2 — Serve with Optimization Flow, Section 6.3 — GET /assets/{filename}.
 /// </summary>
 [Route("assets")]
 [ApiController]
 [RawResponse]
-public class AssetsController(IWebHostEnvironment env) : ControllerBase
+public class AssetsController(IWebHostEnvironment env, IDigitalAssetRepository assetRepository) : ControllerBase
 {
     // Responsive breakpoints in ascending order (matches ImageVariantGenerator breakpoints).
     private static readonly int[] Breakpoints = [320, 640, 960, 1280, 1920];
 
     [HttpGet("{fileName}")]
     [ResponseCache(Duration = 31536000, Location = ResponseCacheLocation.Any)]
-    public IActionResult Serve(string fileName, [FromQuery] int? w)
+    public async Task<IActionResult> Serve(string fileName, [FromQuery] int? w, CancellationToken ct)
     {
         if (string.IsNullOrEmpty(fileName) || fileName.Contains(".."))
             return BadRequest();
 
         var assetsPath = Path.Combine(env.WebRootPath, "assets");
+
+        // Validate that the requested filename corresponds to a registered DigitalAsset entity.
+        // Design reference: Section 3.6 — GetByStoredFileNameAsync is "used during serve".
+        // Only the base stored filename (the original uploaded file) has an entity record;
+        // variant files ({assetId}-{width}w.{format}) are derived from that entity.
+        var baseStoredFileName = Path.GetFileName(fileName);
+        var asset = await assetRepository.GetByStoredFileNameAsync(baseStoredFileName, ct);
+        if (asset == null)
+            return NotFound();
 
         // Determine the best format accepted by the client (AVIF > WebP > original).
         var accept = Request.Headers.Accept.ToString();
@@ -33,28 +44,25 @@ public class AssetsController(IWebHostEnvironment env) : ControllerBase
 
         // If a width was requested and a variant-capable format is accepted, try to find
         // a pre-generated variant that matches the request.
+        // Variants are derived from the confirmed asset's GUID (entity ID == stored filename base).
+        var assetId = asset.DigitalAssetId;
         if (w.HasValue && (preferAvif || preferWebp))
         {
-            // Extract the base asset GUID from the stored filename (strip extension).
-            var baseName = Path.GetFileNameWithoutExtension(fileName);
-            if (Guid.TryParse(baseName, out var assetId))
+            var nearestWidth = FindNearestBreakpoint(w.Value);
+
+            // Try AVIF first (highest compression), then WebP.
+            if (preferAvif)
             {
-                var nearestWidth = FindNearestBreakpoint(w.Value);
+                var avifPath = Path.Combine(assetsPath, $"{assetId}-{nearestWidth}w.avif");
+                if (System.IO.File.Exists(avifPath))
+                    return ServeFile(avifPath, "image/avif");
+            }
 
-                // Try AVIF first (highest compression), then WebP.
-                if (preferAvif)
-                {
-                    var avifPath = Path.Combine(assetsPath, $"{assetId}-{nearestWidth}w.avif");
-                    if (System.IO.File.Exists(avifPath))
-                        return ServeFile(avifPath, "image/avif");
-                }
-
-                if (preferWebp)
-                {
-                    var webpPath = Path.Combine(assetsPath, $"{assetId}-{nearestWidth}w.webp");
-                    if (System.IO.File.Exists(webpPath))
-                        return ServeFile(webpPath, "image/webp");
-                }
+            if (preferWebp)
+            {
+                var webpPath = Path.Combine(assetsPath, $"{assetId}-{nearestWidth}w.webp");
+                if (System.IO.File.Exists(webpPath))
+                    return ServeFile(webpPath, "image/webp");
             }
         }
 

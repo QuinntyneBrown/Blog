@@ -1746,7 +1746,7 @@ The design specifies that `AssetRepository` (Section 3.6) exposes `GetByStoredFi
 - Implemented the method in `DigitalAssetRepository` in `src/Blog.Infrastructure/Data/Repositories/DigitalAssetRepository.cs` using a `FirstOrDefaultAsync` query on `StoredFileName`.
 - Updated `AssetsController.Serve` to inject `IDigitalAssetRepository`, look up the base stored filename via `GetByStoredFileNameAsync` before serving, and return 404 if no matching asset entity is found. Variant filenames (`{assetId}-{width}w.webp`) are resolved only after the parent asset record is confirmed to exist.
 
-**Status:** OPEN
+**Status:** FIXED
 
 ---
 
