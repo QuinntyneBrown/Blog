@@ -13,6 +13,8 @@
         ViewBag.OgType = "article";
         if (!string.IsNullOrEmpty(Model.Article.FeaturedImageUrl))
             ViewBag.OgImage = $"{siteUrl}{Model.Article.FeaturedImageUrl}";
+        ViewBag.ArticlePublishedTime = Model.Article.DatePublished?.ToString("O");
+        ViewBag.ArticleModifiedTime = Model.Article.UpdatedAt.ToString("O");
     }
 }
 @if (Model.Article == null)
