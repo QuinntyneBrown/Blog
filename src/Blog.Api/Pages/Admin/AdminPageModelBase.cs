@@ -17,6 +17,8 @@ public abstract class AdminPageModelBase : PageModel
     {
         var token = HttpContext.Session.GetString("jwt_token");
         var expires = HttpContext.Session.GetString("jwt_expires");
+        System.Diagnostics.Debug.WriteLine($"[AUTH CHECK] Path={HttpContext.Request.Path} token={!string.IsNullOrEmpty(token)} expires={expires} sessionId={HttpContext.Session.Id}");
+        Console.Error.WriteLine($"[AUTH CHECK] Path={HttpContext.Request.Path} token={!string.IsNullOrEmpty(token)} expires={expires}");
         if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(expires)) return false;
         if (!DateTime.TryParse(expires, out var exp)) return false;
         return exp > DateTime.UtcNow;
