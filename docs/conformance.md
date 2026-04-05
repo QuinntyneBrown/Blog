@@ -1703,3 +1703,17 @@ The design specifies `SiteDescription` as a configurable value in `SiteConfigura
 - Changed `ViewBag.Description` in `Index.cshtml` to read from `Configuration["Site:SiteDescription"]` with the original string as fallback.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Nav logo hardcodes "QB" instead of showing the site name
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 3.3 — NavBar
+
+**Description:**
+The design specifies (Section 3.3): at viewports >= 768px, the NavDesktop shows "'Quinn's Blog' logo/brand on the left." For mobile, "Logo 'Quinn's Blog' remains visible." The implementation hardcoded `<a href="/" class="nav-logo">QB</a>` at all breakpoints — a two-letter abbreviation instead of the full site name the design describes. Additionally, the logo text was not configurable via `Site:SiteName`, inconsistent with all other site name references which were made configuration-driven in prior conformance fixes.
+
+**Fix applied:**
+- Changed the nav logo from hardcoded `QB` to `@(Configuration["Site:SiteName"] ?? "Quinn Brown")`, making it configurable and showing the full site name per the design.
+
+**Status:** FIXED
