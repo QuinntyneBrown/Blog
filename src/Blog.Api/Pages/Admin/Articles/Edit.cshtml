@@ -11,8 +11,8 @@
         <a href="/admin/articles" class="btn-icon" data-testid="toolbar-back-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
         </a>
-        <h1 class="toolbar-title" data-testid="toolbar-title">Edit Article</h1>
-        <span class="badge @(Model.Article?.Published == true ? "badge-published" : "badge-draft")" data-testid="toolbar-badge">
+        <h1 class="toolbar-title" style="font-size:18px" data-testid="toolbar-title">Edit Article</h1>
+        <span class="badge @(Model.Article?.Published == true ? "badge-published" : "badge-draft") badge-sm" data-testid="toolbar-badge">
             @(Model.Article?.Published == true ? "Published" : "Draft")
         </span>
     </div>
@@ -74,9 +74,9 @@
                             <span>Remove Image</span>
                         </button>
                         <div class="dropzone" style="height:160px;@(!string.IsNullOrEmpty(Model.Article?.FeaturedImageUrl) ? "display:none;" : "")" data-testid="featured-image-button" id="open-image-chooser">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                            <div class="dropzone-text">Choose featured image</div>
-                            <div class="dropzone-hint">JPEG, PNG, WebP, AVIF — Max 10 MB</div>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <div class="dropzone-text">Drop image or click</div>
+                            <div class="dropzone-hint">Max 10 MB</div>
                         </div>
                         <input type="hidden" name="featuredImageId" id="featured-image-id" value="@Model.Article?.FeaturedImageId" />
                     </div>
