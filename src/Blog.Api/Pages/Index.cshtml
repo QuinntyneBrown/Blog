@@ -3,7 +3,7 @@
 @inject IConfiguration Configuration
 @{
     ViewBag.Title = $"{Configuration["Site:SiteName"] ?? "Quinn Brown"} | Personal Blog";
-    ViewBag.Description = "Thoughts on software engineering, .NET architecture, and building systems that last.";
+    ViewBag.Description = Configuration["Site:SiteDescription"] ?? "Thoughts on software engineering, .NET architecture, and building systems that last.";
     ViewBag.ActiveNav = "articles";
     ViewBag.CanonicalUrl = Configuration["Site:SiteUrl"]?.TrimEnd('/');
 }
