@@ -60,13 +60,6 @@
                 <div class="editor-sidebar-label">Article Settings</div>
                 <div style="display:flex;flex-direction:column;gap:16px">
                     <div class="form-group">
-                        <label class="form-label">Status</label>
-                        <select class="form-select" name="statusSelect">
-                            @if (Model.Article?.Published == false) { <option value="draft" selected>Draft</option> } else { <option value="draft">Draft</option> }
-                            @if (Model.Article?.Published == true) { <option value="published" selected>Published</option> } else { <option value="published">Published</option> }
-                        </select>
-                    </div>
-                    <div class="form-group">
                         <label class="form-label">Featured Image</label>
                         <img data-testid="featured-image-preview" id="featured-image-preview" class="featured-img-preview" style="@(string.IsNullOrEmpty(Model.Article?.FeaturedImageUrl) ? "display:none;" : "")margin-bottom:8px" src="@(Model.Article?.FeaturedImageUrl ?? "")" alt="Featured image preview" />
                         <button type="button" data-testid="remove-featured-image" id="remove-featured-image-btn" class="btn btn-secondary" style="@(string.IsNullOrEmpty(Model.Article?.FeaturedImageUrl) ? "display:none;" : "display:inline-flex;")margin-bottom:8px;font-size:12px;padding:4px 10px" onclick="removeFeaturedImage()">
@@ -80,17 +73,23 @@
                         </div>
                         <input type="hidden" name="featuredImageId" id="featured-image-id" value="@Model.Article?.FeaturedImageId" />
                     </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" name="statusSelect">
+                            @if (Model.Article?.Published == false) { <option value="draft" selected>Draft</option> } else { <option value="draft">Draft</option> }
+                            @if (Model.Article?.Published == true) { <option value="published" selected>Published</option> } else { <option value="published">Published</option> }
+                        </select>
+                    </div>
                     @if (Model.Article != null)
                     {
                         <div style="padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px">
-                            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--fg-tertiary)">Reading time</span><span style="color:var(--fg-primary);font-family:var(--font-mono)" data-testid="reading-time">@Model.Article.ReadingTimeMinutes min</span></div>
-                            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--fg-tertiary)">Created</span><span style="color:var(--fg-primary);font-family:var(--font-mono)" data-testid="created-at">@Model.Article.CreatedAt.ToString("MMM d, yyyy")</span></div>
-                            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--fg-tertiary)">Updated</span><span style="color:var(--fg-primary);font-family:var(--font-mono)" data-testid="updated-at">@Model.Article.UpdatedAt.ToString("MMM d, yyyy")</span></div>
+                            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--fg-tertiary)">Word Count</span><span style="color:var(--fg-primary);font-family:var(--font-mono)" data-testid="word-count" id="word-count-display">—</span></div>
+                            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--fg-tertiary)">Reading Time</span><span style="color:var(--fg-primary);font-family:var(--font-mono)" data-testid="reading-time">@Model.Article.ReadingTimeMinutes min</span></div>
+                            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--fg-tertiary)">Last Saved</span><span style="color:var(--fg-primary);font-family:var(--font-mono)" data-testid="updated-at">@Model.Article.UpdatedAt.ToString("MMM d, yyyy")</span></div>
                             @if (Model.Article.Published && Model.Article.DatePublished.HasValue)
                             {
-                                <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--fg-tertiary)">Published</span><span style="color:var(--fg-primary);font-family:var(--font-mono)" data-testid="date-published">@Model.Article.DatePublished.Value.ToString("MMM d, yyyy")</span></div>
+                                <span data-testid="date-published" style="display:none">@Model.Article.DatePublished.Value.ToString("MMM d, yyyy")</span>
                             }
-                            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--fg-tertiary)">Version</span><span style="color:var(--fg-primary);font-family:var(--font-mono)" data-testid="article-version">v@Model.Article.Version</span></div>
                         </div>
                     }
                 </div>
@@ -176,6 +175,16 @@
     function showDeleteModal() { deleteModal?.classList.remove('modal-hidden'); }
     function closeDeleteModal() { deleteModal?.classList.add('modal-hidden'); }
     deleteModal?.addEventListener('click', e => { if (e.target === deleteModal) closeDeleteModal(); });
+
+    // Word count
+    const bodyTextarea = document.getElementById('body-textarea');
+    const wordCountEl = document.getElementById('word-count-display');
+    function updateWordCount() {
+        if (!bodyTextarea || !wordCountEl) return;
+        const words = bodyTextarea.value.trim() ? bodyTextarea.value.trim().split(/\s+/).length : 0;
+        wordCountEl.textContent = words.toLocaleString();
+    }
+    if (bodyTextarea) { bodyTextarea.addEventListener('input', updateWordCount); updateWordCount(); }
 
     // Image chooser modal
     const chooserModal = document.getElementById('image-chooser-modal');
