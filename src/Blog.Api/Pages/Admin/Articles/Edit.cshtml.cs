@@ -40,6 +40,22 @@ public class AdminArticleEditModel(IMediator mediator) : PageModel
         }
     }
 
+    public async Task<IActionResult> OnPostDeleteAsync(Guid id, int version)
+    {
+        if (!IsAuthenticated()) return RedirectToPage("/Admin/Login");
+        try
+        {
+            var ifMatch = $"W/\"article-{id}-v{version}\"";
+            await mediator.Send(new DeleteArticleCommand(id, ifMatch));
+            return RedirectToPage("/Admin/Articles/Index");
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+            return RedirectToPage("/Admin/Articles/Edit", new { id });
+        }
+    }
+
     private bool IsAuthenticated()
     {
         var token = HttpContext.Session.GetString("jwt_token");
