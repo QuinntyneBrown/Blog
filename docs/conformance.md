@@ -1057,6 +1057,20 @@ The design specifies (Section 6.3): "robots.txt and llms.txt: Static content, ca
 
 ---
 
+## 2026-04-05 — Login endpoint missing IP-based rate limiting policy
+
+**Design reference:** `docs/detailed-designs/01-authentication/README.md`, Section 7.3 — Rate Limiting on Login
+
+**Description:**
+The design specifies (Section 7.3): "The login endpoint is protected by layered rate limits: 10 requests per minute per client IP address and 5 requests per 15 minutes per normalized email address." The email-level rate limit was enforced in `LoginCommandHandler` via `IEmailRateLimitService.TryAcquire()`. However, the `login-ip` sliding window policy (10 req/min per IP, registered in `Program.cs`) was never applied to the login endpoint — `AuthController.Login()` had no `[EnableRateLimiting("login-ip")]` attribute. This meant the IP-level protection was entirely inactive: an attacker could send unlimited login attempts from a single IP address (rotating email addresses to avoid the per-email limit), effectively bypassing the first layer of brute-force protection.
+
+**Fix applied:**
+- Added `[EnableRateLimiting("login-ip")]` to the `Login()` action in `AuthController`.
+
+**Status:** FIXED
+
+---
+
 ## 2026-04-05 — DeleteArticleCommandHandler does not invalidate response cache
 
 **Design reference:** `docs/detailed-designs/07-web-performance/README.md`, Section 3.1 — ResponseCachingMiddleware, Section 7.2 — Caching Strategy
