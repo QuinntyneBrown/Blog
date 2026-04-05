@@ -727,3 +727,15 @@ The design specifies a `PaginationHelper` component (Section 3.3) that "generate
 **Status:** OPEN
 
 ---
+
+## 2026-04-04 — Missing dns-prefetch fallback hints for font origins
+
+**Design reference:** `docs/detailed-designs/07-web-performance/README.md`, Section 3.6 — ResourceHintTagHelper
+
+**Description:**
+The design specifies (Section 3.6): "`dns-prefetch`: Fallback for browsers without `preconnect` support." The layout included `<link rel="preconnect">` tags for `fonts.googleapis.com` and `fonts.gstatic.com` but had no corresponding `<link rel="dns-prefetch">` fallback tags. Older browsers (e.g., Safari < 11.1, IE 11) do not support `preconnect` but do support `dns-prefetch`. Without the fallback, those browsers perform DNS resolution lazily when the font stylesheet is first fetched, adding 50-100ms to the critical rendering path on the first visit.
+
+**Fix applied:**
+- Added `<link rel="dns-prefetch" href="https://fonts.googleapis.com" />` and `<link rel="dns-prefetch" href="https://fonts.gstatic.com" />` alongside the existing `preconnect` hints in `_Layout.cshtml`.
+
+**Status:** FIXED
