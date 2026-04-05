@@ -1861,3 +1861,17 @@ The design specifies (Section 7.2): "At 768px, the sidebar is removed. The table
 - Added `.date-col { display: none; }` to the `max-width: 991px` media query in `_AdminLayout.cshtml`, hiding the Date column at MD and below.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Admin sidebar nav label says "Digital Assets" instead of design-specified "Media"
+
+**Design reference:** `docs/detailed-designs/02-article-management/README.md`, Section 7.1 — Articles List — Desktop
+
+**Description:**
+The design specifies (Section 7.1): "Other nav items include **Media** and Settings." The admin sidebar rendered the digital assets nav link with the label "Digital Assets" instead of the design-specified "Media." While "Digital Assets" is the technical domain term used in the API and code, the design's UI specification uses the shorter, user-friendly "Media" label for the back-office navigation.
+
+**Fix applied:**
+- Changed the sidebar nav label from "Digital Assets" to "Media" in `_AdminLayout.cshtml`.
+
+**Status:** FIXED
