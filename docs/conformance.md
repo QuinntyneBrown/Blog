@@ -1585,3 +1585,14 @@ The design specifies (Section 3.3): "Serves static assets (CSS, JS, images, font
 - Configured `StaticFileOptions` with an `OnPrepareResponse` callback that sets `Cache-Control: public, max-age=31536000, immutable` on every static file response.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Article and listing images rendered as plain `<img>` instead of responsive `<picture>` with WebP srcset
+
+**Design reference:** `docs/detailed-designs/07-web-performance/README.md`, Section 3.5 — ImageTagHelper; Section 7.4 — Image Pipeline
+
+**Description:**
+The design specifies (Section 3.5) that article images are transformed into `<picture>` elements with `<source type="image/webp" srcset="...">` entries at all pre-generated breakpoints (320, 640, 960, 1280, 1920 px), plus a standard `<img>` fallback for browsers without `<picture>` support. Section 7.4 confirms: "ImageTagHelper emits `<picture>` elements with `<source>` for AVIF and WebP, plus `<img>` fallback." The `ImageVariantGenerator` correctly pre-generates `{assetId}-{width}w.webp` variants at upload time, and the `AssetsController` supports `?w=` + `Accept` header negotiation. However, all three public Razor pages still emit bare `<img src="@article.FeaturedImageUrl" ...>` tags: the article detail hero (`Slug.cshtml` line 36), the homepage article card images (`Index.cshtml`), and the articles listing card images (`Articles/Index.cshtml`). The pre-generated WebP variants are never referenced, forcing every visitor to download the original format (JPEG/PNG) at full resolution regardless of viewport width. Browsers that support `<picture>` (all modern browsers) receive no WebP alternative and no responsive width selection, violating L2-020 (image optimization with modern formats and responsive srcset) and the performance budget requirements the design establishes for LCP and total transferred bytes.
+
+**Status:** OPEN
