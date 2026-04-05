@@ -265,3 +265,15 @@ The design specifies Brotli at `CompressionLevel.Optimal` (level 4) for dynamic 
 - Added `image/svg+xml` to the response compression MIME types via `ResponseCompressionDefaults.MimeTypes.Concat(["image/svg+xml"])`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — IDigitalAssetRepository missing GetByCreatedByAsync; uses unfiltered GetAllAsync instead
+
+**Design reference:** `docs/detailed-designs/10-data-persistence/README.md`, Section 3.3 — Repository Pattern (IDigitalAssetRepository)
+
+**Description:**
+The design specifies `IDigitalAssetRepository` should expose `Task<IReadOnlyList<DigitalAsset>> GetByCreatedByAsync(Guid userId)` — a method that returns only the assets belonging to a specific creator. The implementation instead declares `Task<List<DigitalAsset>> GetAllAsync(CancellationToken cancellationToken = default)`, which fetches every digital asset in the database with no creator filter. `DigitalAssetRepository` implements this with a plain `ToListAsync()` with no `Where` clause, and `GetDigitalAssetsHandler` calls `GetAllAsync` directly. As a result, every call to list digital assets performs a full table scan and returns all assets regardless of who created them, violating the design's per-creator scoping contract and the interface contract documented in the spec.
+
+**Status:** OPEN
+
