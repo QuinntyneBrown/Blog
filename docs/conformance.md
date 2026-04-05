@@ -122,3 +122,14 @@ The design resolves Open Question #6 with: "Hard delete with orphan protection. 
 The design specifies that the asset serving endpoint must set `Vary: Accept` on responses to "indicate content-negotiated responses" and ensure caches distinguish between format-negotiated variants (Section 7.3: "The `Vary: Accept` header ensures caches distinguish between format-negotiated responses"). The `AssetsController.Serve` method set `Cache-Control` and `ETag` headers but omitted `Vary: Accept`. Without this header, a CDN or browser cache could serve a JPEG response to a client that supports AVIF/WebP, or vice versa, once content negotiation is implemented.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — 429 exception class named TooManyRequestsException instead of RateLimitExceededException
+
+**Design reference:** `docs/detailed-designs/06-restful-api/README.md`, Section 7.3 — Global Exception Handler
+
+**Description:**
+The design's exception-to-status-code mapping table specifies the 429 exception class as `RateLimitExceededException`. The implementation created and uses `TooManyRequestsException` in all three relevant files: `src/Blog.Api/Common/Exceptions/TooManyRequestsException.cs` (class declaration), `src/Blog.Api/Middleware/ExceptionHandlingMiddleware.cs` (catch arm), and `src/Blog.Api/Features/Auth/Commands/Login.cs` (throw site). The class name diverges from the design specification, making the codebase inconsistent with the documented contract and breaking any tooling, documentation, or future code that relies on the name given in the design.
+
+**Status:** OPEN
