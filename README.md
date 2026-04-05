@@ -183,8 +183,8 @@ All write endpoints require a valid JWT bearer token obtained from `/api/auth/lo
 
 Requirements are tracked using **Acceptance Test Driven Development (ATDD)**:
 
-- **[L1 Requirements](docs/specs/L1.md)** — 12 high-level capabilities
-- **[L2 Requirements](docs/specs/L2.md)** — 42 detailed requirements with 120+ acceptance criteria
+- **[L1 Requirements](docs/specs/L1.md)** — 14 high-level capabilities
+- **[L2 Requirements](docs/specs/L2.md)** — 63 detailed requirements with 160+ acceptance criteria
 
 Every acceptance test includes a trace comment back to its L2 requirement:
 
