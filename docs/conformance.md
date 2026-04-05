@@ -984,6 +984,17 @@ The design lists `Serilog.Enrichers.Thread` as a required NuGet package (Section
 
 ---
 
+## 2026-04-04 — Serilog.Sinks.ApplicationInsights missing; ApplicationInsights sink not configured
+
+**Design reference:** `docs/detailed-designs/09-observability/README.md`, Section 7.1 — Serilog Sinks, Section 7.2 — appsettings.json Configuration, Section 7.3 — NuGet Packages
+
+**Description:**
+The design specifies (Section 7.1): "ApplicationInsights: Staging, Production — Centralized log aggregation, KQL querying, dashboards, and alerting via `Serilog.Sinks.ApplicationInsights`." Section 7.3 lists two required NuGet packages for this: `Serilog.Sinks.ApplicationInsights` and `Microsoft.ApplicationInsights.AspNetCore`. Section 7.2 shows the `appsettings.json` `WriteTo` array including an `ApplicationInsights` entry with `telemetryConverter: "Serilog.Sinks.ApplicationInsights.TelemetryConverters.TraceTelemetryConverter, Serilog.Sinks.ApplicationInsights"`. Neither package appears in `Blog.Api.csproj`, `Serilog.Sinks.ApplicationInsights` is absent from the `Using` array in `appsettings.json`, and no `ApplicationInsights` sink entry exists in the `WriteTo` array. As a result, production and staging deployments emit logs only to Console and to the rolling file — structured log entries never reach Azure Monitor, making KQL querying, dashboards, alerting, and the 30-day log retention described in Open Question 4 completely unavailable.
+
+**Status:** OPEN
+
+---
+
 ## 2026-04-05 — JWT signing key minimum size (256 bits) not validated at startup
 
 **Design reference:** `docs/detailed-designs/01-authentication/README.md`, Section 7.4 — Additional Measures
