@@ -1717,3 +1717,17 @@ The design specifies (Section 3.3): at viewports >= 768px, the NavDesktop shows 
 - Changed the nav logo from hardcoded `QB` to `@(Configuration["Site:SiteName"] ?? "Quinn Brown")`, making it configurable and showing the full site name per the design.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Article card link text says "Read article" instead of design-specified "Read more"
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 3.5 — ArticleCard
+
+**Description:**
+The design specifies (Section 3.5): "a 'Read more' link" on each ArticleCard component. Both listing pages (`Index.cshtml` and `Articles/Index.cshtml`) rendered "Read article" instead of the design-specified "Read more" text.
+
+**Fix applied:**
+- Changed "Read article" to "Read more" in both `Index.cshtml` and `Articles/Index.cshtml`.
+
+**Status:** FIXED
