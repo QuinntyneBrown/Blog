@@ -24,7 +24,7 @@ public class UploadDigitalAssetCommandHandler(IUnitOfWork uow, IWebHostEnvironme
 
         var (contentType, extension) = await DetectContentTypeAsync(request.File);
         if (contentType == null)
-            throw new ConflictException("File type not allowed. Supported types: JPEG, PNG, WebP, GIF, AVIF.");
+            throw new BadRequestException("File type not allowed. Supported types: JPEG, PNG, WebP, GIF, AVIF.");
         var storedFileName = $"{Guid.NewGuid()}{extension}";
         var assetsPath = Path.Combine(env.WebRootPath, "assets");
         Directory.CreateDirectory(assetsPath);
@@ -41,9 +41,9 @@ public class UploadDigitalAssetCommandHandler(IUnitOfWork uow, IWebHostEnvironme
         var height = image.Height;
 
         if (width > MaxDimension || height > MaxDimension)
-            throw new ConflictException($"Image dimensions ({width}x{height}) exceed the maximum of {MaxDimension}x{MaxDimension}.");
+            throw new BadRequestException($"Image dimensions ({width}x{height}) exceed the maximum of {MaxDimension}x{MaxDimension}.");
         if ((long)width * height > MaxPixelCount)
-            throw new ConflictException($"Image pixel count ({(long)width * height:N0}) exceeds the maximum of {MaxPixelCount:N0}.");
+            throw new BadRequestException($"Image pixel count ({(long)width * height:N0}) exceeds the maximum of {MaxPixelCount:N0}.");
 
         var asset = new DigitalAsset
         {

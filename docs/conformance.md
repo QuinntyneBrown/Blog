@@ -795,6 +795,22 @@ The design's `DigitalAssetDto` (Section 4.2) specifies these fields: `DigitalAss
 
 ---
 
+## 2026-04-04 — Invalid file type and dimension errors return 409 Conflict instead of 400 Bad Request
+
+**Design reference:** `docs/detailed-designs/04-digital-asset-management/README.md`, Section 6.1 — POST /api/digital-assets
+
+**Description:**
+The design specifies (Section 6.1): invalid file type returns "Error Response (400 Bad Request)" with detail "File type not allowed." The `UploadDigitalAssetCommandHandler` threw `ConflictException` for three validation scenarios — invalid file type, oversized dimensions, and excessive pixel count — all of which mapped to 409 Conflict via the exception middleware. The 409 status code is reserved for state conflicts (e.g., duplicate slug), not input validation failures. Clients receiving 409 for a bad upload would interpret it as a server-side state conflict and might retry, whereas 400 correctly signals that the request itself is invalid and should not be retried without modification.
+
+**Fix applied:**
+- Created `src/Blog.Api/Common/Exceptions/BadRequestException.cs`.
+- Added a `BadRequestException` → 400 mapping in `ExceptionHandlingMiddleware`.
+- Changed the three validation `throw` sites in `UploadDigitalAssetCommandHandler` from `ConflictException` to `BadRequestException`.
+
+**Status:** FIXED
+
+---
+
 ## 2026-04-04 — 429 responses missing Retry-After header
 
 **Design reference:** `docs/detailed-designs/01-authentication/README.md`, Section 7.3 — Rate Limiting on Login; `docs/detailed-designs/08-security-hardening/README.md`, Section 3.3 — RateLimitingMiddleware
