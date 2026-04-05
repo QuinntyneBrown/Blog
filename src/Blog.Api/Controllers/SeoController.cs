@@ -129,7 +129,7 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
     }
 
     [HttpGet("atom.xml")]
-    [ResponseCache(Duration = 300)] // Design spec: 5 minutes (docs/detailed-designs/05-seo-and-discoverability/README.md, Section 6.3)
+    [ResponseCache(Duration = 3600)] // Design spec: 60 minutes (docs/detailed-designs/05-seo-and-discoverability/README.md, Open Question 4 — resolved)
     public async Task<IActionResult> Atom()
     {
         var result = await mediator.Send(new GetPublishedArticlesQuery(1, 20));

@@ -562,7 +562,13 @@ The `SeoController` implemented the Section 6.3 draft values rather than the OQ-
 
 All three should be `Duration = 3600` (60 minutes) per OQ-4. The inline code comments even cite "Design spec: 10 minutes" and "Design spec: 5 minutes", recording the wrong values as if they were authoritative. Search engine crawlers and feed readers that honour `Cache-Control: max-age` will re-request the sitemap and feeds 6–12 times more often than the resolved design intends, creating unnecessary server load and database queries for every poll.
 
-**Status:** OPEN
+**Fix applied:**
+- Changed `[ResponseCache(Duration = 600)]` → `[ResponseCache(Duration = 3600)]` on `GET /sitemap.xml` in `SeoController`.
+- Changed `[ResponseCache(Duration = 300)]` → `[ResponseCache(Duration = 3600)]` on `GET /feed.xml` in `SeoController`.
+- Changed `[ResponseCache(Duration = 300)]` → `[ResponseCache(Duration = 3600)]` on `GET /atom.xml` in `SeoController`.
+- Updated all three inline comments to reference Open Question 4 (resolved) as the authoritative source.
+
+**Status:** FIXED
 
 ---
 
