@@ -1043,6 +1043,20 @@ The design specifies (Section 3.7): "If the URL contains file extensions or nume
 
 ---
 
+## 2026-04-05 — robots.txt and llms.txt cache TTL is 24 hours instead of design-specified 1 hour
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 6.3 — Caching Strategy
+
+**Description:**
+The design specifies (Section 6.3): "robots.txt and llms.txt: Static content, cached with long TTL (1 hour) or served from configuration." Both endpoints in `SeoController` used `[ResponseCache(Duration = 86400)]` (24 hours). While still functional, a 24-hour TTL means changes to robots.txt directives (e.g., blocking a new path) or llms.txt content (e.g., updating the article listing for AI agents) would take up to 24 hours to propagate through browser and CDN caches, far exceeding the 1-hour window the design intended.
+
+**Fix applied:**
+- Changed `[ResponseCache(Duration = 86400)]` to `[ResponseCache(Duration = 3600)]` on both the `Robots()` and `LlmsTxt()` actions in `SeoController`, matching the design's 1-hour (3600s) TTL.
+
+**Status:** FIXED
+
+---
+
 ## 2026-04-05 — DeleteArticleCommandHandler does not invalidate response cache
 
 **Design reference:** `docs/detailed-designs/07-web-performance/README.md`, Section 3.1 — ResponseCachingMiddleware, Section 7.2 — Caching Strategy
