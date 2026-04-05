@@ -1815,3 +1815,17 @@ The design specifies (Section 7.1): "Status: Badge component — **amber** `Comp
 - Changed `--badge-draft-text` from `#A1A1AA` (gray) to `#F59E0B` (amber text).
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Admin sidebar narrows to 200px at LG breakpoint instead of design-specified 220px
+
+**Design reference:** `docs/detailed-designs/02-article-management/README.md`, Section 7.1 — Articles List
+
+**Description:**
+The design specifies (Section 7.1): "At the LG breakpoint (992px), the sidebar narrows to **220px** with slightly reduced typography." The `_AdminLayout.cshtml` `max-width: 991px` media query set `.sidebar { width: 200px; }` — 20px narrower than specified. This reduces the available space for navigation labels, potentially causing text truncation on longer nav items.
+
+**Fix applied:**
+- Changed `.sidebar { width: 200px; }` to `.sidebar { width: 220px; }` in the `max-width: 991px` media query.
+
+**Status:** FIXED
