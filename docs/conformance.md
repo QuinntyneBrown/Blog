@@ -1354,3 +1354,27 @@ Markdig generates `<br>` for hard line breaks in Markdown (two trailing spaces o
 - Added `"br"` and `"hr"` to the sanitizer's allowed tags list in `MarkdownConverter.BuildSanitizer()`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Sitemap and feed cache durations do not match design specification
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 6.3 — Caching Strategy
+
+**Description:**
+The design specifies three distinct cache TTLs for SEO endpoints:
+- **Sitemap (`/sitemap.xml`):** 10 minutes (600 seconds) — short enough to reflect newly-published articles within a single crawl window.
+- **Feeds (`/feed.xml`, `/atom.xml`):** 5 minutes (300 seconds) — ensures feed readers see new articles quickly after publication.
+- **robots.txt and llms.txt:** 1 hour (3600 seconds) — static content that changes rarely.
+
+The `SeoController` used `[ResponseCache(Duration = 3600)]` on **all** endpoints, including `/sitemap.xml` (should be 600 s) and `/feed.xml` and `/atom.xml` (should be 300 s). A previous conformance fix correctly set `robots.txt` and `llms.txt` to 3600 s, but that fix did not adjust the sitemap and feed durations. As a result, a search engine crawler caching a sitemap response at the moment before a new article is published would not discover the article for up to an hour — six times longer than the design's 10-minute window. Feed readers caching an RSS or Atom response would likewise miss a new article for up to an hour instead of the design's 5-minute window.
+
+**Fix applied:**
+- Changed `[ResponseCache(Duration = 3600)]` → `[ResponseCache(Duration = 600)]` on the `Sitemap()` action (`GET /sitemap.xml`).
+- Changed `[ResponseCache(Duration = 3600)]` → `[ResponseCache(Duration = 300)]` on the `Rss()` action (`GET /feed.xml`).
+- Changed `[ResponseCache(Duration = 3600)]` → `[ResponseCache(Duration = 300)]` on the `Atom()` action (`GET /atom.xml`).
+- `robots.txt`, `llms.txt`, and the JSON feed remain at 3600 s (1 hour), consistent with the design's specification for static/rarely-changing content.
+
+**Status:** FIXED
+
+---
