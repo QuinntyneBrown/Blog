@@ -1543,3 +1543,17 @@ The design specifies (Section 3.3): "hamburger menu button (44x44px touch target
 - Added `align-items: center; justify-content: center;` to keep the hamburger icon centered within the enlarged touch area.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Footer links remain horizontal on mobile instead of stacking vertically
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 6.5 — Footer
+
+**Description:**
+The design specifies (Section 6.5): "The footer adapts from a horizontal link layout on desktop to a stacked vertical layout on mobile. Link groups collapse into a single column on XS/SM breakpoints." The `.footer-links` container used `display: flex` (horizontal) by default and only added `flex-wrap: wrap` at XS (max-width 575px). At SM (576-767px), the links remained in a horizontal row, and at XS the `flex-wrap` allowed wrapping to multiple rows but not a clean single-column stack. The design explicitly says "stacked vertical layout" and "single column" on small screens.
+
+**Fix applied:**
+- Added `.footer-links { flex-direction: column; align-items: center; }` to the `max-width: 767px` media query, so footer links stack into a single vertical column on both SM and XS breakpoints.
+
+**Status:** FIXED
