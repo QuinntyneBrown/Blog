@@ -1,7 +1,8 @@
 @page
 @model Blog.Api.Pages.ErrorModel
+@inject IConfiguration Configuration
 @{
-    ViewBag.Title = "Error | Quinn Brown";
+    ViewBag.Title = $"Error | {Configuration["Site:SiteName"] ?? "Quinn Brown"}";
     Layout = "_Layout";
 }
 

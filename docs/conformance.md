@@ -1246,3 +1246,19 @@ The design specifies (Section 7.3): "10 requests per minute **per client IP addr
 - Replaced `AddSlidingWindowLimiter("write-endpoints", ...)` with `AddPolicy("write-endpoints", ...)` using `RateLimitPartition.GetSlidingWindowLimiter` partitioned by the authenticated user's `sub` claim, falling back to IP address for unauthenticated requests.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Page title site name suffix hardcoded instead of reading from Site:SiteName configuration
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.1 — SeoMetaTagHelper, Section 4.6 — SiteConfiguration
+
+**Description:**
+The design specifies (Section 3.1): "Title pattern `{Article Title} | {Site Name}`" where `{Site Name}` comes from the `SiteConfiguration.SiteName` config value (Section 4.6). All six public Razor pages hardcoded `| Quinn Brown` in their `ViewBag.Title` strings instead of reading `Site:SiteName` from configuration. This meant changing the blog's display name required editing source code in six files and redeploying, rather than updating a single configuration value.
+
+**Fix applied:**
+- `Slug.cshtml`, `Articles/Index.cshtml`, `Index.cshtml`: Already injected `IConfiguration`, updated title to use `Configuration["Site:SiteName"]` with fallback.
+- `Feed.cshtml`, `Error.cshtml`, `NotFound.cshtml`: Added `@inject IConfiguration Configuration` and updated titles to use the config value with fallback.
+- `Feed.cshtml` description also updated to use the configured site name.
+
+**Status:** FIXED
