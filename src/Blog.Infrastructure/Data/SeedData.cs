@@ -14,7 +14,7 @@ public class SeedData(IUnitOfWork uow, ILogger<SeedData> logger, IConfiguration 
 
     public async Task SeedDevelopmentDataAsync(CancellationToken cancellationToken = default)
     {
-        var (articles, _) = await uow.Articles.GetAllAsync(1, 1, cancellationToken);
+        var articles = await uow.Articles.GetAllAsync(1, 1, cancellationToken);
         if (articles.Count > 0)
         {
             logger.LogDebug("Articles already exist — skipping development seed.");

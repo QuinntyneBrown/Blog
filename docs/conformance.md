@@ -1519,4 +1519,12 @@ Design 02 Section 3.4 enables Markdig "advanced extensions: tables, autolinks, t
 **Description:**
 Design 10 Section 3.3 establishes the `IArticleRepository` contract and specifies `GetPublishedAsync(int page, int pageSize)` returning `Task<IReadOnlyList<Article>>` with a separate `GetPublishedCountAsync()` for the total. A prior conformance fix corrected `GetPublishedAsync` exactly this way. The admin-facing `GetAllAsync(int page, int pageSize)` was never corrected by the same fix and still returns `Task<(List<Article> Items, int TotalCount)>` — a tuple. This diverges from the design pattern in two ways: (1) the return type is `List<Article>` (not `IReadOnlyList<Article>`), and (2) the total count is bundled into the tuple rather than exposed as a separate `GetAllCountAsync()` method. `GetArticlesHandler` uses tuple destructuring `var (items, total) = await articles.GetAllAsync(...)`, coupling the handler to the non-standard shape. Any test double or alternative implementation of `IArticleRepository` must satisfy the tuple signature rather than the consistent pattern the design establishes.
 
-**Status:** OPEN
+**Fix applied:**
+- Changed `IArticleRepository.GetAllAsync` return type from `Task<(List<Article> Items, int TotalCount)>` to `Task<IReadOnlyList<Article>>` in `src/Blog.Domain/Interfaces/IArticleRepository.cs`.
+- Added `Task<int> GetAllCountAsync(CancellationToken cancellationToken = default)` to `IArticleRepository`.
+- Updated `ArticleRepository.GetAllAsync` in `src/Blog.Infrastructure/Data/Repositories/ArticleRepository.cs` to return only the page of items (no count in the tuple).
+- Added `ArticleRepository.GetAllCountAsync` that executes `CountAsync()` independently.
+- Updated `GetArticlesHandler` in `src/Blog.Api/Features/Articles/Queries/GetArticles.cs` to call both `GetAllAsync` and `GetAllCountAsync` separately, eliminating the tuple destructuring.
+- Updated `SeedData.SeedDevelopmentDataAsync` in `src/Blog.Infrastructure/Data/SeedData.cs` to use the new non-tuple return from `GetAllAsync`.
+
+**Status:** FIXED

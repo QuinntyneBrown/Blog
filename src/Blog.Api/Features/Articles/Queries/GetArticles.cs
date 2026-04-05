@@ -16,7 +16,8 @@ public class GetArticlesHandler(IArticleRepository articles) : IRequestHandler<G
 {
     public async Task<PagedResponse<ArticleListDto>> Handle(GetArticlesQuery request, CancellationToken cancellationToken)
     {
-        var (items, total) = await articles.GetAllAsync(request.Page, request.PageSize, cancellationToken);
+        var items = await articles.GetAllAsync(request.Page, request.PageSize, cancellationToken);
+        var total = await articles.GetAllCountAsync(cancellationToken);
         return new PagedResponse<ArticleListDto>
         {
             Items = items.Select(a => new ArticleListDto(
