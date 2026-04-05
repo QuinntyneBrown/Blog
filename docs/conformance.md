@@ -758,3 +758,16 @@ The design specifies (Section 3.6): "`dns-prefetch`: Fallback for browsers witho
 - Added `<link rel="dns-prefetch" href="https://fonts.googleapis.com" />` and `<link rel="dns-prefetch" href="https://fonts.gstatic.com" />` alongside the existing `preconnect` hints in `_Layout.cshtml`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — HtmlSanitizer uses default allow-list instead of the design-specified minimal allow-list
+
+**Design reference:** `docs/detailed-designs/08-security-hardening/README.md`, Section 3.7 — HtmlSanitizer
+
+**Description:**
+The design specifies that article body HTML must be sanitized using the `HtmlSanitizer` NuGet package (Ganss.Xss) "with a **configured allow-list** of tags and attributes" — preserving only: `<p>`, `<h1>`-`<h6>`, `<a>`, `<img>`, `<ul>`, `<ol>`, `<li>`, `<strong>`, `<em>`, `<code>`, `<pre>`, `<blockquote>`, `<figure>`, `<figcaption>`. The `MarkdownConverter` constructor calls `new HtmlSanitizer()` with no configuration, which defaults to Ganss.Xss's built-in permissive allow-list. That default list includes many elements outside the design's scope (e.g., `<table>`, `<div>`, `<span>`, `<input>`, `<form>`, `<select>`, `<button>`, `<details>`, `<summary>`, and others), none of which appear in the design's specified allow-list. While the default list does strip `<script>`, `<iframe>`, and inline event handlers, it allows a significantly broader set of elements than the design intends, increasing the HTML surface area that could be leveraged for future XSS or injection vectors (e.g., a `<form>` that mimics a login prompt, or `<input>` elements embedded in content). The design chose a minimal allow-list deliberately to reduce the attack surface to only the tags required for Markdown-derived article content.
+
+**Status:** OPEN
+
+---
