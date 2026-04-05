@@ -5,7 +5,7 @@ namespace Blog.Api.Services;
 /// <summary>
 /// Redis-backed sliding-window rate limiter scoped to a normalized email address.
 /// Uses a Redis sorted set per email key where each member is a unique attempt ID
-/// scored by its UTC timestamp (Unix seconds).
+/// scored by its UTC timestamp (Unix milliseconds).
 /// Enforces a maximum of <c>RateLimiting:EmailLoginMaxAttempts</c> login attempts per email
 /// within any 15-minute window (default: 5).
 /// Design reference: Feature 08, Section 8, Open Question 2 — Resolved: Redis.

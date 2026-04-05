@@ -60,10 +60,11 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Rate limiting — prefer Redis when a connection string is configured; fall back to in-memory.
 var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
+IConnectionMultiplexer? redisConnection = null;
 if (!string.IsNullOrWhiteSpace(redisConnectionString))
 {
-    builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(
-        StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnectionString));
+    redisConnection = ConnectionMultiplexer.Connect(redisConnectionString);
+    builder.Services.AddSingleton<IConnectionMultiplexer>(redisConnection);
     builder.Services.AddSingleton<IEmailRateLimitService, RedisEmailRateLimitService>();
 }
 else
@@ -110,9 +111,8 @@ var loginRateLimit = builder.Configuration.GetValue("RateLimiting:LoginPermitLim
 var writeRateLimit = builder.Configuration.GetValue("RateLimiting:WritePermitLimit", 60);
 builder.Services.AddRateLimiter(options =>
 {
-    if (!string.IsNullOrWhiteSpace(redisConnectionString))
+    if (redisConnection != null)
     {
-        var redisConnection = ConnectionMultiplexer.Connect(redisConnectionString);
         options.AddPolicy("login-ip", context =>
             RedisRateLimitPartition.GetSlidingWindowRateLimiter(
                 partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
