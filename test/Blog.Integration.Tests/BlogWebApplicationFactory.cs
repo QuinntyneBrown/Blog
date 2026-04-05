@@ -123,7 +123,8 @@ public class BlogWebApplicationFactory : WebApplicationFactory<Program>
 
         var json = await response.Content.ReadAsStringAsync();
         using var doc = System.Text.Json.JsonDocument.Parse(json);
-        var token = doc.RootElement.GetProperty("token").GetString()!;
+        var data = doc.RootElement.GetProperty("data");
+        var token = data.GetProperty("token").GetString()!;
 
         client.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
