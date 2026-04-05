@@ -888,3 +888,20 @@ The design specifies an `IETagGenerator` service that "computes a weak validator
 - Updated `ArticleDetailModel` (`Pages/Articles/Slug.cshtml.cs`) to inject `IETagGenerator`, compute the ETag after a successful article fetch, compare it against the `If-None-Match` request header, and return `StatusCode(304)` when the values match. When no match, the `ETag` response header is set alongside the existing `Cache-Control` header so subsequent requests can trigger 304s.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Featured image URLs render bare GUID without file extension; images 404 on public pages
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 4.2 — PublicArticleDto (`FeaturedImageUrl: string?`)
+
+**Description:**
+The design specifies `FeaturedImageUrl` (string?) as a resolved URL in the article DTOs. The implementation passed `FeaturedImageId` (Guid?) — the raw FK value — to listing DTOs and Razor pages. Pages rendered `<img src="/assets/{GUID}">` (e.g., `/assets/a1b2c3d4-...`) but digital assets are stored with file extensions (e.g., `a1b2c3d4-....jpg`). The `AssetsController` resolves files by exact filename match, so the extensionless URL would 404, producing broken images on every article card and detail page with a featured image.
+
+**Fix applied:**
+- Added `FeaturedImageUrl` (string?) to both `ArticleListDto` and `ArticleDto`.
+- Added `.Include(a => a.FeaturedImage)` to `GetAllAsync` and `GetPublishedAsync` repository methods so the navigation property is loaded for listing queries.
+- All six DTO construction sites (`GetArticlesHandler`, `GetPublishedArticlesHandler`, `GetArticleByIdHandler`, `GetArticleBySlugHandler`, `UpdateArticleCommandHandler`, `PublishArticleCommandHandler`, `CreateArticleCommandHandler`) now resolve `FeaturedImageUrl` from `article.FeaturedImage?.StoredFileName`.
+- Updated `Index.cshtml`, `Articles/Index.cshtml`, and `Articles/Slug.cshtml` to use `FeaturedImageUrl` instead of the bare `FeaturedImageId`.
+
+**Status:** FIXED

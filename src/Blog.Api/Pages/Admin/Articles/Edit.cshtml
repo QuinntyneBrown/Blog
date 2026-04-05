@@ -65,9 +65,9 @@
                     <div class="form-group">
                         <label class="form-label">Featured Image</label>
                         <div class="dropzone" style="height:160px" id="image-dropzone">
-                            @if (Model.Article?.FeaturedImageId != null)
+                            @if (!string.IsNullOrEmpty(Model.Article?.FeaturedImageUrl))
                             {
-                                <img src="/assets/@Model.Article.FeaturedImageId" style="max-height:140px;max-width:100%;object-fit:contain;border-radius:4px" />
+                                <img src="@Model.Article.FeaturedImageUrl" style="max-height:140px;max-width:100%;object-fit:contain;border-radius:4px" />
                             }
                             else
                             {
