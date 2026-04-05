@@ -1,0 +1,32 @@
+@startuml sequence_search_query
+!theme plain
+skinparam sequenceMessageAlign center
+
+title Full-Text Search Query Flow
+
+actor Visitor
+participant "PublicArticlesController" as Ctrl
+participant "SearchArticlesQuery\nHandler" as Handler
+participant "ArticleRepository" as Repo
+participant "SearchHighlighter" as HL
+database "SQL Server FTS" as DB
+
+Visitor -> Ctrl: GET /api/public/articles/search?q=azure&page=1
+Ctrl -> Ctrl: Validate q (not empty, max 200 chars)
+Ctrl -> Handler: Send(new SearchArticlesQuery("azure", 1, 10))
+Handler -> Repo: SearchAsync("azure", 1, 10, ct)
+Repo -> DB: CONTAINSTABLE(Articles,\n(Title,Abstract,Body), '"azure*"')
+DB --> Repo: (ArticleId, RANK) pairs
+Repo -> DB: JOIN Articles WHERE Published=1\nORDER BY RANK DESC, DatePublished DESC\nOFFSET 0 FETCH NEXT 10
+DB --> Repo: Article rows + total count
+Repo --> Handler: (IReadOnlyList<Article>, totalCount=42)
+loop per article
+    Handler -> HL: Highlight(article.Title, "azure")
+    HL --> Handler: "<mark>azure</mark>..."
+    Handler -> HL: Highlight(article.Abstract, "azure")
+    HL --> Handler: "...with <mark>azure</mark>..."
+end
+Handler --> Ctrl: PagedResponse<SearchResultDto>
+Ctrl --> Visitor: 200 OK JSON
+
+@enduml

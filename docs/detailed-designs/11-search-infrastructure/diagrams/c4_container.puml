@@ -1,0 +1,20 @@
+@startuml c4_container
+!theme plain
+!include <C4/C4_Container>
+
+title Search Infrastructure — Container Diagram
+
+Person(visitor, "Anonymous Visitor", "")
+
+System_Boundary(blog, "Blog Platform") {
+    Container(web, "Razor Pages App", "ASP.NET Core 8", "Serves /search results page;\ndispatches MediatR queries in-process")
+    Container(api, "REST API", "ASP.NET Core 8 Controllers", "GET /api/public/articles/search\nGET /api/public/articles/suggestions")
+    ContainerDb(db, "SQL Server", "Azure SQL Database Standard+", "Articles table with FTS catalog\nand index on Title, Abstract, Body")
+}
+
+Rel(visitor, web, "GET /search?q=", "HTTPS")
+Rel(visitor, api, "GET /api/public/articles/suggestions?q=", "HTTPS / JSON")
+Rel(web, api, "MediatR in-process dispatch", "")
+Rel(api, db, "CONTAINSTABLE / CONTAINS", "EF Core raw SQL")
+
+@enduml

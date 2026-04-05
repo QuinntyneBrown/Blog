@@ -1,0 +1,28 @@
+@startuml sequence_suggestions
+!theme plain
+skinparam sequenceMessageAlign center
+
+title Autocomplete Suggestions Flow
+
+actor Visitor
+participant "search.js\n(Browser)" as JS
+participant "PublicArticlesController" as Ctrl
+participant "GetSearchSuggestionsQuery\nHandler" as Handler
+participant "ArticleRepository" as Repo
+database "SQL Server FTS" as DB
+
+Visitor -> JS: keyup — types "clean ar"
+JS -> JS: debounce timer reset (200ms)
+JS -> JS: 200ms elapsed, query.length=8 >= 2
+JS -> Ctrl: GET /api/public/articles/suggestions?q=clean+ar
+Ctrl -> Handler: Send(new GetSearchSuggestionsQuery("clean ar"))
+Handler -> Repo: GetSuggestionsAsync("clean ar", ct)
+Repo -> DB: SELECT TOP 8 ArticleId, Title, Slug\nFROM Articles WHERE Published=1\nAND CONTAINS(Title, '"clean*" AND "ar*"')\nORDER BY DatePublished DESC
+DB --> Repo: Matching article rows
+Repo --> Handler: IReadOnlyList<SearchSuggestionDto>
+Handler -> Handler: Highlight each title
+Handler --> Ctrl: [{title, slug, titleHighlighted}]
+Ctrl --> JS: 200 OK JSON (≤8 items)
+JS -> JS: Render dropdown (role=listbox)
+
+@enduml

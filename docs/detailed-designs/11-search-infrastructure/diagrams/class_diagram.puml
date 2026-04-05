@@ -1,0 +1,52 @@
+@startuml class_diagram
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+
+title Search Infrastructure — Domain & DTO Model
+
+interface IArticleRepository {
+    +SearchAsync(query, page, pageSize, ct): Task<(IReadOnlyList<SearchResultDto>, int)>
+    +GetSuggestionsAsync(query, ct): Task<IReadOnlyList<SearchSuggestionDto>>
+}
+
+class SearchResultDto {
+    +ArticleId: Guid
+    +Title: string
+    +Slug: string
+    +Abstract: string
+    +TitleHighlighted: string
+    +AbstractHighlighted: string
+    +FeaturedImageUrl: string?
+    +DatePublished: DateTime?
+    +ReadingTimeMinutes: int
+}
+
+class SearchSuggestionDto {
+    +Title: string
+    +Slug: string
+    +TitleHighlighted: string
+}
+
+class SearchArticlesQuery {
+    +Query: string
+    +Page: int = 1
+    +PageSize: int = 10
+}
+
+class GetSearchSuggestionsQuery {
+    +Query: string
+}
+
+class SearchHighlighter {
+    +Highlight(text: string, query: string): string
+}
+
+IArticleRepository ..> SearchResultDto : returns
+IArticleRepository ..> SearchSuggestionDto : returns
+SearchArticlesQuery --> IArticleRepository : dispatched to
+GetSearchSuggestionsQuery --> IArticleRepository : dispatched to
+SearchArticlesQuery --> SearchHighlighter : uses
+GetSearchSuggestionsQuery --> SearchHighlighter : uses
+
+@enduml

@@ -1,0 +1,27 @@
+@startuml c4_component
+!theme plain
+!include <C4/C4_Component>
+
+title Search Infrastructure — Component Diagram
+
+Container_Boundary(app, "ASP.NET Core 8 Application") {
+    Component(ctrl, "PublicArticlesController", "ASP.NET Controller", "Adds two search endpoints:\nGET /search\nGET /suggestions")
+    Component(searchQ, "SearchArticlesQuery\n+ Handler", "MediatR", "Paginates ranked FTS results;\napplies highlighting")
+    Component(suggestQ, "GetSearchSuggestionsQuery\n+ Handler", "MediatR", "Returns up to 8 title matches\nwith highlighting")
+    Component(highlighter, "SearchHighlighter", "Service (singleton)", "Wraps matched substrings\nin HTML <mark> tags")
+    Component(repo, "ArticleRepository", "EF Core Repository", "SearchAsync() — CONTAINSTABLE\nGetSuggestionsAsync() — CONTAINS")
+    Component(migration, "AddFullTextIndex Migration", "EF Core Migration", "Creates BlogSearchCatalog\nand FTS index on Articles")
+}
+
+ContainerDb(db, "SQL Server", "", "FTS catalog: BlogSearchCatalog\nFTS index: Title, Abstract, Body")
+
+Rel(ctrl, searchQ, "mediator.Send()")
+Rel(ctrl, suggestQ, "mediator.Send()")
+Rel(searchQ, repo, "SearchAsync(query, page, pageSize)")
+Rel(suggestQ, repo, "GetSuggestionsAsync(query)")
+Rel(searchQ, highlighter, "Highlight(text, query)")
+Rel(suggestQ, highlighter, "Highlight(title, query)")
+Rel(repo, db, "Raw SQL — CONTAINSTABLE / CONTAINS")
+Rel(migration, db, "Applied at startup")
+
+@enduml

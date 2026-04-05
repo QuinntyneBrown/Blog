@@ -1,0 +1,14 @@
+@startuml c4_context
+!theme plain
+!include <C4/C4_Context>
+
+title Search Infrastructure — System Context
+
+Person(visitor, "Anonymous Visitor", "Searches published articles from any public page")
+System(blog, "Blog Platform", "ASP.NET Core 8 — Razor Pages + REST API")
+SystemDb(sql, "SQL Server", "Azure SQL Database (Standard tier)\nFull-Text Search catalog + index on Articles")
+
+Rel(visitor, blog, "Submits search query", "HTTPS")
+Rel(blog, sql, "CONTAINSTABLE / CONTAINS queries", "EF Core raw SQL / ADO.NET")
+
+@enduml
