@@ -1071,6 +1071,20 @@ The design specifies (Section 7.3): "The login endpoint is protected by layered 
 
 ---
 
+## 2026-04-05 — Serilog File sink missing size limit and retention configuration
+
+**Design reference:** `docs/detailed-designs/09-observability/README.md`, Section 7.1 — Serilog Sinks
+
+**Description:**
+The design specifies (Section 7.1): "File: Development — Rolling file logs in `logs/` directory, 50 MB limit, 7-day retention." The File sink in `appsettings.json` configured `rollingInterval: Day` but omitted `fileSizeLimitBytes` and `retainedFileCountLimit`. Serilog's defaults are 1 GB per file and 31 retained files — significantly exceeding the design's 50 MB limit and 7-day retention. On a development machine with frequent debugging, this could accumulate up to 31 GB of log files before old ones are purged, consuming disk space unnecessarily.
+
+**Fix applied:**
+- Added `"fileSizeLimitBytes": 52428800` (50 MB) and `"retainedFileCountLimit": 7` to the File sink configuration in `appsettings.json`.
+
+**Status:** FIXED
+
+---
+
 ## 2026-04-05 — DeleteArticleCommandHandler does not invalidate response cache
 
 **Design reference:** `docs/detailed-designs/07-web-performance/README.md`, Section 3.1 — ResponseCachingMiddleware, Section 7.2 — Caching Strategy
