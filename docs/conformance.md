@@ -386,3 +386,14 @@ Design 10 (Section 3.1) specifies that `BlogDbContext.SaveChangesAsync` "increme
 - The single authoritative increment now occurs in `BlogDbContext.SaveChangesAsync`, as specified by design 10 Section 3.1.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Kestrel MaxRequestBodySize not configured; non-file endpoints accept unlimited request bodies
+
+**Design reference:** `docs/detailed-designs/06-restful-api/README.md`, Section 8 — Open Question 4
+
+**Description:**
+The design resolves Open Question 4: "Resolved: 1 MB. Enforced via Kestrel's `MaxRequestBodySize`. File upload endpoints override this to 10 MB." Neither the global Kestrel limit nor the per-endpoint override exists anywhere in the implementation. `Program.cs` registers no `KestrelServerOptions.Limits.MaxRequestBodySize` setting, and the `DigitalAssetsController.Upload` action carries no `[RequestSizeLimit]` or `[RequestFormLimits]` attributes. The only protection in place is an application-level `if (file.Length > MaxFileSize)` check inside `UploadDigitalAssetCommandHandler`, which runs after ASP.NET Core has already buffered the entire multipart body into memory. Without the Kestrel-level limit, non-file endpoints (e.g., `POST /api/articles`) accept arbitrarily large request bodies, making the API vulnerable to resource exhaustion via oversized JSON payloads. The upload endpoint similarly has no server-level guard to prevent a 100 MB multipart body from being fully received before the application-level check rejects it.
+
+**Status:** OPEN
