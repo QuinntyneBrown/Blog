@@ -5,6 +5,7 @@
     ViewBag.Title = $"Follow via Feed | {siteName}";
     ViewBag.Description = $"Subscribe to {siteName}'s blog via RSS, Atom, or JSON Feed.";
     ViewBag.ActiveNav = "feed";
+    ViewBag.CanonicalUrl = $"{Configuration["Site:SiteUrl"]?.TrimEnd('/')}/feed";
     Layout = "_Layout";
 }
 
