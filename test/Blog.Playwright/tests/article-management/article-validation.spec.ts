@@ -49,12 +49,10 @@ test.describe('L2-001/L2-002: Article Validation', () => {
 
   test('should show 409 conflict error toast when slug is a duplicate', async ({
     articleEditorPage,
-    page,
   }) => {
-    const toast = new ToastComponent(page);
+    const toast = new ToastComponent(articleEditorPage.page);
     const fixedTitle = 'Duplicate Slug Article';
 
-    // Create the first article with a specific title
     await articleEditorPage.goto();
     const firstArticle = createArticleData({ title: fixedTitle });
     await articleEditorPage.fillArticle(
@@ -65,7 +63,6 @@ test.describe('L2-001/L2-002: Article Validation', () => {
     await articleEditorPage.save();
     await toast.waitForSuccess();
 
-    // Create a second article with the same title to trigger duplicate slug
     await articleEditorPage.goto();
     const secondArticle = createArticleData({ title: fixedTitle });
     await articleEditorPage.fillArticle(

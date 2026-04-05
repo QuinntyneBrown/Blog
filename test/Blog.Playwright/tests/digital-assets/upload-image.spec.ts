@@ -8,8 +8,8 @@ const VALID_JPEG = path.resolve(__dirname, '../../fixtures/assets/sample.jpg');
 test.describe('L2-028: Digital Asset Upload – Image Upload', () => {
   let toast: ToastComponent;
 
-  test.beforeEach(async ({ articleEditorPage, page }) => {
-    toast = new ToastComponent(page);
+  test.beforeEach(async ({ articleEditorPage }) => {
+    toast = new ToastComponent(articleEditorPage.page);
     await articleEditorPage.goto();
     await articleEditorPage.featuredImageButton.click();
   });
@@ -28,13 +28,13 @@ test.describe('L2-028: Digital Asset Upload – Image Upload', () => {
     expect(message).toMatch(/upload|success/i);
   });
 
-  test('uploaded image appears in assets list', async ({ digitalAssetModal, page }) => {
+  test('uploaded image appears in assets list', async ({ digitalAssetModal, authenticatedPage }) => {
     await digitalAssetModal.selectFile(VALID_JPEG);
     await digitalAssetModal.upload();
 
     await toast.waitForSuccess();
 
-    const assetEntry = page.locator('[data-testid="asset-list"] img[src*="sample"]');
+    const assetEntry = authenticatedPage.locator('[data-testid="asset-list"] img[src*="sample"]');
     await expect(assetEntry).toBeVisible();
   });
 });

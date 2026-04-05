@@ -15,12 +15,10 @@ test.describe('Back-office: Article List', () => {
   test('should display title, status badge, and date in table rows', async ({
     articleEditorPage,
     articleListPage,
-    page,
   }) => {
-    const toast = new ToastComponent(page);
+    const toast = new ToastComponent(articleEditorPage.page);
     const article = createArticleData();
 
-    // Create an article so the list is not empty
     await articleEditorPage.goto();
     await articleEditorPage.fillArticle(article.title, article.body, article.abstract);
     await articleEditorPage.save();
@@ -49,12 +47,11 @@ test.describe('Back-office: Article List', () => {
   test('should support pagination when many articles exist', async ({
     articleEditorPage,
     articleListPage,
-    page,
   }) => {
-    const toast = new ToastComponent(page);
+    const toast = new ToastComponent(articleEditorPage.page);
 
-    // Create enough articles to trigger pagination (assumes page size of 10)
-    for (let i = 0; i < 12; i++) {
+    // Create enough articles to trigger pagination (assumes page size of 20)
+    for (let i = 0; i < 22; i++) {
       const article = createArticleData({ title: `Pagination Test Article ${i}` });
       await articleEditorPage.goto();
       await articleEditorPage.fillArticle(article.title, article.body, article.abstract);
@@ -64,10 +61,8 @@ test.describe('Back-office: Article List', () => {
 
     await articleListPage.goto();
 
-    // Verify pagination controls are visible
     await expect(articleListPage.paginationNext).toBeVisible();
 
-    // Navigate to next page
     await articleListPage.paginationNext.click();
 
     const rowCount = await articleListPage.getRowCount();

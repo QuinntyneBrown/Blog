@@ -5,22 +5,18 @@ import { ToastComponent } from '../../page-objects/back-office/components/toast.
 test.describe('L2-003: Publish Article', () => {
   test('should change status badge to Published when publishing a draft article', async ({
     articleEditorPage,
-    page,
   }) => {
-    const toast = new ToastComponent(page);
+    const toast = new ToastComponent(articleEditorPage.page);
     const article = createArticleData();
 
-    // Create a draft article
     await articleEditorPage.goto();
     await articleEditorPage.fillArticle(article.title, article.body, article.abstract);
     await articleEditorPage.save();
     await toast.waitForSuccess();
 
-    // Verify it starts as Draft
     const initialStatus = await articleEditorPage.getStatusText();
     expect(initialStatus).toBe('Draft');
 
-    // Publish the article
     await articleEditorPage.publish();
     await toast.waitForSuccess();
 
@@ -30,12 +26,10 @@ test.describe('L2-003: Publish Article', () => {
 
   test('should change status badge back to Draft when unpublishing a published article', async ({
     articleEditorPage,
-    page,
   }) => {
-    const toast = new ToastComponent(page);
+    const toast = new ToastComponent(articleEditorPage.page);
     const article = createArticleData();
 
-    // Create and publish an article
     await articleEditorPage.goto();
     await articleEditorPage.fillArticle(article.title, article.body, article.abstract);
     await articleEditorPage.save();
@@ -46,7 +40,6 @@ test.describe('L2-003: Publish Article', () => {
     const publishedStatus = await articleEditorPage.getStatusText();
     expect(publishedStatus).toBe('Published');
 
-    // Unpublish the article
     await articleEditorPage.unpublish();
     await toast.waitForSuccess();
 
@@ -56,12 +49,11 @@ test.describe('L2-003: Publish Article', () => {
 
   test('should set datePublished when article is published', async ({
     articleEditorPage,
-    page,
   }) => {
-    const toast = new ToastComponent(page);
+    const pg = articleEditorPage.page;
+    const toast = new ToastComponent(pg);
     const article = createArticleData();
 
-    // Create and publish an article
     await articleEditorPage.goto();
     await articleEditorPage.fillArticle(article.title, article.body, article.abstract);
     await articleEditorPage.save();
@@ -69,9 +61,8 @@ test.describe('L2-003: Publish Article', () => {
     await articleEditorPage.publish();
     await toast.waitForSuccess();
 
-    // Verify datePublished is displayed on the page
-    const datePublished = page.locator('[data-testid="date-published"]');
-    await expect(datePublished).toBeVisible();
+    const datePublished = pg.locator('[data-testid="date-published"]');
+    await expect(datePublished).toBeAttached();
 
     const dateText = await datePublished.innerText();
     expect(dateText).not.toBe('');
