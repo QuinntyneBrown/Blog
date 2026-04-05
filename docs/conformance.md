@@ -2082,3 +2082,22 @@ The design specifies (Section 6.3): "**Sitemap:** Cached in memory for 10 minute
 - Updated `CacheInvalidator.InvalidateArticle` in `src/Blog.Api/Services/CacheInvalidator.cs` to also evict the response cache entries for `/sitemap.xml`, `/feed.xml`, `/atom.xml`, and `/feed/json` by calling `cache.Remove()` for each path. These removals follow the same pattern already used for the article detail and listing pages — the `ResponseCachingMiddleware` will re-render and re-cache each endpoint on the next request after invalidation.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — IAssetStorage missing GetAsync method; AssetsController bypasses stream abstraction via GetFilePath
+
+**Design reference:** `docs/detailed-designs/04-digital-asset-management/README.md`, Section 3.5 — AssetStorage, Section 5.2 — Serve with Optimization Flow (step 5)
+
+**Description:**
+The design specifies (Section 3.5) that `IAssetStorage` exposes four methods: `SaveAsync`, `GetAsync(string storedFileName)` — "returns a readable stream for the file", `DeleteAsync`, and `GetPublicUrl`. The implementation's `IAssetStorage` interface never added `GetAsync`. Instead it defined a filesystem-specific `GetFilePath(string storedFileName)` method and a separate `bool Exists(string storedFileName)` method. The design's serve flow (Section 5.2, step 5) reads: "Controller calls `AssetStorage.GetAsync()` to retrieve the pre-generated variant." The actual `AssetsController` bypasses this contract entirely: it calls `assetStorage.GetFilePath()` to obtain a physical path and then passes it to `PhysicalFile()`.
+
+This defeats the abstraction boundary the design establishes. The `BlobAssetStorage` placeholder already exposes the flaw explicitly: its `GetFilePath` method throws `NotImplementedException("Azure Blob Storage does not support local file paths. Use GetUrl for cloud storage.")`. If `BlobAssetStorage` were ever registered (e.g., for staging or production), every `GET /assets/{filename}` request would crash at the `GetFilePath` call inside `AssetsController.Serve`. The design's intent was precisely to avoid this: `GetAsync` returns a `Stream` regardless of whether the backing store is a local directory, Azure Blob Storage, or S3, making the serving path backend-agnostic.
+
+**Fix applied:**
+- Added `Task<Stream?> GetAsync(string storedFileName, CancellationToken cancellationToken = default)` to `IAssetStorage` in `src/Blog.Infrastructure/Storage/IAssetStorage.cs`. Returns `null` when the file does not exist, replacing the separate `Exists` + `GetFilePath` call pattern at serving call sites.
+- Implemented `GetAsync` in `LocalFileAssetStorage`: returns `null` if the file does not exist, otherwise returns a `FileStream` opened for reading with `FileOptions.SequentialScan`.
+- Implemented `GetAsync` in `BlobAssetStorage`: throws `NotImplementedException` (placeholder, matching the pattern of other unimplemented blob methods).
+- Updated `AssetsController.Serve`: replaced `assetStorage.Exists(variantName)` + `assetStorage.GetFilePath(variantName)` calls with `await assetStorage.GetAsync(variantName, ct)`. When a non-null stream is returned the controller sets cache/ETag/Vary headers and returns a `FileStreamResult` with the correct `Content-Type`. Replaced the final `assetStorage.Exists(fileName)` + `assetStorage.GetFilePath(fileName)` fallback with the same `GetAsync`-based pattern.
+
+**Status:** OPEN
