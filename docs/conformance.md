@@ -871,3 +871,14 @@ The design resolves Open Question #5: "Published articles only. Non-article page
 - Removed the `/articles` and `/feed` static entries from the sitemap URL list in `SeoController.Sitemap()`. Only the homepage (`/`) and individual published article URLs remain.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — ETagGenerator not implemented; article detail page never returns 304 Not Modified
+
+**Design reference:** `docs/detailed-designs/07-web-performance/README.md`, Section 3.7 — ETagGenerator; Section 5.1 — Full Page Delivery Pipeline (step 8)
+
+**Description:**
+The design specifies an `IETagGenerator` service that "computes a weak validator from the page version metadata" and, when the incoming `If-None-Match` request header matches, short-circuits the response with `304 Not Modified` (Section 5.1, step 8: "If `If-None-Match` matches, short-circuits with 304 Not Modified"). This is confirmed by the RESTful API design Open Question 6 resolution: "weak validators on cacheable GET responses." Neither the `IETagGenerator` interface nor any implementation existed in the codebase. The `ArticleDetailModel` (`Pages/Articles/Slug.cshtml.cs`) always re-queries the database and re-renders the page regardless of whether the client already holds a current version. Without the 304 path, every repeat visit from a browser or CDN that already has the page in its local cache still incurs a full database round-trip and Razor render, even when the article content has not changed since the last visit. The `AssetsController` already implements the same pattern correctly for binary files via `If-None-Match` → 304.
+
+**Status:** OPEN
