@@ -60,8 +60,8 @@ The Events feature allows the blog author to manage a list of speaking engagemen
 
 | Handler | Command | Validator | Effect |
 |---------|---------|-----------|--------|
-| `CreateEventHandler` | `CreateEventCommand` | `CreateEventCommandValidator` | Generates slug, persists with `published=false` |
-| `UpdateEventHandler` | `UpdateEventCommand` | `UpdateEventCommandValidator` | Updates all mutable fields; regenerates slug from new title; calls `ICacheInvalidator` if the event is currently `Published = true` |
+| `CreateEventHandler` | `CreateEventCommand` | `CreateEventCommandValidator` — rules: `Title` NotEmpty, MaximumLength(256); `Description` NotEmpty, MaximumLength(4000); `StartDate` NotEmpty; `Location` NotEmpty, MaximumLength(512); `EndDate` must be ≥ `StartDate` when provided (Must predicate); `ExternalUrl` must be a well-formed absolute URL (`https://` or `http://`) when provided (Must predicate, rejects relative URLs and empty strings) | Generates slug, persists with `published=false` |
+| `UpdateEventHandler` | `UpdateEventCommand` | `UpdateEventCommandValidator` — rules: same field rules as `CreateEventCommandValidator` plus `Version` GreaterThan(0) | Updates all mutable fields; regenerates slug from new title; calls `ICacheInvalidator` if the event is currently `Published = true` |
 | `DeleteEventHandler` | `DeleteEventCommand` | — | Removes event; returns 409 if `Published = true` (must unpublish first) |
 | `PublishEventHandler` | `PublishEventCommand` | — | Sets `published=true`; calls `ICacheInvalidator` to bust the public events cache |
 | `UnpublishEventHandler` | `UnpublishEventCommand` | — | Sets `published=false`; calls `ICacheInvalidator` to bust the public events cache |
