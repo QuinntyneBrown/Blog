@@ -724,7 +724,12 @@ The design specifies (Section 6.1, L2-009): "`twitter:card` is 'summary_large_im
 **Description:**
 The design specifies a `PaginationHelper` component (Section 3.3) that "generates `NextPageUrl` and `PreviousPageUrl` using ASP.NET Core link generation from route values and configured application URLs rather than blindly echoing raw host headers." The `PagedResponse<T>` model declares both `PreviousPageUrl` and `NextPageUrl` string properties, but neither is ever populated. Both `GetArticlesHandler` and `GetPublishedArticlesHandler` construct `PagedResponse<T>` objects leaving these fields as `null`. The `ApiControllerBase.PagedResult` helper simply calls `Ok(response)` without injecting navigation URLs. As a result, every paginated API response (`GET /api/articles` and `GET /api/public/articles`) returns `"previousPageUrl": null` and `"nextPageUrl": null` regardless of the current page, making it impossible for API consumers and headless clients to navigate pages programmatically without constructing URLs themselves.
 
-**Status:** OPEN
+**Fix applied:**
+- Created `src/Blog.Api/Common/Models/PaginationHelper.cs` — static class with `SetNavigationUrls<T>(PagedResponse<T>, string baseUrl, string requestPath)` that builds `PreviousPageUrl` and `NextPageUrl` using the configured `Site:SiteUrl` base (not the raw `Host` header), appending `?page=N&pageSize=N` query parameters.
+- Updated `ApiControllerBase` to accept `IConfiguration` in its primary constructor and call `PaginationHelper.SetNavigationUrls` inside the `PagedResult` helper before returning `Ok(response)`.
+- Updated `ArticlesController`, `AuthController`, and `DigitalAssetsController` primary constructors to forward `IConfiguration` to `ApiControllerBase`.
+
+**Status:** FIXED
 
 ---
 
