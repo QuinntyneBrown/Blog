@@ -1450,3 +1450,17 @@ The design specifies (Section 6.3): body `line-height` is 1.6 only at LG/XL (>=9
 - Added `line-height: 1.5` alongside the existing `font-size: 16px` in the `max-width: 767px` `.article-body` override for explicit specificity.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — No visible focus indicators on interactive elements for keyboard navigation
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 7.3 — Color Contrast, Section 7.4 — Keyboard Navigation
+
+**Description:**
+The design specifies (Section 7.3): "Interactive elements (links, buttons) have visible focus indicators that meet contrast requirements." Section 7.4 adds: "All interactive elements (navigation links, pagination controls, hamburger menu, 'Read more' links) are reachable and operable via keyboard." The only focus style in the layout was on the skip-to-content link. All other interactive elements relied on browser-default focus outlines, which are typically a thin dotted line or blue ring that can be invisible or low-contrast on the blog's dark theme (`#050505` background). Keyboard users tabbing through navigation, article links, or pagination would have no visible indication of which element is focused — a WCAG 2.1 Level AA failure (Success Criterion 2.4.7).
+
+**Fix applied:**
+- Added a global `:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 2px; }` rule to the layout stylesheet. Uses `:focus-visible` (not `:focus`) so mouse clicks don't show the outline, only keyboard navigation. The accent color provides sufficient contrast against the dark background.
+
+**Status:** FIXED
