@@ -2,7 +2,7 @@
 @{
     var rawTitle = (string)(ViewBag.Title ?? "Quinn Brown");
     var title = rawTitle.Length <= 60 ? rawTitle : rawTitle[..57] + "...";
-    var rawDescription = (string)(ViewBag.Description ?? "Personal blog about software engineering, architecture, and .NET");
+    var rawDescription = (string)(ViewBag.Description ?? Configuration["Site:SiteDescription"] ?? "Personal blog about software engineering, architecture, and .NET");
     var description = rawDescription.Length <= 160 ? rawDescription : TruncateAtWord(rawDescription, 160);
     var canonicalUrl = ViewBag.CanonicalUrl ?? "";
     var ogImage = (string)(ViewBag.OgImage ?? Configuration["Site:DefaultOgImage"] ?? "");
