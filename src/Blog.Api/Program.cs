@@ -246,7 +246,6 @@ var app = builder.Build();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<RequestLoggingMiddleware>();
-app.UseMiddleware<ResponseEnvelopeMiddleware>();
 app.UseMiddleware<SecurityHeadersMiddleware>();
 
 if (!app.Environment.IsDevelopment())
@@ -255,6 +254,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseResponseCompression();
+app.UseMiddleware<ResponseEnvelopeMiddleware>();
 
 app.UseStatusCodePagesWithReExecute("/404");
 
