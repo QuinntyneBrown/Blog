@@ -1,0 +1,112 @@
+@page "/admin/articles/edit/{id:guid}"
+@model Blog.Api.Pages.Admin.Articles.AdminArticleEditModel
+@{
+    ViewBag.AdminTitle = "Edit Article";
+    ViewBag.AdminNav = "articles";
+    Layout = "/Pages/Admin/Shared/_AdminLayout.cshtml";
+}
+
+<div class="toolbar">
+    <div class="toolbar-left">
+        <a href="/admin/articles" class="btn-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </a>
+        <h1 class="toolbar-title">Edit Article</h1>
+        <span class="badge @(Model.Article?.Published == true ? "badge-published" : "badge-draft")">
+            @(Model.Article?.Published == true ? "Published" : "Draft")
+        </span>
+    </div>
+    <div class="toolbar-right">
+        <button type="submit" form="article-form" name="action" value="save" class="btn btn-secondary">Save Draft</button>
+        <button type="submit" form="article-form" name="action" value="publish" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            <span>@(Model.Article?.Published == true ? "Unpublish" : "Publish")</span>
+        </button>
+    </div>
+</div>
+
+<form id="article-form" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="version" value="@Model.Article?.Version" />
+    <div class="editor-layout">
+        <div class="editor-main">
+            <div class="form-group">
+                <label class="form-label">Title</label>
+                <input class="form-input" type="text" name="title" value="@Model.Article?.Title" placeholder="Article title..." required />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Abstract</label>
+                <textarea class="form-textarea" name="abstract" rows="3" placeholder="A brief summary of the article...">@Model.Article?.Abstract</textarea>
+            </div>
+            <div class="form-group" style="flex:1;display:flex;flex-direction:column">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                    <label class="form-label" style="margin:0">Body (Markdown)</label>
+                    <div style="display:flex;gap:4px">
+                        <button type="button" class="btn-icon" title="Bold" onclick="insertMarkdown('**', '**')"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg></button>
+                        <button type="button" class="btn-icon" title="Italic" onclick="insertMarkdown('_', '_')"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg></button>
+                        <button type="button" class="btn-icon" title="Heading" onclick="insertMarkdown('\n## ', '')"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16"/><path d="M4 18V6"/><path d="M20 18V6"/></svg></button>
+                        <button type="button" class="btn-icon" title="Code" onclick="insertMarkdown('`', '`')"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></button>
+                    </div>
+                </div>
+                <textarea class="form-textarea" id="body-textarea" name="body" style="flex:1;min-height:400px;font-family:var(--font-mono);font-size:14px;line-height:1.7" placeholder="Write your article in Markdown...">@Model.Article?.Body</textarea>
+            </div>
+        </div>
+        <aside class="editor-sidebar">
+            <div>
+                <div class="editor-sidebar-label">Article Settings</div>
+                <div style="display:flex;flex-direction:column;gap:16px">
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" name="statusSelect">
+                            @if (Model.Article?.Published == false) { <option value="draft" selected>Draft</option> } else { <option value="draft">Draft</option> }
+                            @if (Model.Article?.Published == true) { <option value="published" selected>Published</option> } else { <option value="published">Published</option> }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Featured Image</label>
+                        <div class="dropzone" style="height:160px" id="image-dropzone">
+                            @if (Model.Article?.FeaturedImageId != null)
+                            {
+                                <img src="/assets/@Model.Article.FeaturedImageId" style="max-height:140px;max-width:100%;object-fit:contain;border-radius:4px" />
+                            }
+                            else
+                            {
+                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                <div class="dropzone-text">Drop image or click to upload</div>
+                                <div class="dropzone-hint">JPEG, PNG, WebP, AVIF — Max 10 MB</div>
+                            }
+                        </div>
+                        <input type="file" name="featuredImage" id="featured-image-input" accept="image/*" style="display:none" />
+                        <input type="hidden" name="featuredImageId" value="@Model.Article?.FeaturedImageId" />
+                    </div>
+                    @if (Model.Article != null)
+                    {
+                        <div style="padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px">
+                            <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--fg-tertiary)">Reading time</span><span style="color:var(--fg-secondary);font-family:var(--font-mono)">@Model.Article.ReadingTimeMinutes min</span></div>
+                            <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--fg-tertiary)">Created</span><span style="color:var(--fg-secondary);font-family:var(--font-mono)">@Model.Article.CreatedAt.ToString("MMM d, yyyy")</span></div>
+                            <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--fg-tertiary)">Version</span><span style="color:var(--fg-secondary);font-family:var(--font-mono)">v@Model.Article.Version</span></div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </aside>
+    </div>
+</form>
+
+@section AdminScripts {
+<script>
+    document.getElementById('image-dropzone')?.addEventListener('click', () => {
+        document.getElementById('featured-image-input').click();
+    });
+
+    function insertMarkdown(before, after) {
+        const ta = document.getElementById('body-textarea');
+        const start = ta.selectionStart, end = ta.selectionEnd;
+        const selected = ta.value.substring(start, end);
+        ta.value = ta.value.substring(0, start) + before + selected + after + ta.value.substring(end);
+        ta.focus();
+        ta.selectionStart = start + before.length;
+        ta.selectionEnd = end + before.length;
+    }
+</script>
+}

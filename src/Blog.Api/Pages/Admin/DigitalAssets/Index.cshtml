@@ -1,0 +1,85 @@
+@page "/admin/digital-assets"
+@model Blog.Api.Pages.Admin.DigitalAssets.AdminDigitalAssetsIndexModel
+@{
+    ViewBag.AdminTitle = "Digital Assets";
+    ViewBag.AdminNav = "assets";
+    Layout = "/Pages/Admin/Shared/_AdminLayout.cshtml";
+}
+
+<div class="toolbar">
+    <div class="toolbar-left">
+        <h1 class="toolbar-title">Digital Assets</h1>
+    </div>
+    <div class="toolbar-right">
+        <label for="upload-input" class="btn btn-primary" style="cursor:pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+            <span>Upload</span>
+        </label>
+    </div>
+</div>
+
+<div class="page-content">
+    <form id="upload-form" method="post" enctype="multipart/form-data" style="display:none">
+        @Html.AntiForgeryToken()
+        <input type="file" id="upload-input" name="file" accept="image/jpeg,image/png,image/webp,image/avif" />
+    </form>
+
+    <div class="dropzone" style="height:140px;margin-bottom:24px" id="drop-area">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" stroke-width="1.5"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+        <div class="dropzone-text">Drop files here or click to upload</div>
+        <div class="dropzone-hint">JPEG, PNG, WebP, AVIF — Max 10 MB</div>
+    </div>
+
+    <div style="font-family:var(--font-mono);font-size:12px;color:var(--fg-tertiary);margin-bottom:16px">@Model.Assets.Count assets</div>
+
+    @if (Model.Assets.Count == 0)
+    {
+        <div style="text-align:center;padding:48px;color:var(--fg-tertiary)">No assets uploaded yet.</div>
+    }
+    else
+    {
+        <div class="asset-grid">
+            @foreach (var asset in Model.Assets)
+            {
+                <div class="asset-card">
+                    <div class="asset-card-img">
+                        <img src="/assets/@asset.StoredFileName" alt="@asset.OriginalFileName" loading="lazy" onerror="this.style.display='none'" />
+                    </div>
+                    <div class="asset-card-info">
+                        <span class="asset-filename" title="@asset.OriginalFileName">@asset.OriginalFileName</span>
+                        <form method="post" style="display:inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" formaction="/admin/digital-assets/delete/@asset.DigitalAssetId" class="btn-icon destructive" title="Delete">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section AdminScripts {
+<script>
+    const uploadInput = document.getElementById('upload-input');
+    const uploadForm = document.getElementById('upload-form');
+    uploadInput.addEventListener('change', () => uploadForm.submit());
+
+    const dropArea = document.getElementById('drop-area');
+    dropArea.addEventListener('click', () => uploadInput.click());
+    dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.style.borderColor = 'var(--accent)'; });
+    dropArea.addEventListener('dragleave', () => dropArea.style.borderColor = '');
+    dropArea.addEventListener('drop', e => {
+        e.preventDefault();
+        dropArea.style.borderColor = '';
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const dt = new DataTransfer();
+            dt.items.add(files[0]);
+            uploadInput.files = dt.files;
+            uploadForm.submit();
+        }
+    });
+</script>
+}

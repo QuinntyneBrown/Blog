@@ -1,0 +1,123 @@
+@page "/admin/articles"
+@model Blog.Api.Pages.Admin.Articles.AdminArticlesIndexModel
+@{
+    ViewBag.AdminTitle = "Articles";
+    ViewBag.AdminNav = "articles";
+    Layout = "/Pages/Admin/Shared/_AdminLayout.cshtml";
+}
+
+<div class="toolbar">
+    <div class="toolbar-left">
+        <h1 class="toolbar-title">Articles</h1>
+    </div>
+    <div class="toolbar-right">
+        <a href="/admin/articles/create" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>New Article</span>
+        </a>
+    </div>
+</div>
+
+<div class="page-content">
+    @if (Model.Articles.Items.Count == 0)
+    {
+        <div style="display:flex;justify-content:center;padding:48px 0">
+            <div style="background:var(--surface-card);border:1px solid var(--border);border-radius:8px;padding:64px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;max-width:400px">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--border-strong)" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <div style="font-size:20px;font-weight:700">No articles yet</div>
+                <div style="font-size:14px;color:var(--fg-secondary)">Create your first article to get started.</div>
+                <a href="/admin/articles/create" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    New Article
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th style="width:100px">Status</th>
+                        <th style="width:120px">Date</th>
+                        <th style="width:70px">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var article in Model.Articles.Items)
+                    {
+                        <tr>
+                            <td>
+                                <div class="td-title">@article.Title</div>
+                                <div class="td-slug">/articles/@article.Slug</div>
+                            </td>
+                            <td>
+                                <span class="badge @(article.Published ? "badge-published" : "badge-draft")">
+                                    @(article.Published ? "Published" : "Draft")
+                                </span>
+                            </td>
+                            <td class="td-date">
+                                @((article.DatePublished ?? article.CreatedAt).ToString("MMM d, yyyy"))
+                            </td>
+                            <td>
+                                <div class="td-actions">
+                                    <a href="/admin/articles/edit/@article.ArticleId" class="btn-icon" title="Edit">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    </a>
+                                    <button class="btn-icon destructive" title="Delete" onclick="confirmDelete('@article.ArticleId', '@Html.Raw(article.Title.Replace("'", "\\'"))', @article.Version)">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.Articles.TotalPages > 1)
+        {
+            <div style="display:flex;justify-content:center;gap:4px;padding:24px 0">
+                @for (int i = 1; i <= Model.Articles.TotalPages; i++)
+                {
+                    <a href="/admin/articles?page=@i" style="padding:8px 14px;border-radius:4px;font-size:14px;font-weight:@(i == Model.CurrentPage ? "600" : "500");background:@(i == Model.CurrentPage ? "var(--accent)" : "transparent");color:@(i == Model.CurrentPage ? "#000" : "var(--fg-secondary)")">@i</a>
+                }
+            </div>
+        }
+    }
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay modal-hidden" id="delete-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title">Delete Article</span>
+            <button class="btn-icon" onclick="closeDeleteModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="modal-body" id="delete-modal-body">Are you sure you want to delete this article? This action cannot be undone.</div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+            <form id="delete-form" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-destructive">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section AdminScripts {
+<script>
+    let deleteModal = document.getElementById('delete-modal');
+    function confirmDelete(id, title, version) {
+        document.getElementById('delete-modal-body').textContent = `Delete "${title}"? This action cannot be undone.`;
+        document.getElementById('delete-form').action = `/admin/articles?handler=Delete&id=${id}&version=${version}`;
+        deleteModal.classList.remove('modal-hidden');
+    }
+    function closeDeleteModal() { deleteModal.classList.add('modal-hidden'); }
+    deleteModal.addEventListener('click', e => { if (e.target === deleteModal) closeDeleteModal(); });
+</script>
+}

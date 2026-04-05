@@ -1,0 +1,64 @@
+@page "/feed"
+@{
+    ViewBag.Title = "Follow via Feed — Quinn Brown";
+    ViewBag.Description = "Subscribe to Quinn Brown's blog via RSS, Atom, or JSON Feed.";
+    ViewBag.ActiveNav = "feed";
+    Layout = "_Layout";
+}
+
+<div class="feed-page">
+    <div class="feed-inner">
+        <div class="feed-header">
+            <span class="feed-tag">Subscribe</span>
+            <h1 class="feed-title">Follow via Feed</h1>
+            <p class="feed-subtitle">Stay up to date with new articles. Choose your preferred feed format below.</p>
+        </div>
+        <div class="feed-cards">
+            <div class="feed-card">
+                <div class="feed-card-left">
+                    <div class="feed-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+                    </div>
+                    <div>
+                        <div class="feed-card-title">RSS Feed</div>
+                        <div class="feed-card-desc">Subscribe with any RSS reader — Feedly, NetNewsWire, Reeder.</div>
+                    </div>
+                </div>
+                <a href="/feed/rss" class="feed-card-btn" target="_blank">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+                    Subscribe
+                </a>
+            </div>
+            <div class="feed-card">
+                <div class="feed-card-left">
+                    <div class="feed-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+                    </div>
+                    <div>
+                        <div class="feed-card-title">Atom Feed</div>
+                        <div class="feed-card-desc">An alternative feed format supported by most feed readers.</div>
+                    </div>
+                </div>
+                <a href="/feed/atom" class="feed-card-btn" target="_blank">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+                    Subscribe
+                </a>
+            </div>
+            <div class="feed-card">
+                <div class="feed-card-left">
+                    <div class="feed-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    </div>
+                    <div>
+                        <div class="feed-card-title">JSON Feed</div>
+                        <div class="feed-card-desc">Machine-readable feed in JSON format for developers and tools.</div>
+                    </div>
+                </div>
+                <a href="/feed/json" class="feed-card-btn" target="_blank">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    View
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

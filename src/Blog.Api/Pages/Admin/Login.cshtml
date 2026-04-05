@@ -1,0 +1,116 @@
+@page "/admin/login"
+@model Blog.Api.Pages.Admin.LoginModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Sign In — QB Admin";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; background: #000; color: #fff; -webkit-font-smoothing: antialiased; }
+        .login-left {
+            flex: 1;
+            background: linear-gradient(180deg, #0A0A1A 0%, #0F1B3E 50%, #1A0A2E 100%);
+            padding: 80px 64px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .login-brand { display: flex; flex-direction: column; gap: 8px; }
+        .login-brand-logo { font-size: 32px; font-weight: 800; letter-spacing: -2px; }
+        .login-brand-label { font-family: 'Geist Mono', monospace; font-size: 13px; color: #71717A; letter-spacing: 2px; }
+        .login-tagline { font-size: 48px; font-weight: 800; letter-spacing: -2px; line-height: 1.1; }
+        .login-tagline-sub { font-size: 16px; color: #A1A1AA; line-height: 1.6; margin-top: 16px; }
+        .login-copyright { font-family: 'Geist Mono', monospace; font-size: 11px; color: #71717A; }
+        .login-right {
+            width: 480px;
+            background: #0A0A0A;
+            padding: 0 64px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 32px;
+        }
+        .login-form-header { display: flex; flex-direction: column; gap: 8px; }
+        .login-form-title { font-size: 28px; font-weight: 700; }
+        .login-form-desc { font-size: 14px; color: #A1A1AA; line-height: 1.5; }
+        .form { display: flex; flex-direction: column; gap: 16px; }
+        .field { display: flex; flex-direction: column; gap: 6px; }
+        .label { font-size: 13px; font-weight: 500; color: #A1A1AA; }
+        .input {
+            height: 44px; background: #0D0D0D; border: 1px solid #1E1E1E;
+            border-radius: 6px; padding: 0 14px; font-size: 14px; color: #fff;
+            font-family: 'Inter', sans-serif; outline: none; width: 100%; transition: border-color 0.15s;
+        }
+        .input:focus { border-color: #3B82F6; border-width: 2px; }
+        .input-wrapper { position: relative; }
+        .input-wrapper .input { padding-right: 44px; }
+        .input-icon { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #71717A; cursor: pointer; background: none; border: none; }
+        .submit-btn {
+            height: 44px; background: #3B82F6; color: #000; font-size: 15px; font-weight: 600;
+            border: none; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif;
+            transition: background 0.15s; width: 100%;
+        }
+        .submit-btn:hover { background: #60A5FA; }
+        .submit-btn:active { background: #2563EB; }
+        .error-msg { background: #2D0A0A; border: 1px solid #EF4444; border-radius: 6px; padding: 12px 14px; font-size: 13px; color: #EF4444; }
+        @@media (max-width: 767px) {
+            .login-left { display: none; }
+            .login-right { width: 100%; padding: 40px 32px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-left">
+        <div class="login-brand">
+            <span class="login-brand-logo">QB</span>
+            <span class="login-brand-label">Blog Admin</span>
+        </div>
+        <div>
+            <div class="login-tagline">Manage your content.</div>
+            <div class="login-tagline-sub">Create, edit, and publish articles from one streamlined dashboard.</div>
+        </div>
+        <div class="login-copyright">© @DateTime.Now.Year Quinn Brown</div>
+    </div>
+    <div class="login-right">
+        <div class="login-form-header">
+            <h1 class="login-form-title">Sign in</h1>
+            <p class="login-form-desc">Enter your credentials to access the admin panel.</p>
+        </div>
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="error-msg">@Model.ErrorMessage</div>
+        }
+        <form method="post" class="form">
+            @Html.AntiForgeryToken()
+            <div class="field">
+                <label class="label" for="email">Email</label>
+                <input class="input" type="email" id="email" name="email" value="@Model.Email" placeholder="admin@blog.dev" autocomplete="email" required />
+            </div>
+            <div class="field">
+                <label class="label" for="password">Password</label>
+                <div class="input-wrapper">
+                    <input class="input" type="password" id="password" name="password" autocomplete="current-password" required />
+                    <button type="button" class="input-icon" onclick="togglePassword()" aria-label="Toggle password">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="eye-icon"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" class="submit-btn">Sign in</button>
+        </form>
+    </div>
+    <script>
+        function togglePassword() {
+            const input = document.getElementById('password');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+@page "/articles/{slug}"
+@model Blog.Api.Pages.Articles.ArticleDetailModel
+@{
+    ViewBag.Title = $"{Model.Article?.Title} — Quinn Brown";
+    ViewBag.Description = Model.Article?.Abstract;
+    ViewBag.ActiveNav = "";
+}
+@if (Model.Article == null)
+{
+    <div class="not-found">
+        <div class="not-found-number">404</div>
+        <h1 class="not-found-title">Article not found</h1>
+        <p class="not-found-desc">This article doesn't exist or has been removed.</p>
+        <a href="/articles" class="btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Back to articles
+        </a>
+    </div>
+}
+else
+{
+    @if (Model.Article.FeaturedImageId.HasValue)
+    {
+        <div class="article-featured-image">
+            <img src="/assets/@Model.Article.FeaturedImageId" alt="@Model.Article.Title" />
+        </div>
+    }
+    else
+    {
+        <div class="article-featured-image"></div>
+    }
+
+    <div class="article-detail">
+        <div class="article-content-wrapper">
+            <div class="article-meta">
+                <time datetime="@Model.Article.DatePublished?.ToString("yyyy-MM-dd")">
+                    @Model.Article.DatePublished?.ToString("MMMM d, yyyy")
+                </time>
+                <span class="article-meta-dot"></span>
+                <span>@Model.Article.ReadingTimeMinutes min read</span>
+            </div>
+            <h1 class="article-title">@Model.Article.Title</h1>
+            <p class="article-abstract">@Model.Article.Abstract</p>
+            <div class="article-divider"></div>
+            <div class="article-body">
+                @Html.Raw(Model.Article.BodyHtml)
+            </div>
+            <div class="article-divider"></div>
+            <a href="/articles" class="back-link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                Back to all articles
+            </a>
+        </div>
+    </div>
+}

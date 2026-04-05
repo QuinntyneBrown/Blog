@@ -1,0 +1,84 @@
+@page
+@model IndexModel
+@{
+    ViewBag.Title = "Quinn Brown — Personal Blog";
+    ViewBag.Description = "Thoughts on software engineering, .NET architecture, and building systems that last.";
+    ViewBag.ActiveNav = "articles";
+}
+
+<section class="hero">
+    <span class="hero-tag">Personal Blog</span>
+    <h1 class="hero-title">Quinn Brown</h1>
+    <p class="hero-subtitle">Thoughts on software engineering, .NET architecture, and building systems that last.</p>
+    <div class="hero-divider"></div>
+</section>
+
+<section class="articles-section">
+    @if (Model.Articles.Items.Count == 0)
+    {
+        <div class="empty-state">
+            <svg class="empty-state-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <h2 class="empty-state-title">No articles yet</h2>
+            <p class="empty-state-desc">Check back soon for new content.</p>
+        </div>
+    }
+    else
+    {
+        <div class="article-grid">
+            @foreach (var article in Model.Articles.Items)
+            {
+                <article class="article-card">
+                    <div class="article-card-image">
+                        @if (article.FeaturedImageId.HasValue)
+                        {
+                            <img src="/assets/@article.FeaturedImageId" alt="@article.Title" loading="lazy" />
+                        }
+                        else
+                        {
+                            <div class="article-card-image-placeholder"></div>
+                        }
+                    </div>
+                    <div class="article-card-body">
+                        <div class="article-card-meta">
+                            <time datetime="@article.DatePublished?.ToString("yyyy-MM-dd")">
+                                @article.DatePublished?.ToString("MMM d, yyyy")
+                            </time>
+                            <span class="article-card-meta-dot"></span>
+                            <span>@article.ReadingTimeMinutes min read</span>
+                        </div>
+                        <h2 class="article-card-title">@article.Title</h2>
+                        <p class="article-card-abstract">@article.Abstract</p>
+                        <a href="/articles/@article.Slug" class="article-card-link">
+                            Read article
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </a>
+                    </div>
+                </article>
+            }
+        </div>
+
+        @if (Model.Articles.TotalPages > 1)
+        {
+            <nav class="pagination" aria-label="Pagination">
+                @if (Model.Articles.HasPreviousPage)
+                {
+                    <a href="/?page=@(Model.CurrentPage - 1)" class="pagination-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                        Prev
+                    </a>
+                }
+                @for (int i = 1; i <= Model.Articles.TotalPages; i++)
+                {
+                    <a href="/?page=@i" class="pagination-page @(i == Model.CurrentPage ? "active" : "")">@i</a>
+                }
+                @if (Model.Articles.HasNextPage)
+                {
+                    <a href="/?page=@(Model.CurrentPage + 1)" class="pagination-btn">
+                        Next
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </a>
+                }
+            </nav>
+        }
+    }
+</section>
