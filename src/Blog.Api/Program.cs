@@ -119,11 +119,18 @@ builder.Services.AddHealthChecks()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// CORS
+// CORS — only origins listed under Cors:AllowedOrigins in configuration are permitted.
+// See docs/detailed-designs/08-security-hardening/README.md, Section 3.4.
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? Array.Empty<string>();
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
-        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+        policy
+            .WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+            .SetPreflightMaxAge(TimeSpan.FromSeconds(7200)));
 });
 
 // Session (for admin JWT storage)
