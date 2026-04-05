@@ -13,262 +13,281 @@
 }
 
 <style>
-    .search-results-header {
-        max-width: 860px;
-        margin-inline: auto;
-        padding: 48px 24px 24px;
-    }
-
-    .search-results-header h1 {
-        font-size: 32px;
-        font-weight: 700;
-        color: var(--foreground-primary);
-        margin: 0 0 8px;
-    }
-
-    .search-results-header h1 q {
-        quotes: "\201C" "\201D";
-        font-style: normal;
-    }
-
-    .result-count {
-        font-size: 14px;
-        color: var(--foreground-secondary);
-        margin: 0;
-    }
-
-    .search-results {
-        max-width: 860px;
-        margin-inline: auto;
-        padding: 0 24px;
-        list-style: none;
-    }
-
-    .result-card {
+    .search-hero {
+        background: var(--surface-secondary);
+        padding: 64px 96px 48px;
         display: flex;
-        gap: 20px;
-        align-items: flex-start;
-        padding: 24px 0;
+        flex-direction: column;
+        gap: 24px;
+    }
+    .search-hero-label {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--foreground-tertiary);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+    .search-hero-bar {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        height: 56px;
+        background: var(--surface-input);
+        border: 2px solid var(--border-focus);
+        border-radius: var(--radius-md);
+        padding: 0 20px;
+    }
+    .search-hero-bar svg { flex-shrink: 0; color: var(--foreground-secondary); }
+    .search-hero-input {
+        flex: 1;
+        background: none;
+        border: none;
+        outline: none;
+        font-family: var(--font-body);
+        font-size: 18px;
+        color: var(--foreground-primary);
+    }
+    .search-hero-input::placeholder { color: var(--foreground-placeholder); }
+    .search-hero-clear {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        background: var(--surface-elevated);
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        color: var(--foreground-secondary);
+        flex-shrink: 0;
+    }
+    .search-hero-clear:hover { color: var(--foreground-primary); }
+    .search-hero-count {
+        font-size: 14px;
+        color: var(--foreground-tertiary);
+    }
+    .search-filters-bar {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 96px;
+        background: var(--surface-primary);
         border-bottom: 1px solid var(--border-subtle);
     }
-
-    .result-card-body {
-        flex: 1;
-        min-width: 0;
+    .search-filter-label {
+        font-size: 14px;
+        color: var(--foreground-tertiary);
+        white-space: nowrap;
     }
-
-    .result-title {
-        font-size: 20px;
-        font-weight: 600;
-        margin: 0 0 8px;
-        line-height: 1.4;
-    }
-
-    .result-title a {
-        color: var(--foreground-primary);
-        text-decoration: none;
-    }
-
-    .result-title a:hover {
-        color: var(--accent-primary);
-    }
-
-    .result-title mark,
-    .result-excerpt mark {
-        background: transparent;
-        color: var(--accent-primary);
-        font-weight: 600;
-    }
-
-    .result-excerpt {
-        font-size: 15px;
-        color: var(--foreground-secondary);
-        line-height: 1.6;
-        margin: 0 0 12px;
-    }
-
-    .result-meta {
+    .search-filter-tags {
         display: flex;
-        gap: 12px;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        flex-wrap: wrap;
+    }
+    .search-tag {
+        display: flex;
+        align-items: center;
+        padding: 6px 14px;
+        border-radius: 20px;
         font-size: 13px;
-        color: var(--foreground-tertiary);
-    }
-
-    .result-type {
         font-weight: 500;
-        color: var(--accent-primary);
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.15s;
     }
-
-    .result-card-thumb {
-        flex-shrink: 0;
-        width: 180px;
-    }
-
-    .result-card-thumb img {
-        width: 180px;
-        height: 101px;
-        object-fit: cover;
-        border-radius: 4px;
-        display: block;
-    }
-
-    .search-empty {
-        max-width: 860px;
-        margin-inline: auto;
-        padding: 64px 24px;
-        text-align: center;
-    }
-
-    .search-empty-icon {
-        color: var(--foreground-tertiary);
-        margin-bottom: 16px;
-    }
-
-    .empty-heading {
-        font-size: 20px;
+    .search-tag-active {
+        background: var(--accent-primary);
+        color: var(--foreground-inverse);
         font-weight: 600;
-        color: var(--foreground-primary);
-        margin: 0 0 8px;
     }
-
-    .empty-heading q {
-        quotes: "\201C" "\201D";
-    }
-
-    .empty-hint {
-        font-size: 15px;
+    .search-tag-inactive {
+        background: var(--surface-elevated);
         color: var(--foreground-secondary);
-        margin: 0 0 24px;
+        border: 1px solid var(--border-subtle);
     }
-
-    .search-page-pagination {
-        max-width: 860px;
-        margin-inline: auto;
-        padding: 32px 24px;
+    .search-tag-inactive:hover { border-color: var(--border-strong); color: var(--foreground-primary); }
+    .search-content {
+        background: var(--surface-primary);
+        padding: 48px 96px;
+        display: flex;
+        flex-direction: column;
+        gap: 48px;
     }
-
+    .search-results-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+    }
+    .search-empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        text-align: center;
+        padding: 80px 24px;
+        color: var(--foreground-secondary);
+    }
+    .search-empty-state svg { color: var(--border-strong); }
+    @@media (max-width: 1199px) {
+        .search-hero { padding: 48px 48px 40px; }
+        .search-filters-bar { padding: 14px 48px; }
+        .search-content { padding: 40px 48px; }
+        .search-results-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @@media (max-width: 767px) {
+        .search-hero { padding: 40px 32px 32px; gap: 16px; }
+        .search-filters-bar { padding: 12px 32px; }
+        .search-content { padding: 32px 32px; gap: 24px; }
+        .search-results-grid { grid-template-columns: 1fr; }
+    }
     @@media (max-width: 575px) {
-        .result-card-thumb { display: none; }
-        .search-results-header { padding-top: 32px; }
+        .search-hero { padding: 32px 24px 24px; gap: 14px; }
+        .search-filters-bar { padding: 10px 24px; gap: 8px; }
+        .search-content { padding: 24px 24px; }
+    }
+    @@media (max-width: 375px) {
+        .search-hero { padding: 24px 16px 20px; }
+        .search-filters-bar { padding: 10px 16px; overflow-x: auto; flex-wrap: nowrap; }
+        .search-content { padding: 20px 16px; }
     }
 </style>
 
-<main id="main-content">
-    <section class="search-results-header">
-        <h1>
+<section class="search-hero">
+    <span class="search-hero-label">Search Results</span>
+    <form action="/search" method="get" class="search-hero-bar">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="search" name="q" class="search-hero-input" placeholder="Search articles…"
+               value="@Model.Query" autocomplete="off" spellcheck="false" maxlength="200" aria-label="Search articles" />
+        @if (Model.Query.Length > 0)
+        {
+            <button type="submit" name="q" value="" class="search-hero-clear" aria-label="Clear search">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        }
+    </form>
+    @if (Model.Query.Length > 0 && !Model.IsEmpty)
+    {
+        <p class="search-hero-count" aria-live="polite">
+            @Model.Results.TotalCount result@(Model.Results.TotalCount == 1 ? "" : "s") for &ldquo;@Model.Query&rdquo;
+        </p>
+    }
+</section>
+
+<div class="search-filters-bar">
+    <span class="search-filter-label">Filter by:</span>
+    <div class="search-filter-tags">
+        <span class="search-tag search-tag-active">All</span>
+    </div>
+</div>
+
+<section class="search-content" aria-label="Search results">
+    @if (string.IsNullOrWhiteSpace(Model.Query) || Model.IsEmpty)
+    {
+        <div class="search-empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
             @if (Model.Query.Length > 0)
             {
-                <span>Results for </span><q>@Model.Query</q>
+                <p class="empty-heading">No results found for &ldquo;@Model.Query&rdquo;</p>
+                <p class="empty-hint">Try different keywords or fewer terms.</p>
             }
             else
             {
-                <span>Search</span>
+                <p class="empty-heading">Search for articles</p>
+                <p class="empty-hint">Enter a keyword above to find articles.</p>
             }
-        </h1>
-        @if (!Model.IsEmpty && !string.IsNullOrWhiteSpace(Model.Query))
-        {
-            <p aria-live="polite" class="result-count">
-                @Model.Results.TotalCount result@(Model.Results.TotalCount == 1 ? "" : "s")
-            </p>
-        }
-    </section>
-
-    @if (Model.IsEmpty)
-    {
-        <section class="search-empty" aria-label="No results">
-            <svg class="search-empty-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <p class="empty-heading">No results found for <q>@Model.Query</q></p>
-            <p class="empty-hint">Try different keywords or fewer terms.</p>
-            <a href="/articles" class="btn btn-secondary">Browse all articles</a>
-        </section>
+        </div>
     }
-    else if (!string.IsNullOrWhiteSpace(Model.Query))
+    else
     {
-        <ol class="search-results" aria-label="Search results">
+        <div class="search-results-grid" role="list">
             @foreach (var result in Model.Results.Items)
             {
-                <li>
-                    <article class="result-card" data-testid="search-result">
-                        <div class="result-card-body">
-                            <h2 class="result-title">
-                                <a href="/articles/@result.Slug">@Html.Raw(result.TitleHighlighted)</a>
-                            </h2>
-                            <p class="result-excerpt">@Html.Raw(result.AbstractHighlighted)</p>
-                            <footer class="result-meta">
-                                <span class="result-type">Article</span>
-                                <time datetime="@result.DatePublished?.ToString("yyyy-MM-dd")">
-                                    @result.DatePublished?.ToString("MMMM d, yyyy")
-                                </time>
-                                <span class="result-reading-time">@result.ReadingTimeMinutes min read</span>
-                            </footer>
-                        </div>
-                        @if (result.FeaturedImageUrl != null)
+                <article class="article-card" role="listitem" data-testid="search-result">
+                    <div class="article-card-image">
+                        @if (!string.IsNullOrEmpty(result.FeaturedImageUrl))
                         {
-                            <div class="result-card-thumb">
-                                <img src="@result.FeaturedImageUrl"
-                                     alt=""
-                                     loading="lazy"
-                                     decoding="async"
-                                     width="180" height="101" />
-                            </div>
-                        }
-                    </article>
-                </li>
-            }
-        </ol>
-
-        @if (Model.Results.TotalPages > 1)
-        {
-            <div class="search-page-pagination">
-                <nav aria-label="Search results pages" class="pagination">
-                    @if (Model.Results.HasPreviousPage)
-                    {
-                        <a href="/search?q=@Uri.EscapeDataString(Model.Query)&page=@(Model.CurrentPage - 1)"
-                           rel="prev" class="pagination-btn">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
-                            Prev
-                        </a>
-                    }
-                    else
-                    {
-                        <span class="pagination-btn disabled" aria-disabled="true">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
-                            Prev
-                        </span>
-                    }
-
-                    @for (int p = 1; p <= Model.Results.TotalPages; p++)
-                    {
-                        if (p == Model.CurrentPage)
-                        {
-                            <span class="pagination-page active" aria-current="page">@p</span>
+                            <img src="@result.FeaturedImageUrl" alt="@result.Title" loading="lazy" decoding="async" />
                         }
                         else
                         {
-                            <a href="/search?q=@Uri.EscapeDataString(Model.Query)&page=@p"
-                               class="pagination-page">@p</a>
+                            <div class="article-card-image-placeholder"></div>
                         }
-                    }
-
-                    @if (Model.Results.HasNextPage)
-                    {
-                        <a href="/search?q=@Uri.EscapeDataString(Model.Query)&page=@(Model.CurrentPage + 1)"
-                           rel="next" class="pagination-btn pagination-btn-next">
-                            Next
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+                    </div>
+                    <div class="article-card-body">
+                        <div class="article-card-meta">
+                            <time datetime="@result.DatePublished?.ToString("yyyy-MM-dd")">
+                                @result.DatePublished?.ToString("MMM d, yyyy")
+                            </time>
+                            <span class="article-card-meta-dot"></span>
+                            <span>@result.ReadingTimeMinutes min read</span>
+                        </div>
+                        <h2 class="article-card-title">@Html.Raw(result.TitleHighlighted)</h2>
+                        <p class="article-card-abstract">@Html.Raw(result.AbstractHighlighted)</p>
+                        <a href="/articles/@result.Slug" class="article-card-link">
+                            Read article
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                         </a>
+                    </div>
+                </article>
+            }
+        </div>
+
+        @if (Model.Results.TotalPages > 1)
+        {
+            <nav aria-label="Search results pages" class="pagination">
+                @if (Model.Results.HasPreviousPage)
+                {
+                    <a href="/search?q=@Uri.EscapeDataString(Model.Query)&page=@(Model.CurrentPage - 1)"
+                       rel="prev" class="pagination-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                        Prev
+                    </a>
+                }
+                else
+                {
+                    <span class="pagination-btn disabled" aria-disabled="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                        Prev
+                    </span>
+                }
+
+                @for (int p = 1; p <= Model.Results.TotalPages; p++)
+                {
+                    if (p == Model.CurrentPage)
+                    {
+                        <span class="pagination-page active" aria-current="page">@p</span>
                     }
                     else
                     {
-                        <span class="pagination-btn pagination-btn-next disabled" aria-disabled="true">
-                            Next
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-                        </span>
+                        <a href="/search?q=@Uri.EscapeDataString(Model.Query)&page=@p" class="pagination-page">@p</a>
                     }
-                </nav>
-            </div>
+                }
+
+                @if (Model.Results.HasNextPage)
+                {
+                    <a href="/search?q=@Uri.EscapeDataString(Model.Query)&page=@(Model.CurrentPage + 1)"
+                       rel="next" class="pagination-btn pagination-btn-next">
+                        Next
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+                    </a>
+                }
+                else
+                {
+                    <span class="pagination-btn pagination-btn-next disabled" aria-disabled="true">
+                        Next
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+                    </span>
+                }
+            </nav>
         }
     }
-</main>
+</section>
