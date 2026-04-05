@@ -3,10 +3,10 @@ using Blog.Api.Services;
 using Blog.Domain.Entities;
 using Blog.Domain.Interfaces;
 using Blog.Infrastructure.Data;
+using Blog.Infrastructure.Storage;
 using Blog.Api.Features.DigitalAssets.Queries;
 using MediatR;
 using SixLabors.ImageSharp;
-using System.Security.Claims;
 
 namespace Blog.Api.Features.DigitalAssets.Commands;
 
@@ -14,7 +14,7 @@ public record UploadDigitalAssetCommand(IFormFile File, Guid UserId) : IRequest<
 
 public class UploadDigitalAssetCommandHandler(
     IUnitOfWork uow,
-    IWebHostEnvironment env,
+    IAssetStorage assetStorage,
     IImageVariantGenerator variantGenerator) : IRequestHandler<UploadDigitalAssetCommand, DigitalAssetDto>
 {
     private const long MaxFileSize = 10 * 1024 * 1024; // 10MB
@@ -29,19 +29,20 @@ public class UploadDigitalAssetCommandHandler(
         var (contentType, extension) = await DetectContentTypeAsync(request.File);
         if (contentType == null)
             throw new BadRequestException("File type not allowed. Supported types: JPEG, PNG, WebP, GIF, AVIF.");
+
         // Use the same GUID for both the entity ID and the stored filename so that variant
         // filenames ({assetId}-{width}w.{format}) can be resolved from the entity ID alone.
         var assetGuid = Guid.NewGuid();
         var storedFileName = $"{assetGuid}{extension}";
-        var assetsPath = Path.Combine(env.WebRootPath, "assets");
-        Directory.CreateDirectory(assetsPath);
-        var filePath = Path.Combine(assetsPath, storedFileName);
 
+        // Persist the original file via the IAssetStorage abstraction (design Section 3.5,
+        // upload flow step 10). This decouples the handler from the filesystem so the backing
+        // store can be swapped to Azure Blob Storage or S3 by registering a different implementation.
         using (var stream = request.File.OpenReadStream())
-        {
-            using var fileStream = File.Create(filePath);
-            await stream.CopyToAsync(fileStream, cancellationToken);
-        }
+            await assetStorage.SaveAsync(storedFileName, stream, cancellationToken);
+
+        // Resolve the physical path via IAssetStorage so ImageSharp can load the saved file.
+        var filePath = assetStorage.GetFilePath(storedFileName);
 
         using var image = await Image.LoadAsync(filePath, cancellationToken);
         var width = image.Width;
@@ -75,7 +76,7 @@ public class UploadDigitalAssetCommandHandler(
         return new DigitalAssetDto(
             asset.DigitalAssetId, asset.OriginalFileName,
             asset.ContentType, asset.FileSizeBytes, asset.Width, asset.Height,
-            $"/assets/{asset.StoredFileName}", asset.CreatedAt);
+            assetStorage.GetUrl(asset.StoredFileName), asset.CreatedAt);
     }
 
     private static async Task<(string? ContentType, string Extension)> DetectContentTypeAsync(IFormFile file)

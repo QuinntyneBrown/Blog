@@ -7,18 +7,15 @@ public class LocalFileAssetStorage(IConfiguration configuration) : IAssetStorage
     private string StoragePath => configuration["AssetStorage:LocalPath"] ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "assets");
     private string BaseUrl => configuration["AssetStorage:BaseUrl"] ?? "/assets";
 
-    public async Task<string> SaveAsync(Stream stream, string fileName, string contentType, CancellationToken cancellationToken = default)
+    public async Task SaveAsync(string storedFileName, Stream stream, CancellationToken cancellationToken = default)
     {
         Directory.CreateDirectory(StoragePath);
-        var extension = Path.GetExtension(fileName);
-        var storedFileName = $"{Guid.NewGuid():N}{extension}";
         var filePath = Path.Combine(StoragePath, storedFileName);
-
         await using var fileStream = File.Create(filePath);
         await stream.CopyToAsync(fileStream, cancellationToken);
-
-        return storedFileName;
     }
+
+    public string GetFilePath(string storedFileName) => Path.Combine(StoragePath, storedFileName);
 
     public Task DeleteAsync(string storedFileName, CancellationToken cancellationToken = default)
     {
