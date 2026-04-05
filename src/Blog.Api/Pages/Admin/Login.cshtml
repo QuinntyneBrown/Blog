@@ -3,7 +3,7 @@
 @{
     Layout = null;
     ViewData["Title"] = "Sign In — QB Admin";
-    var cspNonce = Context.Items[Blog.Api.Middleware.SecurityHeadersMiddleware.CspNonceKey] as string ?? "";
+    var cspNonce = HttpContext.Items[Blog.Api.Middleware.SecurityHeadersMiddleware.CspNonceKey] as string ?? "";
 }
 <!DOCTYPE html>
 <html lang="en">
