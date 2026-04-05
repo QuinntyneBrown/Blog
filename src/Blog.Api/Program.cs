@@ -164,28 +164,13 @@ builder.Services.AddSession(options =>
 // HTTP Context Accessor
 builder.Services.AddHttpContextAccessor();
 
+// Migration runner and seed data — both registered as hosted services so they execute
+// before the Kestrel HTTP pipeline accepts traffic (design 10, Section 3.5, OQ-4).
+// MigrationRunner must be registered before SeedDataHostedService to guarantee ordering.
+builder.Services.AddHostedService<Blog.Infrastructure.Data.MigrationRunner>();
+builder.Services.AddHostedService<Blog.Infrastructure.Data.SeedDataHostedService>();
+
 var app = builder.Build();
-
-// Apply migrations and seed data on startup
-using (var scope = app.Services.CreateScope())
-{
-    try
-    {
-        var db = scope.ServiceProvider.GetRequiredService<BlogDbContext>();
-        await db.Database.MigrateAsync();
-        app.Logger.LogInformation("Database migrations applied successfully.");
-
-        var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-        var seedLogger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<Blog.Infrastructure.Data.SeedData>();
-        var seedData = new Blog.Infrastructure.Data.SeedData(uow, seedLogger, builder.Configuration);
-        await seedData.SeedAsync();
-    }
-    catch (Exception ex)
-    {
-        app.Logger.LogCritical(ex, "Failed to apply database migrations or seed data. Application will terminate.");
-        throw;
-    }
-}
 
 // Middleware Pipeline
 app.UseMiddleware<ExceptionHandlingMiddleware>();
