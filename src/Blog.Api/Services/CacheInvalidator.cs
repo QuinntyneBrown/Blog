@@ -29,5 +29,13 @@ public sealed class CacheInvalidator(IMemoryCache cache) : ICacheInvalidator
         cache.Remove("/");
         for (var page = 1; page <= 5; page++)
             cache.Remove($"/?page={page}");
+
+        // Evict SEO endpoints that include article data.
+        // Design reference: docs/detailed-designs/05-seo-and-discoverability/README.md, Section 6.3:
+        // "Cache is invalidated when articles are published, unpublished, or modified."
+        cache.Remove("/sitemap.xml");
+        cache.Remove("/feed.xml");
+        cache.Remove("/atom.xml");
+        cache.Remove("/feed/json");
     }
 }

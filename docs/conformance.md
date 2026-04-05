@@ -2051,3 +2051,19 @@ The design specifies (Section 3.2): "`Version`: required concurrency token, defa
 - Added `.IsConcurrencyToken()` to the `Version` property configuration in `src/Blog.Infrastructure/Data/Configurations/ArticleConfiguration.cs`, so EF Core includes `WHERE "Version" = @p_original_Version` in all generated `UPDATE` and `DELETE` SQL statements for `Article` entities. If a concurrent write has already incremented `Version`, EF Core will detect `0 rows affected` and throw `DbUpdateConcurrencyException`, enforcing the optimistic concurrency guarantee the design requires at the database level.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — `ICacheInvalidator.InvalidateArticle` does not invalidate sitemap and feed cache entries; sitemap and feeds serve stale data after article state changes
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 6.3 — Caching Strategy
+
+**Description:**
+The design specifies (Section 6.3): "**Sitemap:** Cached in memory for 10 minutes. Cache is invalidated when articles are published, unpublished, or modified." and "**Feeds:** Cached in memory for 5 minutes with similar invalidation." The `ICacheInvalidator` interface exposes a single method `InvalidateArticle(string slug)`, which is called in `UpdateArticleCommandHandler` and `PublishArticleCommandHandler` after every article state change. However, the implementation of `CacheInvalidator.InvalidateArticle` only removes cache entries for the article detail page (`/articles/{slug}`), the home page (`/`, `/?page=N`), and the articles listing page (`/articles`, `/articles?page=N`). It does not remove cache entries for `/sitemap.xml`, `/feed.xml`, `/atom.xml`, or `/feed/json`.
+
+`SeoController` uses `[ResponseCache(Duration = 600)]` on `sitemap.xml` (10 minutes) and `[ResponseCache(Duration = 300)]` on `feed.xml` and `atom.xml` (5 minutes). ASP.NET Core's `ResponseCachingMiddleware` stores cached responses in the registered `IMemoryCache` keyed by the request path. When an article is published or a title/slug is updated, the sitemap should immediately reflect the new URL and the feeds should list the newly published article — but instead both serve a cached version until the TTL expires naturally. A user who publishes an article will not see it in `/sitemap.xml` for up to 10 minutes and not in `/feed.xml` or `/atom.xml` for up to 5 minutes, even though the designed behaviour requires immediate cache eviction on article state change.
+
+**Fix applied:**
+- Updated `CacheInvalidator.InvalidateArticle` in `src/Blog.Api/Services/CacheInvalidator.cs` to also evict the response cache entries for `/sitemap.xml`, `/feed.xml`, `/atom.xml`, and `/feed/json` by calling `cache.Remove()` for each path. These removals follow the same pattern already used for the article detail and listing pages — the `ResponseCachingMiddleware` will re-render and re-cache each endpoint on the next request after invalidation.
+
+**Status:** FIXED
