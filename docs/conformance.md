@@ -1896,3 +1896,17 @@ The design specifies (L2-010): "Canonical URLs — absolute, lowercase, no trail
 - Added `ViewBag.CanonicalUrl = $"{Configuration["Site:SiteUrl"]?.TrimEnd('/')}/feed"` to `Feed.cshtml`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Custom 404 page not used for non-existent URLs; bare 404 returned instead
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 5.2 — Load Article Detail Page (step 8)
+
+**Description:**
+The design specifies (Section 5.2, step 8): "the framework renders the custom 404 error page." A `NotFound.cshtml` page exists at the `/404` route with a user-friendly error UI. However, no `UseStatusCodePages` middleware was registered in `Program.cs`. When a user navigates to a completely non-existent URL (e.g., `/nonexistent`), ASP.NET Core returns a bare HTTP 404 with an empty body — the custom 404 page is never rendered. Only the article detail page's explicit `Response.StatusCode = 404; return Page()` shows the friendly UI. All other 404 scenarios (unknown routes, missing static files) produce a blank response.
+
+**Fix applied:**
+- Added `app.UseStatusCodePagesWithReExecute("/404")` to `Program.cs` before the static files middleware, so any 404 response triggers re-execution through the custom `/404` Razor page.
+
+**Status:** FIXED
