@@ -10,7 +10,7 @@ namespace Blog.Infrastructure.Data;
 /// Hosted service that seeds required reference data after migrations have been applied.
 /// Registered after MigrationRunner so it executes once the schema is current.
 /// </summary>
-public class SeedDataHostedService(IServiceScopeFactory scopeFactory) : IHostedService
+public class SeedDataHostedService(IServiceScopeFactory scopeFactory, IHostEnvironment env) : IHostedService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -20,6 +20,9 @@ public class SeedDataHostedService(IServiceScopeFactory scopeFactory) : IHostedS
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<SeedData>>();
         var seedData = new SeedData(uow, logger, configuration);
         await seedData.SeedAsync(cancellationToken);
+
+        if (env.IsDevelopment())
+            await seedData.SeedDevelopmentDataAsync(cancellationToken);
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
