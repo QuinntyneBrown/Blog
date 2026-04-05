@@ -2171,7 +2171,13 @@ The design specifies (Section 3.5) that each `<picture>` element must contain tw
 
 A prior conformance fix ("Article and listing images rendered as plain `<img>` instead of responsive `<picture>` with WebP srcset") added `<picture>` elements to all three public pages but only emitted the WebP source. The AVIF `<source>` element was never added to `Slug.cshtml` (hero image), `Index.cshtml` (homepage article card images), or `Articles/Index.cshtml` (listing page article card images). The `AssetsController.Serve` method already handles AVIF content negotiation via the `Accept` header and will serve pre-generated `{assetId}-{width}w.avif` variants when they exist, falling back to WebP gracefully. The `ImageVariantGenerator` notes that SixLabors.ImageSharp 3.1.x lacks a built-in AVIF encoder, so no `.avif` variant files are generated at upload time today. However, the AVIF `<source>` element must still be present in the HTML so that when AVIF generation is enabled in the future, browsers that support AVIF automatically request the correct format — the serving endpoint already handles the `image/avif` Accept header correctly. Without the AVIF `<source>`, AVIF-capable browsers (Chrome, Firefox, Safari 16+) never request the AVIF format even once it becomes available server-side, and the browser can never benefit from the higher-compression AVIF format the design requires as the preferred delivery format (L2-020, L2-029).
 
-**Status:** OPEN
+**Fix applied:**
+- `Pages/Articles/Slug.cshtml`: Added `<source type="image/avif">` as the first source inside the hero `<picture>` element, with an AVIF srcset at breakpoints 320, 640, 960, 1280, 1920 w using the `{assetId}-{width}w.avif` naming convention. The existing `<source type="image/webp">` and `<img>` fallback are unchanged.
+- `Pages/Index.cshtml`: Added `<source type="image/avif">` as the first source inside each article card `<picture>` element, with an AVIF srcset at breakpoints 320, 640, 960 w. The existing WebP source and `<img>` fallback are unchanged.
+- `Pages/Articles/Index.cshtml`: Same change as `Index.cshtml` — AVIF source added first at 320/640/960 w breakpoints for article card images.
+- All three pages derive the AVIF srcset entries from the same `{assetId}` extracted from `FeaturedImageUrl`, using the `{assetId}-{width}w.avif` convention matching the `ImageVariantGenerator`'s file-naming scheme. When the AVIF encoder becomes available and `.avif` variants are present on disk, browsers will transparently switch to AVIF delivery with no further code changes.
+
+**Status:** FIXED
 
 ---
 

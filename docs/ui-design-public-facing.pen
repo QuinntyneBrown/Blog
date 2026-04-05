@@ -399,6 +399,29 @@
                       "iconFontName": "rss",
                       "iconFontFamily": "lucide",
                       "fill": "$foreground-secondary"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "g9Vme",
+                      "name": "searchBtn",
+                      "width": 36,
+                      "height": 36,
+                      "fill": "$surface-elevated",
+                      "cornerRadius": 8,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "UDGXe",
+                          "name": "searchIcon",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "search",
+                          "iconFontFamily": "lucide",
+                          "fill": "$foreground-secondary"
+                        }
+                      ]
                     }
                   ]
                 }
@@ -473,6 +496,19 @@
                       "fill": "$foreground-primary",
                       "width": 20,
                       "height": 2
+                    },
+                    {
+                      "type": "icon_font",
+                      "id": "hfc7h",
+                      "layoutPosition": "absolute",
+                      "x": -48,
+                      "y": 12,
+                      "name": "mobileSearchIcon",
+                      "width": 20,
+                      "height": 20,
+                      "iconFontName": "search",
+                      "iconFontFamily": "lucide",
+                      "fill": "$foreground-secondary"
                     }
                   ]
                 }
@@ -2787,20 +2823,41 @@
                     },
                     "23TLr": {
                       "width": "fill_container",
-                      "height": "fit_content"
+                      "height": "fit_content",
+                      "y": 180
                     },
                     "izitv": {
-                      "width": "fill_container"
+                      "width": "fill_container",
+                      "height": "fit_content",
+                      "x": 24,
+                      "y": 24
+                    },
+                    "eAuGZ": {
+                      "x": 116,
+                      "y": 6.5
+                    },
+                    "XGSzE": {
+                      "x": 127
                     },
                     "Uc0Qg": {
-                      "width": "fill_container"
+                      "width": "fill_container",
+                      "x": 24,
+                      "y": 52
                     },
                     "zZda8": {
                       "width": "fill_container",
-                      "y": 116
+                      "y": 116,
+                      "x": 24
                     },
                     "tqpl0": {
-                      "y": 212
+                      "y": 212,
+                      "width": "fit_content",
+                      "height": "fit_content",
+                      "x": 24
+                    },
+                    "SG7Gh": {
+                      "x": 84,
+                      "y": 1.5
                     }
                   }
                 },
@@ -2820,27 +2877,47 @@
                     },
                     "23TLr": {
                       "width": "fill_container",
-                      "height": "fit_content"
+                      "height": "fit_content",
+                      "y": 180
                     },
                     "izitv": {
-                      "width": "fill_container"
+                      "width": "fill_container",
+                      "height": "fit_content",
+                      "x": 24,
+                      "y": 24
                     },
                     "8HK7P": {
                       "content": "February 28, 2026"
                     },
+                    "eAuGZ": {
+                      "x": 139,
+                      "y": 6.5
+                    },
                     "XGSzE": {
-                      "content": "8 min read"
+                      "content": "8 min read",
+                      "x": 150
                     },
                     "Uc0Qg": {
                       "width": "fill_container",
-                      "content": "Event-Driven Architecture in Distributed Systems"
+                      "content": "Event-Driven Architecture in Distributed Systems",
+                      "x": 24,
+                      "y": 52
                     },
                     "zZda8": {
                       "width": "fill_container",
-                      "content": "How event-driven patterns enable loose coupling and resilience in modern microservice architectures."
+                      "content": "How event-driven patterns enable loose coupling and resilience in modern microservice architectures.",
+                      "x": 24,
+                      "y": 116
                     },
                     "tqpl0": {
-                      "y": 191
+                      "y": 191,
+                      "width": "fit_content",
+                      "height": "fit_content",
+                      "x": 24
+                    },
+                    "SG7Gh": {
+                      "x": 84,
+                      "y": 1.5
                     }
                   }
                 }
@@ -2868,28 +2945,47 @@
                     },
                     "23TLr": {
                       "width": "fill_container",
-                      "height": "fit_content"
+                      "height": "fit_content",
+                      "y": 180
                     },
                     "izitv": {
-                      "width": "fill_container"
+                      "width": "fill_container",
+                      "height": "fit_content",
+                      "x": 24,
+                      "y": 24
                     },
                     "8HK7P": {
                       "content": "February 10, 2026"
                     },
+                    "eAuGZ": {
+                      "x": 139,
+                      "y": 6.5
+                    },
                     "XGSzE": {
-                      "content": "3 min read"
+                      "content": "3 min read",
+                      "x": 150
                     },
                     "Uc0Qg": {
                       "width": "fill_container",
-                      "content": "Why I Chose .NET for My Blog Platform"
+                      "content": "Why I Chose .NET for My Blog Platform",
+                      "x": 24,
+                      "y": 52
                     },
                     "zZda8": {
                       "width": "fill_container",
                       "y": 116,
-                      "content": "A practical look at the decision-making process behind choosing a tech stack."
+                      "content": "A practical look at the decision-making process behind choosing a tech stack.",
+                      "x": 24
                     },
                     "tqpl0": {
-                      "y": 170
+                      "y": 170,
+                      "width": "fit_content",
+                      "height": "fit_content",
+                      "x": 24
+                    },
+                    "SG7Gh": {
+                      "x": 84,
+                      "y": 1.5
                     }
                   }
                 },
@@ -2909,27 +3005,47 @@
                     },
                     "23TLr": {
                       "width": "fill_container",
-                      "height": "fit_content"
+                      "height": "fit_content",
+                      "y": 180
                     },
                     "izitv": {
-                      "width": "fill_container"
+                      "width": "fill_container",
+                      "height": "fit_content",
+                      "x": 24,
+                      "y": 24
                     },
                     "8HK7P": {
                       "content": "January 22, 2026"
                     },
+                    "eAuGZ": {
+                      "x": 132,
+                      "y": 6.5
+                    },
                     "XGSzE": {
-                      "content": "6 min read"
+                      "content": "6 min read",
+                      "x": 143
                     },
                     "Uc0Qg": {
                       "width": "fill_container",
-                      "content": "CQRS and MediatR: A Practical Guide"
+                      "content": "CQRS and MediatR: A Practical Guide",
+                      "x": 24,
+                      "y": 52
                     },
                     "zZda8": {
                       "width": "fill_container",
-                      "content": "Step-by-step walkthrough of implementing the CQRS pattern."
+                      "content": "Step-by-step walkthrough of implementing the CQRS pattern.",
+                      "x": 24,
+                      "y": 116
                     },
                     "tqpl0": {
-                      "y": 170
+                      "y": 170,
+                      "width": "fit_content",
+                      "height": "fit_content",
+                      "x": 24
+                    },
+                    "SG7Gh": {
+                      "x": 84,
+                      "y": 1.5
                     }
                   }
                 }
@@ -2957,28 +3073,47 @@
                     },
                     "23TLr": {
                       "width": "fill_container",
-                      "height": "fit_content"
+                      "height": "fit_content",
+                      "y": 180
                     },
                     "izitv": {
-                      "width": "fill_container"
+                      "width": "fill_container",
+                      "height": "fit_content",
+                      "x": 24,
+                      "y": 24
                     },
                     "8HK7P": {
                       "content": "January 5, 2026"
                     },
+                    "eAuGZ": {
+                      "x": 124,
+                      "y": 6.5
+                    },
                     "XGSzE": {
-                      "content": "4 min read"
+                      "content": "4 min read",
+                      "x": 135
                     },
                     "Uc0Qg": {
                       "width": "fill_container",
-                      "content": "The Art of Writing Acceptance Tests"
+                      "content": "The Art of Writing Acceptance Tests",
+                      "x": 24,
+                      "y": 52
                     },
                     "zZda8": {
                       "width": "fill_container",
                       "y": 116,
-                      "content": "How ATDD leads to better software and fewer production bugs."
+                      "content": "How ATDD leads to better software and fewer production bugs.",
+                      "x": 24
                     },
                     "tqpl0": {
-                      "y": 170
+                      "y": 170,
+                      "width": "fit_content",
+                      "height": "fit_content",
+                      "x": 24
+                    },
+                    "SG7Gh": {
+                      "x": 84,
+                      "y": 1.5
                     }
                   }
                 },
@@ -2998,27 +3133,47 @@
                     },
                     "23TLr": {
                       "width": "fill_container",
-                      "height": "fit_content"
+                      "height": "fit_content",
+                      "y": 180
                     },
                     "izitv": {
-                      "width": "fill_container"
+                      "width": "fill_container",
+                      "height": "fit_content",
+                      "x": 24,
+                      "y": 24
                     },
                     "8HK7P": {
                       "content": "December 18, 2025"
                     },
+                    "eAuGZ": {
+                      "x": 139,
+                      "y": 6.5
+                    },
                     "XGSzE": {
-                      "content": "7 min read"
+                      "content": "7 min read",
+                      "x": 150
                     },
                     "Uc0Qg": {
                       "width": "fill_container",
-                      "content": "Performance Optimization in ASP.NET Core"
+                      "content": "Performance Optimization in ASP.NET Core",
+                      "x": 24,
+                      "y": 52
                     },
                     "zZda8": {
                       "width": "fill_container",
-                      "content": "Techniques for sub-200ms response times in .NET web apps."
+                      "content": "Techniques for sub-200ms response times in .NET web apps.",
+                      "x": 24,
+                      "y": 116
                     },
                     "tqpl0": {
-                      "y": 170
+                      "y": 170,
+                      "width": "fit_content",
+                      "height": "fit_content",
+                      "x": 24
+                    },
+                    "SG7Gh": {
+                      "x": 84,
+                      "y": 1.5
                     }
                   }
                 }
@@ -3042,7 +3197,64 @@
               "type": "ref",
               "ref": "J1Ckh",
               "name": "mdPagInner",
-              "x": 246.5
+              "x": 246.5,
+              "width": "fit_content",
+              "height": "fit_content",
+              "y": 40,
+              "descendants": {
+                "4ZyBm": {
+                  "width": "fit_content",
+                  "height": "fit_content"
+                },
+                "PZ4V1": {
+                  "x": 12,
+                  "y": 8.5
+                },
+                "wdyf8": {
+                  "x": 32,
+                  "y": 8
+                },
+                "4oE0u": {
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 79
+                },
+                "AtL70": {
+                  "x": 14,
+                  "y": 8
+                },
+                "I5fce": {
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 117
+                },
+                "PMgjH": {
+                  "x": 14,
+                  "y": 8
+                },
+                "U5M0I": {
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 158
+                },
+                "3tQiF": {
+                  "x": 14,
+                  "y": 8
+                },
+                "YJXpK": {
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 199
+                },
+                "nm9ul": {
+                  "x": 12,
+                  "y": 8
+                },
+                "YU8k5": {
+                  "x": 48,
+                  "y": 8.5
+                }
+              }
             }
           ]
         },
@@ -3292,19 +3504,41 @@
                 },
                 "23TLr": {
                   "width": "fill_container",
-                  "height": "fit_content"
+                  "height": "fit_content",
+                  "y": 200
                 },
                 "izitv": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "x": 24,
+                  "y": 24
+                },
+                "eAuGZ": {
+                  "x": 116,
+                  "y": 6.5
+                },
+                "XGSzE": {
+                  "x": 127
                 },
                 "Uc0Qg": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "x": 24,
+                  "y": 52
                 },
                 "zZda8": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "x": 24,
+                  "y": 116
                 },
                 "tqpl0": {
-                  "y": 170
+                  "y": 170,
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 24
+                },
+                "SG7Gh": {
+                  "x": 84,
+                  "y": 1.5
                 }
               }
             },
@@ -3324,27 +3558,47 @@
                 },
                 "23TLr": {
                   "width": "fill_container",
-                  "height": "fit_content"
+                  "height": "fit_content",
+                  "y": 200
                 },
                 "izitv": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "x": 24,
+                  "y": 24
                 },
                 "8HK7P": {
                   "content": "February 28, 2026"
                 },
+                "eAuGZ": {
+                  "x": 139,
+                  "y": 6.5
+                },
                 "XGSzE": {
-                  "content": "8 min read"
+                  "content": "8 min read",
+                  "x": 150
                 },
                 "Uc0Qg": {
                   "width": "fill_container",
-                  "content": "Event-Driven Architecture in Distributed Systems"
+                  "content": "Event-Driven Architecture in Distributed Systems",
+                  "x": 24,
+                  "y": 52
                 },
                 "zZda8": {
                   "width": "fill_container",
-                  "content": "How event-driven patterns enable loose coupling and resilience in modern microservice architectures."
+                  "content": "How event-driven patterns enable loose coupling and resilience in modern microservice architectures.",
+                  "x": 24,
+                  "y": 116
                 },
                 "tqpl0": {
-                  "y": 170
+                  "y": 170,
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 24
+                },
+                "SG7Gh": {
+                  "x": 84,
+                  "y": 1.5
                 }
               }
             },
@@ -3364,27 +3618,47 @@
                 },
                 "23TLr": {
                   "width": "fill_container",
-                  "height": "fit_content"
+                  "height": "fit_content",
+                  "y": 200
                 },
                 "izitv": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "x": 24,
+                  "y": 24
                 },
                 "8HK7P": {
                   "content": "February 10, 2026"
                 },
+                "eAuGZ": {
+                  "x": 139,
+                  "y": 6.5
+                },
                 "XGSzE": {
-                  "content": "3 min read"
+                  "content": "3 min read",
+                  "x": 150
                 },
                 "Uc0Qg": {
                   "width": "fill_container",
-                  "content": "Why I Chose .NET for My Blog Platform"
+                  "content": "Why I Chose .NET for My Blog Platform",
+                  "x": 24,
+                  "y": 52
                 },
                 "zZda8": {
                   "width": "fill_container",
-                  "content": "A practical look at the decision-making process behind choosing a tech stack."
+                  "content": "A practical look at the decision-making process behind choosing a tech stack.",
+                  "x": 24,
+                  "y": 90
                 },
                 "tqpl0": {
-                  "y": 144
+                  "y": 144,
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 24
+                },
+                "SG7Gh": {
+                  "x": 84,
+                  "y": 1.5
                 }
               }
             },
@@ -3404,27 +3678,47 @@
                 },
                 "23TLr": {
                   "width": "fill_container",
-                  "height": "fit_content"
+                  "height": "fit_content",
+                  "y": 200
                 },
                 "izitv": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "x": 24,
+                  "y": 24
                 },
                 "8HK7P": {
                   "content": "January 22, 2026"
                 },
+                "eAuGZ": {
+                  "x": 132,
+                  "y": 6.5
+                },
                 "XGSzE": {
-                  "content": "6 min read"
+                  "content": "6 min read",
+                  "x": 143
                 },
                 "Uc0Qg": {
                   "width": "fill_container",
-                  "content": "CQRS and MediatR: A Practical Guide"
+                  "content": "CQRS and MediatR: A Practical Guide",
+                  "x": 24,
+                  "y": 52
                 },
                 "zZda8": {
                   "width": "fill_container",
-                  "content": "Step-by-step walkthrough of implementing the CQRS pattern."
+                  "content": "Step-by-step walkthrough of implementing the CQRS pattern.",
+                  "x": 24,
+                  "y": 90
                 },
                 "tqpl0": {
-                  "y": 123
+                  "y": 123,
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 24
+                },
+                "SG7Gh": {
+                  "x": 84,
+                  "y": 1.5
                 }
               }
             },
@@ -3444,27 +3738,47 @@
                 },
                 "23TLr": {
                   "width": "fill_container",
-                  "height": "fit_content"
+                  "height": "fit_content",
+                  "y": 200
                 },
                 "izitv": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "x": 24,
+                  "y": 24
                 },
                 "8HK7P": {
                   "content": "January 5, 2026"
                 },
+                "eAuGZ": {
+                  "x": 124,
+                  "y": 6.5
+                },
                 "XGSzE": {
-                  "content": "4 min read"
+                  "content": "4 min read",
+                  "x": 135
                 },
                 "Uc0Qg": {
                   "width": "fill_container",
-                  "content": "The Art of Writing Acceptance Tests"
+                  "content": "The Art of Writing Acceptance Tests",
+                  "x": 24,
+                  "y": 52
                 },
                 "zZda8": {
                   "width": "fill_container",
-                  "content": "How ATDD leads to better software and fewer production bugs."
+                  "content": "How ATDD leads to better software and fewer production bugs.",
+                  "x": 24,
+                  "y": 90
                 },
                 "tqpl0": {
-                  "y": 123
+                  "y": 123,
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 24
+                },
+                "SG7Gh": {
+                  "x": 84,
+                  "y": 1.5
                 }
               }
             },
@@ -3484,27 +3798,47 @@
                 },
                 "23TLr": {
                   "width": "fill_container",
-                  "height": "fit_content"
+                  "height": "fit_content",
+                  "y": 200
                 },
                 "izitv": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "x": 24,
+                  "y": 24
                 },
                 "8HK7P": {
                   "content": "December 18, 2025"
                 },
+                "eAuGZ": {
+                  "x": 139,
+                  "y": 6.5
+                },
                 "XGSzE": {
-                  "content": "7 min read"
+                  "content": "7 min read",
+                  "x": 150
                 },
                 "Uc0Qg": {
                   "width": "fill_container",
-                  "content": "Performance Optimization in ASP.NET Core"
+                  "content": "Performance Optimization in ASP.NET Core",
+                  "x": 24,
+                  "y": 52
                 },
                 "zZda8": {
                   "width": "fill_container",
-                  "content": "Techniques for sub-200ms response times in .NET web apps."
+                  "content": "Techniques for sub-200ms response times in .NET web apps.",
+                  "x": 24,
+                  "y": 90
                 },
                 "tqpl0": {
-                  "y": 123
+                  "y": 123,
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 24
+                },
+                "SG7Gh": {
+                  "x": 84,
+                  "y": 1.5
                 }
               }
             }
@@ -3526,7 +3860,64 @@
               "type": "ref",
               "ref": "J1Ckh",
               "name": "smPagInner",
-              "x": 150.5
+              "x": 150.5,
+              "width": "fit_content",
+              "height": "fit_content",
+              "y": 40,
+              "descendants": {
+                "4ZyBm": {
+                  "width": "fit_content",
+                  "height": "fit_content"
+                },
+                "PZ4V1": {
+                  "x": 12,
+                  "y": 8.5
+                },
+                "wdyf8": {
+                  "x": 32,
+                  "y": 8
+                },
+                "4oE0u": {
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 79
+                },
+                "AtL70": {
+                  "x": 14,
+                  "y": 8
+                },
+                "I5fce": {
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 117
+                },
+                "PMgjH": {
+                  "x": 14,
+                  "y": 8
+                },
+                "U5M0I": {
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 158
+                },
+                "3tQiF": {
+                  "x": 14,
+                  "y": 8
+                },
+                "YJXpK": {
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 199
+                },
+                "nm9ul": {
+                  "x": 12,
+                  "y": 8
+                },
+                "YU8k5": {
+                  "x": 48,
+                  "y": 8.5
+                }
+              }
             }
           ]
         },
@@ -3768,22 +4159,49 @@
               "name": "xsC1",
               "x": 16,
               "y": 0,
+              "height": "fit_content",
               "descendants": {
                 "htros": {
                   "width": "fill_container",
                   "height": 180
                 },
                 "23TLr": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "y": 180
                 },
                 "izitv": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "x": 24,
+                  "y": 24
+                },
+                "eAuGZ": {
+                  "x": 116,
+                  "y": 6.5
+                },
+                "XGSzE": {
+                  "x": 127
                 },
                 "Uc0Qg": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "x": 24,
+                  "y": 52
                 },
                 "zZda8": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "x": 24,
+                  "y": 116
+                },
+                "tqpl0": {
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 24,
+                  "y": 191
+                },
+                "SG7Gh": {
+                  "x": 84,
+                  "y": 1.5
                 }
               }
             },
@@ -3795,30 +4213,55 @@
               "name": "xsC2",
               "x": 16,
               "y": 432,
+              "height": "fit_content",
               "descendants": {
                 "htros": {
                   "width": "fill_container",
                   "height": 180
                 },
                 "23TLr": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "y": 180
                 },
                 "izitv": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "x": 24,
+                  "y": 24
                 },
                 "8HK7P": {
                   "content": "Feb 28, 2026"
                 },
+                "eAuGZ": {
+                  "x": 101,
+                  "y": 6.5
+                },
                 "XGSzE": {
-                  "content": "8 min"
+                  "content": "8 min",
+                  "x": 112
                 },
                 "Uc0Qg": {
                   "width": "fill_container",
-                  "content": "Event-Driven Architecture in Distributed Systems"
+                  "content": "Event-Driven Architecture in Distributed Systems",
+                  "x": 24,
+                  "y": 52
                 },
                 "zZda8": {
                   "width": "fill_container",
-                  "content": "How event-driven patterns enable loose coupling and resilience."
+                  "content": "How event-driven patterns enable loose coupling and resilience.",
+                  "x": 24,
+                  "y": 116
+                },
+                "tqpl0": {
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 24,
+                  "y": 170
+                },
+                "SG7Gh": {
+                  "x": 84,
+                  "y": 1.5
                 }
               }
             },
@@ -3830,30 +4273,55 @@
               "name": "xsC3",
               "x": 16,
               "y": 843,
+              "height": "fit_content",
               "descendants": {
                 "htros": {
                   "width": "fill_container",
                   "height": 180
                 },
                 "23TLr": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "y": 180
                 },
                 "izitv": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "x": 24,
+                  "y": 24
                 },
                 "8HK7P": {
                   "content": "Feb 10, 2026"
                 },
+                "eAuGZ": {
+                  "x": 101,
+                  "y": 6.5
+                },
                 "XGSzE": {
-                  "content": "3 min"
+                  "content": "3 min",
+                  "x": 112
                 },
                 "Uc0Qg": {
                   "width": "fill_container",
-                  "content": "Why I Chose .NET for My Blog Platform"
+                  "content": "Why I Chose .NET for My Blog Platform",
+                  "x": 24,
+                  "y": 52
                 },
                 "zZda8": {
                   "width": "fill_container",
-                  "content": "A practical look at choosing a tech stack for a personal project."
+                  "content": "A practical look at choosing a tech stack for a personal project.",
+                  "x": 24,
+                  "y": 116
+                },
+                "tqpl0": {
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 24,
+                  "y": 170
+                },
+                "SG7Gh": {
+                  "x": 84,
+                  "y": 1.5
                 }
               }
             },
@@ -3865,30 +4333,55 @@
               "name": "xsC4",
               "x": 16,
               "y": 1254,
+              "height": "fit_content",
               "descendants": {
                 "htros": {
                   "width": "fill_container",
                   "height": 180
                 },
                 "23TLr": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "y": 180
                 },
                 "izitv": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "x": 24,
+                  "y": 24
                 },
                 "8HK7P": {
                   "content": "Jan 22, 2026"
                 },
+                "eAuGZ": {
+                  "x": 101,
+                  "y": 6.5
+                },
                 "XGSzE": {
-                  "content": "6 min"
+                  "content": "6 min",
+                  "x": 112
                 },
                 "Uc0Qg": {
                   "width": "fill_container",
-                  "content": "CQRS and MediatR: A Practical Guide"
+                  "content": "CQRS and MediatR: A Practical Guide",
+                  "x": 24,
+                  "y": 52
                 },
                 "zZda8": {
                   "width": "fill_container",
-                  "content": "Step-by-step walkthrough of implementing the CQRS pattern."
+                  "content": "Step-by-step walkthrough of implementing the CQRS pattern.",
+                  "x": 24,
+                  "y": 116
+                },
+                "tqpl0": {
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 24,
+                  "y": 170
+                },
+                "SG7Gh": {
+                  "x": 84,
+                  "y": 1.5
                 }
               }
             },
@@ -3900,30 +4393,55 @@
               "name": "xsC5",
               "x": 16,
               "y": 1665,
+              "height": "fit_content",
               "descendants": {
                 "htros": {
                   "width": "fill_container",
                   "height": 180
                 },
                 "23TLr": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "y": 180
                 },
                 "izitv": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "x": 24,
+                  "y": 24
                 },
                 "8HK7P": {
                   "content": "Jan 5, 2026"
                 },
+                "eAuGZ": {
+                  "x": 93,
+                  "y": 6.5
+                },
                 "XGSzE": {
-                  "content": "4 min"
+                  "content": "4 min",
+                  "x": 104
                 },
                 "Uc0Qg": {
                   "width": "fill_container",
-                  "content": "The Art of Writing Acceptance Tests"
+                  "content": "The Art of Writing Acceptance Tests",
+                  "x": 24,
+                  "y": 52
                 },
                 "zZda8": {
                   "width": "fill_container",
-                  "content": "How ATDD leads to better software and fewer bugs."
+                  "content": "How ATDD leads to better software and fewer bugs.",
+                  "x": 24,
+                  "y": 116
+                },
+                "tqpl0": {
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 24,
+                  "y": 170
+                },
+                "SG7Gh": {
+                  "x": 84,
+                  "y": 1.5
                 }
               }
             },
@@ -3935,30 +4453,55 @@
               "name": "xsC6",
               "x": 16,
               "y": 2076,
+              "height": "fit_content",
               "descendants": {
                 "htros": {
                   "width": "fill_container",
                   "height": 180
                 },
                 "23TLr": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "y": 180
                 },
                 "izitv": {
-                  "width": "fill_container"
+                  "width": "fill_container",
+                  "height": "fit_content",
+                  "x": 24,
+                  "y": 24
                 },
                 "8HK7P": {
                   "content": "Dec 18, 2025"
                 },
+                "eAuGZ": {
+                  "x": 101,
+                  "y": 6.5
+                },
                 "XGSzE": {
-                  "content": "7 min"
+                  "content": "7 min",
+                  "x": 112
                 },
                 "Uc0Qg": {
                   "width": "fill_container",
-                  "content": "Performance Optimization in ASP.NET Core"
+                  "content": "Performance Optimization in ASP.NET Core",
+                  "x": 24,
+                  "y": 52
                 },
                 "zZda8": {
                   "width": "fill_container",
-                  "content": "Techniques for sub-200ms response times."
+                  "content": "Techniques for sub-200ms response times.",
+                  "x": 24,
+                  "y": 116
+                },
+                "tqpl0": {
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 24,
+                  "y": 149
+                },
+                "SG7Gh": {
+                  "x": 84,
+                  "y": 1.5
                 }
               }
             }
@@ -3981,7 +4524,63 @@
               "ref": "J1Ckh",
               "name": "xsPagInner",
               "x": 50,
-              "y": 32
+              "y": 32,
+              "width": "fit_content",
+              "height": "fit_content",
+              "descendants": {
+                "4ZyBm": {
+                  "width": "fit_content",
+                  "height": "fit_content"
+                },
+                "PZ4V1": {
+                  "x": 12,
+                  "y": 8.5
+                },
+                "wdyf8": {
+                  "x": 32,
+                  "y": 8
+                },
+                "4oE0u": {
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 79
+                },
+                "AtL70": {
+                  "x": 14,
+                  "y": 8
+                },
+                "I5fce": {
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 117
+                },
+                "PMgjH": {
+                  "x": 14,
+                  "y": 8
+                },
+                "U5M0I": {
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 158
+                },
+                "3tQiF": {
+                  "x": 14,
+                  "y": 8
+                },
+                "YJXpK": {
+                  "width": "fit_content",
+                  "height": "fit_content",
+                  "x": 199
+                },
+                "nm9ul": {
+                  "x": 12,
+                  "y": 8
+                },
+                "YU8k5": {
+                  "x": 48,
+                  "y": 8.5
+                }
+              }
             }
           ]
         },
@@ -10419,14 +11018,98 @@
                           "id": "CSo9h",
                           "type": "ref",
                           "ref": "BlCCi",
-                          "y": 0
+                          "y": 0,
+                          "height": "fit_content",
+                          "descendants": {
+                            "2fyli": {
+                              "width": "fill_container"
+                            },
+                            "FQVtV": {
+                              "width": "fill_container",
+                              "height": "fit_content",
+                              "y": 200
+                            },
+                            "S9REc": {
+                              "x": 24,
+                              "y": 24
+                            },
+                            "R22W1": {
+                              "width": "fill_container",
+                              "x": 24,
+                              "y": 48
+                            },
+                            "d7w8i": {
+                              "x": 24,
+                              "y": 80
+                            },
+                            "GGwxn": {
+                              "width": "fill_container",
+                              "x": 24,
+                              "y": 112
+                            },
+                            "Qp9BG": {
+                              "width": "fill_container",
+                              "x": 24,
+                              "y": 138
+                            },
+                            "DrlOT": {
+                              "x": 24,
+                              "y": 164
+                            },
+                            "d5NNt": {
+                              "x": 24,
+                              "y": 190
+                            }
+                          }
                         },
                         {
                           "id": "br8Yv",
                           "type": "ref",
                           "ref": "BlCCi",
                           "x": 376,
-                          "y": 0
+                          "y": 0,
+                          "height": "fit_content",
+                          "descendants": {
+                            "2fyli": {
+                              "width": "fill_container"
+                            },
+                            "FQVtV": {
+                              "width": "fill_container",
+                              "height": "fit_content",
+                              "y": 200
+                            },
+                            "S9REc": {
+                              "x": 24,
+                              "y": 24
+                            },
+                            "R22W1": {
+                              "width": "fill_container",
+                              "x": 24,
+                              "y": 48
+                            },
+                            "d7w8i": {
+                              "x": 24,
+                              "y": 80
+                            },
+                            "GGwxn": {
+                              "width": "fill_container",
+                              "x": 24,
+                              "y": 112
+                            },
+                            "Qp9BG": {
+                              "width": "fill_container",
+                              "x": 24,
+                              "y": 138
+                            },
+                            "DrlOT": {
+                              "x": 24,
+                              "y": 164
+                            },
+                            "d5NNt": {
+                              "x": 24,
+                              "y": 190
+                            }
+                          }
                         }
                       ]
                     }
@@ -10452,7 +11135,22 @@
                       "id": "smrsx",
                       "type": "ref",
                       "ref": "oMrmQ",
-                      "y": 21
+                      "y": 21,
+                      "height": "fit_content",
+                      "descendants": {
+                        "fAmFb": {
+                          "x": 176,
+                          "y": 64
+                        },
+                        "lcciG": {
+                          "x": 115,
+                          "y": 128
+                        },
+                        "krMxo": {
+                          "x": 60,
+                          "y": 173
+                        }
+                      }
                     }
                   ]
                 }
@@ -10488,22 +11186,109 @@
                 {
                   "id": "ugtZw",
                   "type": "ref",
-                  "ref": "L45kM"
+                  "ref": "L45kM",
+                  "height": "fit_content",
+                  "descendants": {
+                    "chT4V": {
+                      "x": 16,
+                      "y": 33.5
+                    },
+                    "DrcN4": {
+                      "width": "fill_container",
+                      "height": "fit_content",
+                      "x": 48,
+                      "y": 16
+                    },
+                    "qFVtD": {
+                      "width": "fill_container",
+                      "y": 19
+                    },
+                    "NEq9i": {
+                      "x": 328,
+                      "y": 35.5
+                    }
+                  }
                 },
                 {
                   "id": "W0yDa",
                   "type": "ref",
-                  "ref": "CUeV0"
+                  "ref": "CUeV0",
+                  "height": "fit_content",
+                  "x": 376,
+                  "descendants": {
+                    "pS79R": {
+                      "x": 16,
+                      "y": 24.5
+                    },
+                    "Pz16y": {
+                      "width": "fill_container",
+                      "height": "fit_content",
+                      "x": 48,
+                      "y": 16
+                    },
+                    "nREXi": {
+                      "width": "fill_container",
+                      "y": 19
+                    },
+                    "z8At5": {
+                      "x": 328,
+                      "y": 26.5
+                    }
+                  }
                 },
                 {
                   "id": "hAvMx",
                   "type": "ref",
-                  "ref": "16qPG"
+                  "ref": "16qPG",
+                  "height": "fit_content",
+                  "x": 752,
+                  "descendants": {
+                    "MUUqo": {
+                      "x": 16,
+                      "y": 24.5
+                    },
+                    "sHP2g": {
+                      "width": "fill_container",
+                      "height": "fit_content",
+                      "x": 48,
+                      "y": 16
+                    },
+                    "gB8xT": {
+                      "width": "fill_container",
+                      "y": 19
+                    },
+                    "63sai": {
+                      "x": 328,
+                      "y": 26.5
+                    }
+                  }
                 },
                 {
                   "id": "VOpmZ",
                   "type": "ref",
-                  "ref": "75Mev"
+                  "ref": "75Mev",
+                  "height": "fit_content",
+                  "x": 1128,
+                  "descendants": {
+                    "W1jZj": {
+                      "x": 16,
+                      "y": 24.5
+                    },
+                    "XYIz2": {
+                      "width": "fill_container",
+                      "height": "fit_content",
+                      "x": 48,
+                      "y": 16
+                    },
+                    "ryIgy": {
+                      "width": "fill_container",
+                      "y": 19
+                    },
+                    "dMT5w": {
+                      "x": 328,
+                      "y": 26.5
+                    }
+                  }
                 }
               ]
             }
@@ -16882,6 +17667,3393 @@
                                   "fill": "#71717A"
                                 }
                               ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "SO5ek",
+      "x": 900,
+      "y": 12307,
+      "name": "Search Results — XL (1440)",
+      "clip": true,
+      "width": 1440,
+      "height": 1700,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "0VfB3",
+          "type": "ref",
+          "ref": "n9Ehx",
+          "width": "fill_container",
+          "name": "xlNav",
+          "y": 0,
+          "descendants": {
+            "M6RIH": {
+              "x": 1157
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "p4q4j",
+          "name": "searchHero",
+          "width": "fill_container",
+          "fill": "$surface-secondary",
+          "layout": "vertical",
+          "gap": 24,
+          "padding": [
+            64,
+            96,
+            48,
+            96
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "OuEpx",
+              "name": "resultsLabel",
+              "fill": "$foreground-tertiary",
+              "content": "Search Results",
+              "fontFamily": "Geist Mono",
+              "fontSize": 12,
+              "fontWeight": "500",
+              "letterSpacing": 1
+            },
+            {
+              "type": "frame",
+              "id": "kzS37",
+              "name": "searchBar",
+              "width": "fill_container",
+              "height": 56,
+              "fill": "$surface-input",
+              "cornerRadius": 8,
+              "stroke": {
+                "thickness": 2,
+                "fill": "$border-focus"
+              },
+              "gap": 16,
+              "padding": [
+                0,
+                20
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "CBATu",
+                  "width": 20,
+                  "height": 20,
+                  "iconFontName": "search",
+                  "iconFontFamily": "lucide",
+                  "fill": "$foreground-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "YdBuA",
+                  "name": "searchQuery",
+                  "fill": "$foreground-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "clean architecture",
+                  "fontFamily": "Inter",
+                  "fontSize": 18
+                },
+                {
+                  "type": "frame",
+                  "id": "GnX9f",
+                  "name": "clearBtn",
+                  "width": 28,
+                  "height": 28,
+                  "fill": "$surface-elevated",
+                  "cornerRadius": 6,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "QM9ep",
+                      "width": 14,
+                      "height": 14,
+                      "iconFontName": "x",
+                      "iconFontFamily": "lucide",
+                      "fill": "$foreground-secondary"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "5OBF9",
+              "name": "resultCount",
+              "fill": "$foreground-tertiary",
+              "content": "23 results for \"clean architecture\"",
+              "fontFamily": "Inter",
+              "fontSize": 14
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "foHrv",
+          "name": "filtersBar",
+          "width": "fill_container",
+          "fill": "$surface-primary",
+          "stroke": {
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "$border-subtle"
+          },
+          "gap": 16,
+          "padding": [
+            16,
+            96
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "zFXTI",
+              "name": "filterLabel",
+              "fill": "$foreground-tertiary",
+              "content": "Filter by:",
+              "fontFamily": "Inter",
+              "fontSize": 14
+            },
+            {
+              "type": "frame",
+              "id": "0LUL4",
+              "name": "tagAll",
+              "fill": "$accent-primary",
+              "cornerRadius": 20,
+              "gap": 6,
+              "padding": [
+                6,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "LcdIY",
+                  "fill": "$foreground-inverse",
+                  "content": "All",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "QjHVi",
+              "name": "tagArchitecture",
+              "fill": "$surface-elevated",
+              "cornerRadius": 20,
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border-subtle"
+              },
+              "gap": 6,
+              "padding": [
+                6,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "QZbwy",
+                  "fill": "$foreground-secondary",
+                  "content": "Architecture",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "o46Ii",
+              "name": "tagDotNet",
+              "fill": "$surface-elevated",
+              "cornerRadius": 20,
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border-subtle"
+              },
+              "gap": 6,
+              "padding": [
+                6,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "efyAy",
+                  "fill": "$foreground-secondary",
+                  "content": ".NET",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "cpVxH",
+              "name": "tagDesign",
+              "fill": "$surface-elevated",
+              "cornerRadius": 20,
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border-subtle"
+              },
+              "gap": 6,
+              "padding": [
+                6,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "pTRgK",
+                  "fill": "$foreground-secondary",
+                  "content": "Design Patterns",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "mW7Qt",
+              "name": "spacer",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "PTMUL",
+              "name": "sortWrap",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "CEijy",
+                  "fill": "$foreground-tertiary",
+                  "content": "Sort:",
+                  "fontFamily": "Inter",
+                  "fontSize": 14
+                },
+                {
+                  "type": "frame",
+                  "id": "vljxb",
+                  "name": "sortDropdown",
+                  "fill": "$surface-elevated",
+                  "cornerRadius": 6,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "$border-subtle"
+                  },
+                  "gap": 8,
+                  "padding": [
+                    6,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "gipge",
+                      "fill": "$foreground-primary",
+                      "content": "Most Relevant",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "icon_font",
+                      "id": "ijxcN",
+                      "width": 14,
+                      "height": 14,
+                      "iconFontName": "chevron-down",
+                      "iconFontFamily": "lucide",
+                      "fill": "$foreground-secondary"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "xfnWI",
+          "name": "searchContent",
+          "width": "fill_container",
+          "fill": "$surface-primary",
+          "layout": "vertical",
+          "gap": 48,
+          "padding": [
+            48,
+            96
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "pUQCg",
+              "name": "resultsGrid",
+              "width": "fill_container",
+              "gap": 24,
+              "children": [
+                {
+                  "id": "HHDUW",
+                  "type": "ref",
+                  "ref": "GV3o5",
+                  "width": "fill_container",
+                  "name": "card1",
+                  "height": "fit_content",
+                  "y": 0,
+                  "descendants": {
+                    "htros": {
+                      "width": "fill_container"
+                    },
+                    "23TLr": {
+                      "width": "fill_container",
+                      "height": "fit_content"
+                    },
+                    "izitv": {
+                      "width": "fill_container"
+                    },
+                    "8HK7P": {
+                      "content": "Feb 12, 2026"
+                    },
+                    "XGSzE": {
+                      "content": "8 min read"
+                    },
+                    "Uc0Qg": {
+                      "width": "fill_container",
+                      "content": "Clean Architecture in ASP.NET Core: A Practical Guide"
+                    },
+                    "zZda8": {
+                      "width": "fill_container",
+                      "y": 116,
+                      "content": "Learn how to structure your .NET applications using clean architecture principles for better maintainability and testability."
+                    },
+                    "tqpl0": {
+                      "y": 191
+                    }
+                  }
+                },
+                {
+                  "id": "U0yZI",
+                  "type": "ref",
+                  "ref": "GV3o5",
+                  "width": "fill_container",
+                  "name": "card2",
+                  "height": "fit_content",
+                  "x": 424,
+                  "y": 0,
+                  "descendants": {
+                    "htros": {
+                      "width": "fill_container"
+                    },
+                    "23TLr": {
+                      "width": "fill_container",
+                      "height": "fit_content"
+                    },
+                    "izitv": {
+                      "width": "fill_container"
+                    },
+                    "8HK7P": {
+                      "content": "Jan 28, 2026"
+                    },
+                    "XGSzE": {
+                      "content": "11 min read"
+                    },
+                    "Uc0Qg": {
+                      "width": "fill_container",
+                      "content": "Domain-Driven Design Meets Clean Architecture"
+                    },
+                    "zZda8": {
+                      "width": "fill_container",
+                      "y": 116,
+                      "content": "Exploring the synergies between DDD tactical patterns and clean architecture layers in real-world applications."
+                    },
+                    "tqpl0": {
+                      "y": 191
+                    }
+                  }
+                },
+                {
+                  "id": "bhxaJ",
+                  "type": "ref",
+                  "ref": "GV3o5",
+                  "width": "fill_container",
+                  "name": "card3",
+                  "height": "fit_content",
+                  "x": 848,
+                  "y": 0,
+                  "descendants": {
+                    "htros": {
+                      "width": "fill_container"
+                    },
+                    "23TLr": {
+                      "width": "fill_container",
+                      "height": "fit_content"
+                    },
+                    "izitv": {
+                      "width": "fill_container"
+                    },
+                    "8HK7P": {
+                      "content": "Jan 10, 2026"
+                    },
+                    "XGSzE": {
+                      "content": "9 min read"
+                    },
+                    "Uc0Qg": {
+                      "width": "fill_container",
+                      "content": "CQRS and Clean Architecture: Separating Reads from Writes"
+                    },
+                    "zZda8": {
+                      "width": "fill_container",
+                      "y": 116,
+                      "content": "How Command Query Responsibility Segregation integrates naturally with clean architecture to scale complex systems."
+                    },
+                    "tqpl0": {
+                      "y": 191
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "1Bk81",
+              "name": "resultsGrid2",
+              "width": "fill_container",
+              "gap": 24,
+              "children": [
+                {
+                  "id": "2TLi3",
+                  "type": "ref",
+                  "ref": "GV3o5",
+                  "width": "fill_container",
+                  "name": "card4",
+                  "height": "fit_content",
+                  "y": 0,
+                  "descendants": {
+                    "htros": {
+                      "width": "fill_container"
+                    },
+                    "23TLr": {
+                      "width": "fill_container",
+                      "height": "fit_content"
+                    },
+                    "izitv": {
+                      "width": "fill_container"
+                    },
+                    "8HK7P": {
+                      "content": "Dec 22, 2025"
+                    },
+                    "XGSzE": {
+                      "content": "7 min read"
+                    },
+                    "Uc0Qg": {
+                      "width": "fill_container",
+                      "content": "Testing Clean Architecture: From Unit to Integration Tests"
+                    },
+                    "zZda8": {
+                      "width": "fill_container",
+                      "y": 116,
+                      "content": "A comprehensive guide to testing each layer of your clean architecture independently and together."
+                    },
+                    "tqpl0": {
+                      "y": 170
+                    }
+                  }
+                },
+                {
+                  "id": "V0sPn",
+                  "type": "ref",
+                  "ref": "GV3o5",
+                  "width": "fill_container",
+                  "name": "card5",
+                  "height": "fit_content",
+                  "x": 424,
+                  "y": 0,
+                  "descendants": {
+                    "htros": {
+                      "width": "fill_container"
+                    },
+                    "23TLr": {
+                      "width": "fill_container",
+                      "height": "fit_content"
+                    },
+                    "izitv": {
+                      "width": "fill_container"
+                    },
+                    "8HK7P": {
+                      "content": "Dec 5, 2025"
+                    },
+                    "XGSzE": {
+                      "content": "10 min read"
+                    },
+                    "Uc0Qg": {
+                      "width": "fill_container",
+                      "content": "Clean Architecture with Entity Framework Core"
+                    },
+                    "zZda8": {
+                      "width": "fill_container",
+                      "y": 116,
+                      "content": "Managing database concerns at the infrastructure layer while keeping your domain model pure and persistence-ignorant."
+                    },
+                    "tqpl0": {
+                      "y": 191
+                    }
+                  }
+                },
+                {
+                  "id": "KzByp",
+                  "type": "ref",
+                  "ref": "GV3o5",
+                  "width": "fill_container",
+                  "name": "card6",
+                  "height": "fit_content",
+                  "x": 848,
+                  "y": 0,
+                  "descendants": {
+                    "htros": {
+                      "width": "fill_container"
+                    },
+                    "23TLr": {
+                      "width": "fill_container",
+                      "height": "fit_content"
+                    },
+                    "izitv": {
+                      "width": "fill_container"
+                    },
+                    "8HK7P": {
+                      "content": "Nov 18, 2025"
+                    },
+                    "XGSzE": {
+                      "content": "6 min read"
+                    },
+                    "Uc0Qg": {
+                      "width": "fill_container",
+                      "content": "Dependency Injection Patterns in Clean Architecture"
+                    },
+                    "zZda8": {
+                      "width": "fill_container",
+                      "y": 116,
+                      "content": "Structuring your DI container registrations to respect architectural boundaries and avoid coupling."
+                    },
+                    "tqpl0": {
+                      "y": 170
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": "YBIIE",
+              "type": "ref",
+              "ref": "J1Ckh",
+              "width": "fill_container",
+              "name": "xlPagination",
+              "x": 96,
+              "y": 1008,
+              "descendants": {
+                "4ZyBm": {
+                  "x": 486.5
+                },
+                "4oE0u": {
+                  "x": 565.5
+                },
+                "I5fce": {
+                  "x": 603.5
+                },
+                "U5M0I": {
+                  "x": 644.5
+                },
+                "YJXpK": {
+                  "x": 685.5
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "rme2Q",
+          "type": "ref",
+          "ref": "fGDyV",
+          "width": "fill_container",
+          "name": "xlFooter",
+          "x": 0,
+          "y": 1462,
+          "descendants": {
+            "37MRv": {
+              "x": 600.5
+            },
+            "ldPvE": {
+              "x": 575.5
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "AMhXE",
+      "x": 2440,
+      "y": 12307,
+      "name": "Search Results — LG (992)",
+      "clip": true,
+      "width": 992,
+      "height": 1800,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "FM2rK",
+          "type": "ref",
+          "ref": "n9Ehx",
+          "width": "fill_container",
+          "name": "lgNav",
+          "y": 0,
+          "descendants": {
+            "M6RIH": {
+              "x": 709
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "kpoOT",
+          "name": "searchHero",
+          "width": "fill_container",
+          "fill": "$surface-secondary",
+          "layout": "vertical",
+          "gap": 20,
+          "padding": [
+            48,
+            48,
+            40,
+            48
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "6Rf2S",
+              "fill": "$foreground-tertiary",
+              "content": "Search Results",
+              "fontFamily": "Geist Mono",
+              "fontSize": 12,
+              "fontWeight": "500",
+              "letterSpacing": 1
+            },
+            {
+              "type": "frame",
+              "id": "qubFW",
+              "name": "searchBar",
+              "width": "fill_container",
+              "height": 52,
+              "fill": "$surface-input",
+              "cornerRadius": 8,
+              "stroke": {
+                "thickness": 2,
+                "fill": "$border-focus"
+              },
+              "gap": 12,
+              "padding": [
+                0,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "CJcXZ",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "search",
+                  "iconFontFamily": "lucide",
+                  "fill": "$foreground-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "Ad5Kt",
+                  "fill": "$foreground-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "clean architecture",
+                  "fontFamily": "Inter",
+                  "fontSize": 16
+                },
+                {
+                  "type": "frame",
+                  "id": "BrSeZ",
+                  "name": "lgClear",
+                  "width": 26,
+                  "height": 26,
+                  "fill": "$surface-elevated",
+                  "cornerRadius": 6,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "w70UE",
+                      "width": 13,
+                      "height": 13,
+                      "iconFontName": "x",
+                      "iconFontFamily": "lucide",
+                      "fill": "$foreground-secondary"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "zRsXc",
+              "fill": "$foreground-tertiary",
+              "content": "23 results for \"clean architecture\"",
+              "fontFamily": "Inter",
+              "fontSize": 14
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "RGwe3",
+          "name": "filtersBar",
+          "width": "fill_container",
+          "fill": "$surface-primary",
+          "stroke": {
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "$border-subtle"
+          },
+          "gap": 12,
+          "padding": [
+            14,
+            48
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "zhU7P",
+              "fill": "$foreground-tertiary",
+              "content": "Filter by:",
+              "fontFamily": "Inter",
+              "fontSize": 13
+            },
+            {
+              "type": "frame",
+              "id": "GcNeQ",
+              "name": "lgAllTag",
+              "fill": "$accent-primary",
+              "cornerRadius": 20,
+              "padding": [
+                5,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "8CSVa",
+                  "fill": "$foreground-inverse",
+                  "content": "All",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "x9t4L",
+              "name": "lgArchTag",
+              "fill": "$surface-elevated",
+              "cornerRadius": 20,
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border-subtle"
+              },
+              "padding": [
+                5,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "bPFaf",
+                  "fill": "$foreground-secondary",
+                  "content": "Architecture",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "12cBR",
+              "name": "lgDotNetTag",
+              "fill": "$surface-elevated",
+              "cornerRadius": 20,
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border-subtle"
+              },
+              "padding": [
+                5,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "CfKXR",
+                  "fill": "$foreground-secondary",
+                  "content": ".NET",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "zC224",
+              "name": "lgSpacer",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "kNcnR",
+              "name": "lgSort",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "1Jivz",
+                  "fill": "$foreground-tertiary",
+                  "content": "Sort:",
+                  "fontFamily": "Inter",
+                  "fontSize": 13
+                },
+                {
+                  "type": "frame",
+                  "id": "2qoPJ",
+                  "name": "lgSortDrop",
+                  "fill": "$surface-elevated",
+                  "cornerRadius": 6,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "$border-subtle"
+                  },
+                  "gap": 6,
+                  "padding": [
+                    5,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "8RNB1",
+                      "fill": "$foreground-primary",
+                      "content": "Most Relevant",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "icon_font",
+                      "id": "4JQ1Y",
+                      "width": 12,
+                      "height": 12,
+                      "iconFontName": "chevron-down",
+                      "iconFontFamily": "lucide",
+                      "fill": "$foreground-secondary"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "6oy9A",
+          "name": "searchContent",
+          "width": "fill_container",
+          "fill": "$surface-primary",
+          "layout": "vertical",
+          "gap": 40,
+          "padding": [
+            40,
+            48
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "E97KI",
+              "name": "row1",
+              "width": "fill_container",
+              "gap": 20,
+              "children": [
+                {
+                  "id": "JbEIb",
+                  "type": "ref",
+                  "ref": "GV3o5",
+                  "width": "fill_container",
+                  "name": "lgC1",
+                  "height": "fit_content",
+                  "y": 0,
+                  "descendants": {
+                    "htros": {
+                      "width": "fill_container"
+                    },
+                    "23TLr": {
+                      "width": "fill_container",
+                      "height": "fit_content"
+                    },
+                    "izitv": {
+                      "width": "fill_container"
+                    },
+                    "8HK7P": {
+                      "content": "Feb 12, 2026"
+                    },
+                    "Uc0Qg": {
+                      "width": "fill_container",
+                      "content": "Clean Architecture in ASP.NET Core: A Practical Guide"
+                    },
+                    "zZda8": {
+                      "width": "fill_container",
+                      "y": 116,
+                      "content": "Learn how to structure your .NET applications using clean architecture principles for better maintainability."
+                    },
+                    "tqpl0": {
+                      "y": 170
+                    }
+                  }
+                },
+                {
+                  "id": "ZQZIk",
+                  "type": "ref",
+                  "ref": "GV3o5",
+                  "width": "fill_container",
+                  "name": "lgC2",
+                  "height": "fit_content",
+                  "x": 458,
+                  "y": 0,
+                  "descendants": {
+                    "htros": {
+                      "width": "fill_container"
+                    },
+                    "23TLr": {
+                      "width": "fill_container",
+                      "height": "fit_content"
+                    },
+                    "izitv": {
+                      "width": "fill_container"
+                    },
+                    "8HK7P": {
+                      "content": "Jan 28, 2026"
+                    },
+                    "Uc0Qg": {
+                      "width": "fill_container",
+                      "content": "Domain-Driven Design Meets Clean Architecture"
+                    },
+                    "zZda8": {
+                      "width": "fill_container",
+                      "y": 116,
+                      "content": "Exploring the synergies between DDD tactical patterns and clean architecture layers in real-world applications."
+                    },
+                    "tqpl0": {
+                      "y": 170
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "y7vhI",
+              "name": "row2",
+              "width": "fill_container",
+              "gap": 20,
+              "children": [
+                {
+                  "id": "3AHcw",
+                  "type": "ref",
+                  "ref": "GV3o5",
+                  "width": "fill_container",
+                  "name": "lgC3",
+                  "height": "fit_content",
+                  "y": 0,
+                  "descendants": {
+                    "htros": {
+                      "width": "fill_container"
+                    },
+                    "23TLr": {
+                      "width": "fill_container",
+                      "height": "fit_content"
+                    },
+                    "izitv": {
+                      "width": "fill_container"
+                    },
+                    "8HK7P": {
+                      "content": "Jan 10, 2026"
+                    },
+                    "Uc0Qg": {
+                      "width": "fill_container",
+                      "content": "CQRS and Clean Architecture"
+                    },
+                    "zZda8": {
+                      "width": "fill_container",
+                      "y": 90,
+                      "content": "How Command Query Responsibility Segregation integrates naturally with clean architecture."
+                    },
+                    "tqpl0": {
+                      "y": 144
+                    }
+                  }
+                },
+                {
+                  "id": "siRcw",
+                  "type": "ref",
+                  "ref": "GV3o5",
+                  "width": "fill_container",
+                  "name": "lgC4",
+                  "height": "fit_content",
+                  "x": 458,
+                  "y": 0,
+                  "descendants": {
+                    "htros": {
+                      "width": "fill_container"
+                    },
+                    "23TLr": {
+                      "width": "fill_container",
+                      "height": "fit_content"
+                    },
+                    "izitv": {
+                      "width": "fill_container"
+                    },
+                    "8HK7P": {
+                      "content": "Dec 22, 2025"
+                    },
+                    "Uc0Qg": {
+                      "width": "fill_container",
+                      "content": "Testing Clean Architecture: Unit to Integration"
+                    },
+                    "zZda8": {
+                      "width": "fill_container",
+                      "y": 116,
+                      "content": "A comprehensive guide to testing each layer of your clean architecture independently and together."
+                    },
+                    "tqpl0": {
+                      "y": 170
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": "e1k3u",
+              "type": "ref",
+              "ref": "J1Ckh",
+              "width": "fill_container",
+              "name": "lgPag",
+              "x": 48,
+              "y": 942,
+              "descendants": {
+                "4ZyBm": {
+                  "x": 310.5
+                },
+                "4oE0u": {
+                  "x": 389.5
+                },
+                "I5fce": {
+                  "x": 427.5
+                },
+                "U5M0I": {
+                  "x": 468.5
+                },
+                "YJXpK": {
+                  "x": 509.5
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "ra0RQ",
+          "type": "ref",
+          "ref": "fGDyV",
+          "width": "fill_container",
+          "name": "lgFoot",
+          "x": 0,
+          "y": 1345,
+          "descendants": {
+            "37MRv": {
+              "x": 376.5
+            },
+            "ldPvE": {
+              "x": 351.5
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "4XlIf",
+      "x": 3532,
+      "y": 12307,
+      "name": "Search Results — MD (768)",
+      "clip": true,
+      "width": 768,
+      "height": 1900,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "4gmGr",
+          "type": "ref",
+          "ref": "XRb3U",
+          "width": "fill_container",
+          "name": "mdNav",
+          "y": 0,
+          "descendants": {
+            "iT01q": {
+              "x": 708
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "MECvl",
+          "name": "searchHero",
+          "width": "fill_container",
+          "fill": "$surface-secondary",
+          "layout": "vertical",
+          "gap": 16,
+          "padding": [
+            40,
+            32,
+            32,
+            32
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "4AqA6",
+              "fill": "$foreground-tertiary",
+              "content": "Search Results",
+              "fontFamily": "Geist Mono",
+              "fontSize": 11,
+              "fontWeight": "500",
+              "letterSpacing": 1
+            },
+            {
+              "type": "frame",
+              "id": "hOoNv",
+              "name": "searchBar",
+              "width": "fill_container",
+              "height": 48,
+              "fill": "$surface-input",
+              "cornerRadius": 8,
+              "stroke": {
+                "thickness": 2,
+                "fill": "$border-focus"
+              },
+              "gap": 12,
+              "padding": [
+                0,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "cbZKd",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "search",
+                  "iconFontFamily": "lucide",
+                  "fill": "$foreground-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "6zRcR",
+                  "fill": "$foreground-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "clean architecture",
+                  "fontFamily": "Inter",
+                  "fontSize": 15
+                },
+                {
+                  "type": "frame",
+                  "id": "ajN84",
+                  "name": "mdClear",
+                  "width": 24,
+                  "height": 24,
+                  "fill": "$surface-elevated",
+                  "cornerRadius": 6,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "FSkRB",
+                      "width": 12,
+                      "height": 12,
+                      "iconFontName": "x",
+                      "iconFontFamily": "lucide",
+                      "fill": "$foreground-secondary"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "tBDVU",
+              "fill": "$foreground-tertiary",
+              "content": "23 results for \"clean architecture\"",
+              "fontFamily": "Inter",
+              "fontSize": 13
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "rsITw",
+          "name": "filtersBar",
+          "width": "fill_container",
+          "fill": "$surface-primary",
+          "stroke": {
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "$border-subtle"
+          },
+          "gap": 10,
+          "padding": [
+            12,
+            32
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "phupY",
+              "name": "mdAllTag",
+              "fill": "$accent-primary",
+              "cornerRadius": 20,
+              "padding": [
+                5,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ajRKT",
+                  "fill": "$foreground-inverse",
+                  "content": "All",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "mpdSP",
+              "name": "mdArchTag",
+              "fill": "$surface-elevated",
+              "cornerRadius": 20,
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border-subtle"
+              },
+              "padding": [
+                5,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "2vZD4",
+                  "fill": "$foreground-secondary",
+                  "content": "Architecture",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "7WAKN",
+              "name": "mdDNTag",
+              "fill": "$surface-elevated",
+              "cornerRadius": 20,
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border-subtle"
+              },
+              "padding": [
+                5,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "0O1cH",
+                  "fill": "$foreground-secondary",
+                  "content": ".NET",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "1rVe7",
+          "name": "searchContent",
+          "width": "fill_container",
+          "fill": "$surface-primary",
+          "layout": "vertical",
+          "gap": 24,
+          "padding": 32,
+          "children": [
+            {
+              "id": "Q1OWu",
+              "type": "ref",
+              "ref": "GV3o5",
+              "width": "fill_container",
+              "name": "mdCard1",
+              "height": "fit_content",
+              "x": 32,
+              "y": 32,
+              "descendants": {
+                "htros": {
+                  "width": "fill_container"
+                },
+                "23TLr": {
+                  "width": "fill_container",
+                  "height": "fit_content"
+                },
+                "izitv": {
+                  "width": "fill_container"
+                },
+                "8HK7P": {
+                  "content": "Feb 12, 2026"
+                },
+                "Uc0Qg": {
+                  "width": "fill_container",
+                  "content": "Clean Architecture in ASP.NET Core: A Practical Guide"
+                },
+                "zZda8": {
+                  "width": "fill_container",
+                  "y": 90,
+                  "content": "Learn how to structure your .NET applications using clean architecture principles for better maintainability."
+                },
+                "tqpl0": {
+                  "y": 144
+                }
+              }
+            },
+            {
+              "id": "bmZXt",
+              "type": "ref",
+              "ref": "GV3o5",
+              "width": "fill_container",
+              "name": "mdCard2",
+              "height": "fit_content",
+              "x": 32,
+              "y": 441,
+              "descendants": {
+                "htros": {
+                  "width": "fill_container"
+                },
+                "23TLr": {
+                  "width": "fill_container",
+                  "height": "fit_content"
+                },
+                "izitv": {
+                  "width": "fill_container"
+                },
+                "8HK7P": {
+                  "content": "Jan 28, 2026"
+                },
+                "Uc0Qg": {
+                  "width": "fill_container",
+                  "content": "Domain-Driven Design Meets Clean Architecture"
+                },
+                "zZda8": {
+                  "width": "fill_container",
+                  "y": 90,
+                  "content": "Exploring the synergies between DDD tactical patterns and clean architecture layers in real-world applications."
+                },
+                "tqpl0": {
+                  "y": 144
+                }
+              }
+            },
+            {
+              "id": "3u4yh",
+              "type": "ref",
+              "ref": "GV3o5",
+              "width": "fill_container",
+              "name": "mdCard3",
+              "height": "fit_content",
+              "x": 32,
+              "y": 850,
+              "descendants": {
+                "htros": {
+                  "width": "fill_container"
+                },
+                "23TLr": {
+                  "width": "fill_container",
+                  "height": "fit_content"
+                },
+                "izitv": {
+                  "width": "fill_container"
+                },
+                "8HK7P": {
+                  "content": "Jan 10, 2026"
+                },
+                "Uc0Qg": {
+                  "width": "fill_container",
+                  "content": "CQRS and Clean Architecture: Separating Reads from Writes"
+                },
+                "zZda8": {
+                  "width": "fill_container",
+                  "y": 90,
+                  "content": "How Command Query Responsibility Segregation integrates naturally with clean architecture."
+                },
+                "tqpl0": {
+                  "y": 123
+                }
+              }
+            },
+            {
+              "id": "WKMwR",
+              "type": "ref",
+              "ref": "GV3o5",
+              "width": "fill_container",
+              "name": "mdCard4",
+              "height": "fit_content",
+              "x": 32,
+              "y": 1238,
+              "descendants": {
+                "htros": {
+                  "width": "fill_container"
+                },
+                "23TLr": {
+                  "width": "fill_container",
+                  "height": "fit_content"
+                },
+                "izitv": {
+                  "width": "fill_container"
+                },
+                "8HK7P": {
+                  "content": "Dec 22, 2025"
+                },
+                "Uc0Qg": {
+                  "width": "fill_container",
+                  "content": "Testing Clean Architecture: From Unit to Integration Tests"
+                },
+                "zZda8": {
+                  "width": "fill_container",
+                  "y": 90,
+                  "content": "A comprehensive guide to testing each layer of your clean architecture independently and together."
+                },
+                "tqpl0": {
+                  "y": 144
+                }
+              }
+            },
+            {
+              "id": "1VdED",
+              "type": "ref",
+              "ref": "J1Ckh",
+              "width": "fill_container",
+              "name": "mdPag",
+              "x": 32,
+              "y": 1647,
+              "descendants": {
+                "4ZyBm": {
+                  "x": 214.5
+                },
+                "4oE0u": {
+                  "x": 293.5
+                },
+                "I5fce": {
+                  "x": 331.5
+                },
+                "U5M0I": {
+                  "x": 372.5
+                },
+                "YJXpK": {
+                  "x": 413.5
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "b6Nt1",
+          "type": "ref",
+          "ref": "fGDyV",
+          "width": "fill_container",
+          "name": "mdFoot",
+          "x": 0,
+          "y": 1999,
+          "descendants": {
+            "37MRv": {
+              "x": 264.5
+            },
+            "ldPvE": {
+              "x": 239.5
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "I2WzV",
+      "x": 4400,
+      "y": 12307,
+      "name": "Search Results — SM (576)",
+      "clip": true,
+      "width": 576,
+      "height": 2200,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "yuOBw",
+          "type": "ref",
+          "ref": "XRb3U",
+          "width": "fill_container",
+          "name": "smNav",
+          "y": 0,
+          "descendants": {
+            "iT01q": {
+              "x": 516
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "o20HV",
+          "name": "searchHero",
+          "width": "fill_container",
+          "fill": "$surface-secondary",
+          "layout": "vertical",
+          "gap": 14,
+          "padding": [
+            32,
+            24,
+            24,
+            24
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "ZA6Sx",
+              "fill": "$foreground-tertiary",
+              "content": "Search Results",
+              "fontFamily": "Geist Mono",
+              "fontSize": 11,
+              "fontWeight": "500",
+              "letterSpacing": 1
+            },
+            {
+              "type": "frame",
+              "id": "JNPUi",
+              "name": "searchBar",
+              "width": "fill_container",
+              "height": 44,
+              "fill": "$surface-input",
+              "cornerRadius": 8,
+              "stroke": {
+                "thickness": 2,
+                "fill": "$border-focus"
+              },
+              "gap": 10,
+              "padding": [
+                0,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "6Ei6q",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "search",
+                  "iconFontFamily": "lucide",
+                  "fill": "$foreground-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "uVWcS",
+                  "fill": "$foreground-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "clean architecture",
+                  "fontFamily": "Inter",
+                  "fontSize": 14
+                },
+                {
+                  "type": "frame",
+                  "id": "urPIa",
+                  "name": "smClear",
+                  "width": 22,
+                  "height": 22,
+                  "fill": "$surface-elevated",
+                  "cornerRadius": 5,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "q9sqE",
+                      "width": 11,
+                      "height": 11,
+                      "iconFontName": "x",
+                      "iconFontFamily": "lucide",
+                      "fill": "$foreground-secondary"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "M964z",
+              "fill": "$foreground-tertiary",
+              "content": "23 results for \"clean architecture\"",
+              "fontFamily": "Inter",
+              "fontSize": 12
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "rJVAn",
+          "name": "filtersBar",
+          "width": "fill_container",
+          "fill": "$surface-primary",
+          "stroke": {
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "$border-subtle"
+          },
+          "gap": 8,
+          "padding": [
+            10,
+            24
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "BGRsp",
+              "name": "smAllTag",
+              "fill": "$accent-primary",
+              "cornerRadius": 20,
+              "padding": [
+                4,
+                10
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "TolJC",
+                  "fill": "$foreground-inverse",
+                  "content": "All",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "cwS18",
+              "name": "smArchTag",
+              "fill": "$surface-elevated",
+              "cornerRadius": 20,
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border-subtle"
+              },
+              "padding": [
+                4,
+                10
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "l0kTR",
+                  "fill": "$foreground-secondary",
+                  "content": "Architecture",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "FzC79",
+              "name": "smDNTag",
+              "fill": "$surface-elevated",
+              "cornerRadius": 20,
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border-subtle"
+              },
+              "padding": [
+                4,
+                10
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "y5TsW",
+                  "fill": "$foreground-secondary",
+                  "content": ".NET",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ilQFJ",
+          "name": "searchContent",
+          "width": "fill_container",
+          "fill": "$surface-primary",
+          "layout": "vertical",
+          "gap": 20,
+          "padding": 24,
+          "children": [
+            {
+              "id": "e4i7A",
+              "type": "ref",
+              "ref": "GV3o5",
+              "width": "fill_container",
+              "name": "smCard1",
+              "height": "fit_content",
+              "x": 24,
+              "y": 24,
+              "descendants": {
+                "htros": {
+                  "width": "fill_container"
+                },
+                "23TLr": {
+                  "width": "fill_container",
+                  "height": "fit_content"
+                },
+                "izitv": {
+                  "width": "fill_container"
+                },
+                "8HK7P": {
+                  "content": "Feb 12, 2026"
+                },
+                "Uc0Qg": {
+                  "width": "fill_container",
+                  "content": "Clean Architecture in ASP.NET Core: A Practical Guide"
+                },
+                "zZda8": {
+                  "width": "fill_container",
+                  "y": 116,
+                  "content": "Learn how to structure your .NET applications using clean architecture principles."
+                },
+                "tqpl0": {
+                  "y": 170
+                }
+              }
+            },
+            {
+              "id": "LYwt1",
+              "type": "ref",
+              "ref": "GV3o5",
+              "width": "fill_container",
+              "name": "smCard2",
+              "height": "fit_content",
+              "x": 24,
+              "y": 455,
+              "descendants": {
+                "htros": {
+                  "width": "fill_container"
+                },
+                "23TLr": {
+                  "width": "fill_container",
+                  "height": "fit_content"
+                },
+                "izitv": {
+                  "width": "fill_container"
+                },
+                "8HK7P": {
+                  "content": "Jan 28, 2026"
+                },
+                "Uc0Qg": {
+                  "width": "fill_container",
+                  "content": "Domain-Driven Design Meets Clean Architecture"
+                },
+                "zZda8": {
+                  "width": "fill_container",
+                  "y": 90,
+                  "content": "Exploring the synergies between DDD and clean architecture layers in real-world applications."
+                },
+                "tqpl0": {
+                  "y": 144
+                }
+              }
+            },
+            {
+              "id": "4R7Bo",
+              "type": "ref",
+              "ref": "GV3o5",
+              "width": "fill_container",
+              "name": "smCard3",
+              "height": "fit_content",
+              "x": 24,
+              "y": 860,
+              "descendants": {
+                "htros": {
+                  "width": "fill_container"
+                },
+                "23TLr": {
+                  "width": "fill_container",
+                  "height": "fit_content"
+                },
+                "izitv": {
+                  "width": "fill_container"
+                },
+                "8HK7P": {
+                  "content": "Jan 10, 2026"
+                },
+                "Uc0Qg": {
+                  "width": "fill_container",
+                  "content": "CQRS and Clean Architecture"
+                },
+                "zZda8": {
+                  "width": "fill_container",
+                  "y": 90,
+                  "content": "How CQRS integrates naturally with clean architecture to scale complex systems."
+                },
+                "tqpl0": {
+                  "y": 144
+                }
+              }
+            },
+            {
+              "id": "4m3hJ",
+              "type": "ref",
+              "ref": "J1Ckh",
+              "width": "fill_container",
+              "name": "smPag",
+              "x": 24,
+              "y": 1265,
+              "descendants": {
+                "4ZyBm": {
+                  "x": 126.5
+                },
+                "4oE0u": {
+                  "x": 205.5
+                },
+                "I5fce": {
+                  "x": 243.5
+                },
+                "U5M0I": {
+                  "x": 284.5
+                },
+                "YJXpK": {
+                  "x": 325.5
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "xC76h",
+          "type": "ref",
+          "ref": "fGDyV",
+          "width": "fill_container",
+          "name": "smFoot",
+          "x": 0,
+          "y": 1576,
+          "descendants": {
+            "37MRv": {
+              "x": 168.5
+            },
+            "ldPvE": {
+              "x": 143.5
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ZDEWE",
+      "x": 5076,
+      "y": 12307,
+      "name": "Search Results — XS (375)",
+      "clip": true,
+      "width": 375,
+      "height": 2400,
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "cY389",
+          "type": "ref",
+          "ref": "XRb3U",
+          "width": "fill_container",
+          "name": "xsNav",
+          "y": 0,
+          "descendants": {
+            "iT01q": {
+              "x": 315
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "trxIP",
+          "name": "searchHero",
+          "width": "fill_container",
+          "fill": "$surface-secondary",
+          "layout": "vertical",
+          "gap": 12,
+          "padding": [
+            24,
+            16,
+            20,
+            16
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "Z8Q7v",
+              "fill": "$foreground-tertiary",
+              "content": "Search Results",
+              "fontFamily": "Geist Mono",
+              "fontSize": 10,
+              "fontWeight": "500",
+              "letterSpacing": 1
+            },
+            {
+              "type": "frame",
+              "id": "uxrYW",
+              "name": "searchBar",
+              "width": "fill_container",
+              "height": 44,
+              "fill": "$surface-input",
+              "cornerRadius": 8,
+              "stroke": {
+                "thickness": 2,
+                "fill": "$border-focus"
+              },
+              "gap": 10,
+              "padding": [
+                0,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "faXR7",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "search",
+                  "iconFontFamily": "lucide",
+                  "fill": "$foreground-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "J8tYP",
+                  "fill": "$foreground-primary",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "clean architecture",
+                  "fontFamily": "Inter",
+                  "fontSize": 14
+                },
+                {
+                  "type": "frame",
+                  "id": "jTGbx",
+                  "name": "xsClear",
+                  "width": 22,
+                  "height": 22,
+                  "fill": "$surface-elevated",
+                  "cornerRadius": 5,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "p9Ae5",
+                      "width": 11,
+                      "height": 11,
+                      "iconFontName": "x",
+                      "iconFontFamily": "lucide",
+                      "fill": "$foreground-secondary"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "VPtjd",
+              "fill": "$foreground-tertiary",
+              "content": "23 results for \"clean architecture\"",
+              "fontFamily": "Inter",
+              "fontSize": 12
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "JydMn",
+          "name": "tagScroll",
+          "clip": true,
+          "width": "fill_container",
+          "fill": "$surface-primary",
+          "stroke": {
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "$border-subtle"
+          },
+          "gap": 8,
+          "padding": [
+            10,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "tw6wa",
+              "name": "xsAllTag",
+              "fill": "$accent-primary",
+              "cornerRadius": 20,
+              "padding": [
+                4,
+                10
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "5GkIA",
+                  "fill": "$foreground-inverse",
+                  "content": "All",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "eZ8ym",
+              "name": "xsArchTag",
+              "fill": "$surface-elevated",
+              "cornerRadius": 20,
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border-subtle"
+              },
+              "padding": [
+                4,
+                10
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "WAuFJ",
+                  "fill": "$foreground-secondary",
+                  "content": "Architecture",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "YZXgj",
+          "name": "xsContent",
+          "width": "fill_container",
+          "fill": "$surface-primary",
+          "layout": "vertical",
+          "gap": 16,
+          "padding": [
+            20,
+            16
+          ],
+          "children": [
+            {
+              "id": "Cos8M",
+              "type": "ref",
+              "ref": "GV3o5",
+              "width": "fill_container",
+              "name": "xsCard1",
+              "height": "fit_content",
+              "x": 16,
+              "y": 20,
+              "descendants": {
+                "htros": {
+                  "width": "fill_container"
+                },
+                "23TLr": {
+                  "width": "fill_container",
+                  "height": "fit_content"
+                },
+                "izitv": {
+                  "width": "fill_container"
+                },
+                "8HK7P": {
+                  "content": "Feb 12, 2026"
+                },
+                "Uc0Qg": {
+                  "width": "fill_container",
+                  "content": "Clean Architecture in ASP.NET Core"
+                },
+                "zZda8": {
+                  "width": "fill_container",
+                  "y": 116,
+                  "content": "Learn how to structure your .NET applications using clean architecture principles."
+                },
+                "tqpl0": {
+                  "y": 191
+                }
+              }
+            },
+            {
+              "id": "V2VAw",
+              "type": "ref",
+              "ref": "GV3o5",
+              "width": "fill_container",
+              "name": "xsCard2",
+              "height": "fit_content",
+              "x": 16,
+              "y": 468,
+              "descendants": {
+                "htros": {
+                  "width": "fill_container"
+                },
+                "23TLr": {
+                  "width": "fill_container",
+                  "height": "fit_content"
+                },
+                "izitv": {
+                  "width": "fill_container"
+                },
+                "8HK7P": {
+                  "content": "Jan 28, 2026"
+                },
+                "Uc0Qg": {
+                  "width": "fill_container",
+                  "content": "Domain-Driven Design Meets Clean Architecture"
+                },
+                "zZda8": {
+                  "width": "fill_container",
+                  "y": 116,
+                  "content": "Exploring DDD and clean architecture synergies in real-world apps."
+                },
+                "tqpl0": {
+                  "y": 170
+                }
+              }
+            },
+            {
+              "id": "93Btf",
+              "type": "ref",
+              "ref": "GV3o5",
+              "width": "fill_container",
+              "name": "xsCard3",
+              "height": "fit_content",
+              "x": 16,
+              "y": 895,
+              "descendants": {
+                "htros": {
+                  "width": "fill_container"
+                },
+                "23TLr": {
+                  "width": "fill_container",
+                  "height": "fit_content"
+                },
+                "izitv": {
+                  "width": "fill_container"
+                },
+                "8HK7P": {
+                  "content": "Jan 10, 2026"
+                },
+                "Uc0Qg": {
+                  "width": "fill_container",
+                  "content": "CQRS and Clean Architecture"
+                },
+                "zZda8": {
+                  "width": "fill_container",
+                  "y": 90,
+                  "content": "How CQRS integrates naturally with clean architecture to scale complex systems."
+                },
+                "tqpl0": {
+                  "y": 144
+                }
+              }
+            },
+            {
+              "id": "wFvZt",
+              "type": "ref",
+              "ref": "J1Ckh",
+              "width": "fill_container",
+              "name": "xsPag",
+              "x": 16,
+              "y": 1296,
+              "descendants": {
+                "4ZyBm": {
+                  "x": 34
+                },
+                "4oE0u": {
+                  "x": 113
+                },
+                "I5fce": {
+                  "x": 151
+                },
+                "U5M0I": {
+                  "x": 192
+                },
+                "YJXpK": {
+                  "x": 233
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "X0P25",
+          "type": "ref",
+          "ref": "fGDyV",
+          "width": "fill_container",
+          "name": "xsFoot",
+          "x": 0,
+          "y": 1586,
+          "descendants": {
+            "37MRv": {
+              "x": 68
+            },
+            "ldPvE": {
+              "x": 43
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "trzmF",
+      "x": 900,
+      "y": 14107,
+      "name": "Search — Overlay & States",
+      "width": 2600,
+      "height": 1200,
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "MHGxX",
+          "name": "sectionTitle",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 8,
+          "padding": [
+            40,
+            48,
+            32,
+            48
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "U7mEL",
+              "fill": "$foreground-primary",
+              "content": "Search — Overlay & States",
+              "fontFamily": "Inter",
+              "fontSize": 24,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "Jo6io",
+              "fill": "$foreground-tertiary",
+              "content": "Desktop search overlay component shown in 4 interaction states",
+              "fontFamily": "Inter",
+              "fontSize": 14
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "YPrMY",
+          "name": "statesRow",
+          "width": "fill_container",
+          "gap": 32,
+          "padding": [
+            0,
+            48,
+            48,
+            48
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "qKsfZ",
+              "name": "state-empty",
+              "clip": true,
+              "width": 560,
+              "fill": "$surface-card",
+              "cornerRadius": 12,
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border-strong"
+              },
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ZuX0S",
+                  "name": "stateLabel",
+                  "width": "fill_container",
+                  "fill": "$surface-elevated",
+                  "padding": [
+                    10,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "HkfgB",
+                      "fill": "$foreground-tertiary",
+                      "content": "State: Initial (opened)",
+                      "fontFamily": "Geist Mono",
+                      "fontSize": 11,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "31TRu",
+                  "name": "searchInputArea",
+                  "width": "fill_container",
+                  "height": 56,
+                  "fill": "$surface-input",
+                  "stroke": {
+                    "thickness": {
+                      "bottom": 1
+                    },
+                    "fill": "$border-focus"
+                  },
+                  "gap": 12,
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "mrH9O",
+                      "width": 18,
+                      "height": 18,
+                      "iconFontName": "search",
+                      "iconFontFamily": "lucide",
+                      "fill": "$foreground-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "hj2Ci",
+                      "fill": "$foreground-placeholder",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Search articles...",
+                      "fontFamily": "Inter",
+                      "fontSize": 16
+                    },
+                    {
+                      "type": "text",
+                      "id": "T2DX1",
+                      "fill": "$foreground-disabled",
+                      "content": "ESC",
+                      "fontFamily": "Geist Mono",
+                      "fontSize": 11,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "uniPg",
+                  "name": "dropdownBody",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "padding": [
+                    16,
+                    20
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "AsOsR",
+                      "fill": "$foreground-tertiary",
+                      "content": "RECENT SEARCHES",
+                      "fontFamily": "Geist Mono",
+                      "fontSize": 10,
+                      "fontWeight": "500",
+                      "letterSpacing": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Ti25S",
+                      "name": "s1R1",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "padding": [
+                        8,
+                        0
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "Cx9JR",
+                          "width": 14,
+                          "height": 14,
+                          "iconFontName": "history",
+                          "iconFontFamily": "lucide",
+                          "fill": "$foreground-tertiary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "WYyb7",
+                          "fill": "$foreground-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "clean architecture dotnet",
+                          "fontFamily": "Inter",
+                          "fontSize": 14
+                        },
+                        {
+                          "type": "icon_font",
+                          "id": "BPHiT",
+                          "width": 14,
+                          "height": 14,
+                          "iconFontName": "arrow-up-left",
+                          "iconFontFamily": "lucide",
+                          "fill": "$foreground-tertiary"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "jZMjX",
+                      "name": "s1R2",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "padding": [
+                        8,
+                        0
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "UIuWP",
+                          "width": 14,
+                          "height": 14,
+                          "iconFontName": "history",
+                          "iconFontFamily": "lucide",
+                          "fill": "$foreground-tertiary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "22L2C",
+                          "fill": "$foreground-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "mediator pattern cqrs",
+                          "fontFamily": "Inter",
+                          "fontSize": 14
+                        },
+                        {
+                          "type": "icon_font",
+                          "id": "qmt9y",
+                          "width": 14,
+                          "height": 14,
+                          "iconFontName": "arrow-up-left",
+                          "iconFontFamily": "lucide",
+                          "fill": "$foreground-tertiary"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "VE6Oz",
+                      "name": "s1R3",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "padding": [
+                        8,
+                        0
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "YvUrM",
+                          "width": 14,
+                          "height": 14,
+                          "iconFontName": "history",
+                          "iconFontFamily": "lucide",
+                          "fill": "$foreground-tertiary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "wu9OV",
+                          "fill": "$foreground-secondary",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "entity framework core migrations",
+                          "fontFamily": "Inter",
+                          "fontSize": 14
+                        },
+                        {
+                          "type": "icon_font",
+                          "id": "scRl8",
+                          "width": 14,
+                          "height": 14,
+                          "iconFontName": "arrow-up-left",
+                          "iconFontFamily": "lucide",
+                          "fill": "$foreground-tertiary"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "O8Ykr",
+              "name": "state-typing",
+              "clip": true,
+              "width": 560,
+              "fill": "$surface-card",
+              "cornerRadius": 12,
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border-strong"
+              },
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "e6baC",
+                  "name": "stateLabel",
+                  "width": "fill_container",
+                  "fill": "$surface-elevated",
+                  "padding": [
+                    10,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "SpK0X",
+                      "fill": "$foreground-tertiary",
+                      "content": "State: Loading / Typing",
+                      "fontFamily": "Geist Mono",
+                      "fontSize": 11,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Q9oQy",
+                  "name": "searchInput",
+                  "width": "fill_container",
+                  "height": 56,
+                  "fill": "$surface-input",
+                  "stroke": {
+                    "thickness": {
+                      "bottom": 1
+                    },
+                    "fill": "$border-focus"
+                  },
+                  "gap": 12,
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "v7fLB",
+                      "width": 18,
+                      "height": 18,
+                      "iconFontName": "search",
+                      "iconFontFamily": "lucide",
+                      "fill": "$accent-primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "5cpPH",
+                      "fill": "$foreground-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "clean arc",
+                      "fontFamily": "Inter",
+                      "fontSize": 16
+                    },
+                    {
+                      "type": "frame",
+                      "id": "HSqxD",
+                      "name": "s2Spinner",
+                      "width": 24,
+                      "height": 24,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "Suf6M",
+                          "width": 18,
+                          "height": 18,
+                          "stroke": {
+                            "thickness": 2,
+                            "fill": "$accent-primary"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "oBtEL",
+                  "name": "loadingBody",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": 20,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "WfpAP",
+                      "name": "skel1",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": [
+                        12,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 4,
+                          "id": "QerwN",
+                          "fill": "$surface-elevated",
+                          "width": "fill_container",
+                          "height": 14
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 4,
+                          "id": "F0IWR",
+                          "fill": "$surface-elevated",
+                          "width": 360,
+                          "height": 10
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "mkSva",
+                      "name": "skel2",
+                      "width": "fill_container",
+                      "stroke": {
+                        "thickness": {
+                          "top": 1
+                        },
+                        "fill": "$border-subtle"
+                      },
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": [
+                        12,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 4,
+                          "id": "lclER",
+                          "fill": "$surface-elevated",
+                          "width": "fill_container",
+                          "height": 14
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 4,
+                          "id": "MAG5z",
+                          "fill": "$surface-elevated",
+                          "width": 300,
+                          "height": 10
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "HyCCd",
+                      "name": "skel3",
+                      "width": "fill_container",
+                      "stroke": {
+                        "thickness": {
+                          "top": 1
+                        },
+                        "fill": "$border-subtle"
+                      },
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": [
+                        12,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 4,
+                          "id": "W5Yd2",
+                          "fill": "$surface-elevated",
+                          "width": "fill_container",
+                          "height": 14
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 4,
+                          "id": "PRxr0",
+                          "fill": "$surface-elevated",
+                          "width": 320,
+                          "height": 10
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Hf6Z0",
+              "name": "state-results",
+              "clip": true,
+              "width": 560,
+              "fill": "$surface-card",
+              "cornerRadius": 12,
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border-strong"
+              },
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "iZP6Y",
+                  "name": "stateLabel",
+                  "width": "fill_container",
+                  "fill": "$surface-elevated",
+                  "padding": [
+                    10,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "bZ0wW",
+                      "fill": "$foreground-tertiary",
+                      "content": "State: Live Results",
+                      "fontFamily": "Geist Mono",
+                      "fontSize": 11,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "pEMWX",
+                  "name": "searchInput",
+                  "width": "fill_container",
+                  "height": 56,
+                  "fill": "$surface-input",
+                  "stroke": {
+                    "thickness": {
+                      "bottom": 1
+                    },
+                    "fill": "$border-focus"
+                  },
+                  "gap": 12,
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "Ugv45",
+                      "width": 18,
+                      "height": 18,
+                      "iconFontName": "search",
+                      "iconFontFamily": "lucide",
+                      "fill": "$accent-primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "RwuxE",
+                      "fill": "$foreground-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "clean architecture",
+                      "fontFamily": "Inter",
+                      "fontSize": 16
+                    },
+                    {
+                      "type": "frame",
+                      "id": "bjGVv",
+                      "name": "s3ClearBtn",
+                      "width": 24,
+                      "height": 24,
+                      "fill": "$surface-elevated",
+                      "cornerRadius": 6,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "9yEa2",
+                          "width": 12,
+                          "height": 12,
+                          "iconFontName": "x",
+                          "iconFontFamily": "lucide",
+                          "fill": "$foreground-secondary"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "FUfJ0",
+                  "name": "resultsBody",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "padding": [
+                    8,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "8kTeM",
+                      "name": "s3R1",
+                      "width": "fill_container",
+                      "stroke": {
+                        "thickness": {
+                          "bottom": 1
+                        },
+                        "fill": "$border-subtle"
+                      },
+                      "gap": 12,
+                      "padding": [
+                        14,
+                        20
+                      ],
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "K06nE",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "file-text",
+                          "iconFontFamily": "lucide",
+                          "fill": "$foreground-tertiary"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "kekdC",
+                          "name": "s3R1Info",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "045bR",
+                              "fill": "$foreground-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Clean Architecture in ASP.NET Core",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "ZOJws",
+                              "fill": "$foreground-tertiary",
+                              "content": "Feb 12, 2026 · 8 min read",
+                              "fontFamily": "Geist Mono",
+                              "fontSize": 11
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "jffnZ",
+                      "name": "s3R2",
+                      "width": "fill_container",
+                      "stroke": {
+                        "thickness": {
+                          "bottom": 1
+                        },
+                        "fill": "$border-subtle"
+                      },
+                      "gap": 12,
+                      "padding": [
+                        14,
+                        20
+                      ],
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "Zu1v3",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "file-text",
+                          "iconFontFamily": "lucide",
+                          "fill": "$foreground-tertiary"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "r6bbc",
+                          "name": "s3R2Info",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "KETPe",
+                              "fill": "$foreground-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Domain-Driven Design Meets Clean Architecture",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Po43G",
+                              "fill": "$foreground-tertiary",
+                              "content": "Jan 28, 2026 · 11 min read",
+                              "fontFamily": "Geist Mono",
+                              "fontSize": 11
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "n19Yg",
+                      "name": "s3R3",
+                      "width": "fill_container",
+                      "fill": "$surface-elevated",
+                      "gap": 12,
+                      "padding": [
+                        14,
+                        20
+                      ],
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "w9Wpn",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "file-text",
+                          "iconFontFamily": "lucide",
+                          "fill": "$accent-primary"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "FI2zb",
+                          "name": "s3R3Info",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Xu3Pu",
+                              "fill": "$foreground-primary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "CQRS and Clean Architecture",
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "wU2CK",
+                              "fill": "$foreground-tertiary",
+                              "content": "Jan 10, 2026 · 9 min read",
+                              "fontFamily": "Geist Mono",
+                              "fontSize": 11
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "C7rgi",
+                  "name": "s3Footer",
+                  "width": "fill_container",
+                  "fill": "$surface-elevated",
+                  "padding": [
+                    12,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "XtJiv",
+                      "fill": "$foreground-tertiary",
+                      "content": "23 results — ",
+                      "fontFamily": "Inter",
+                      "fontSize": 12
+                    },
+                    {
+                      "type": "text",
+                      "id": "jdbZ9",
+                      "fill": "$accent-primary",
+                      "content": "View all results",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "fyAbJ",
+              "name": "state-no-results",
+              "clip": true,
+              "width": 560,
+              "fill": "$surface-card",
+              "cornerRadius": 12,
+              "stroke": {
+                "thickness": 1,
+                "fill": "$border-strong"
+              },
+              "layout": "vertical",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "4sBEJ",
+                  "name": "stateLabel",
+                  "width": "fill_container",
+                  "fill": "$surface-elevated",
+                  "padding": [
+                    10,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "GNDcI",
+                      "fill": "$foreground-tertiary",
+                      "content": "State: No Results",
+                      "fontFamily": "Geist Mono",
+                      "fontSize": 11,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "CN95g",
+                  "name": "searchInput",
+                  "width": "fill_container",
+                  "height": 56,
+                  "fill": "$surface-input",
+                  "stroke": {
+                    "thickness": {
+                      "bottom": 1
+                    },
+                    "fill": "$border-subtle"
+                  },
+                  "gap": 12,
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "CQYFk",
+                      "width": 18,
+                      "height": 18,
+                      "iconFontName": "search",
+                      "iconFontFamily": "lucide",
+                      "fill": "$foreground-secondary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "FGSyp",
+                      "fill": "$foreground-primary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "kubernetes orchestration",
+                      "fontFamily": "Inter",
+                      "fontSize": 16
+                    },
+                    {
+                      "type": "frame",
+                      "id": "b5kAI",
+                      "name": "s4ClearBtn",
+                      "width": 24,
+                      "height": 24,
+                      "fill": "$surface-elevated",
+                      "cornerRadius": 6,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "gLkOp",
+                          "width": 12,
+                          "height": 12,
+                          "iconFontName": "x",
+                          "iconFontFamily": "lucide",
+                          "fill": "$foreground-secondary"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "GYdwJ",
+                  "name": "emptyBody",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": [
+                    40,
+                    20
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "rR3Fn",
+                      "width": 40,
+                      "height": 40,
+                      "iconFontName": "search-x",
+                      "iconFontFamily": "lucide",
+                      "fill": "$foreground-tertiary"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "w5xyo",
+                      "name": "s4TextGroup",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "8cGue",
+                          "fill": "$foreground-primary",
+                          "content": "No results found",
+                          "textAlign": "center",
+                          "fontFamily": "Inter",
+                          "fontSize": 16,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "bMH1a",
+                          "fill": "$foreground-tertiary",
+                          "textGrowth": "fixed-width",
+                          "width": 380,
+                          "content": "No articles match \"kubernetes orchestration\".\nTry different keywords.",
+                          "textAlign": "center",
+                          "fontFamily": "Inter",
+                          "fontSize": 13
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "vPG6l",
+                      "name": "s4Suggestions",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Z0n9Z",
+                          "fill": "$foreground-tertiary",
+                          "content": "SUGGESTIONS",
+                          "fontFamily": "Geist Mono",
+                          "fontSize": 10,
+                          "fontWeight": "500",
+                          "letterSpacing": 1
+                        },
+                        {
+                          "type": "frame",
+                          "id": "CqZfn",
+                          "name": "s4S1",
+                          "width": "fill_container",
+                          "gap": 10,
+                          "padding": [
+                            8,
+                            0
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "ZkbSF",
+                              "width": 12,
+                              "height": 12,
+                              "iconFontName": "arrow-right",
+                              "iconFontFamily": "lucide",
+                              "fill": "$foreground-tertiary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "WxLLg",
+                              "fill": "$foreground-secondary",
+                              "content": "Try searching for \"docker\" or \"containers\"",
+                              "fontFamily": "Inter",
+                              "fontSize": 13
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "tp0J8",
+                          "name": "s4S2",
+                          "width": "fill_container",
+                          "gap": 10,
+                          "padding": [
+                            8,
+                            0
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "Ex5L8",
+                              "width": 12,
+                              "height": 12,
+                              "iconFontName": "arrow-right",
+                              "iconFontFamily": "lucide",
+                              "fill": "$foreground-tertiary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "qKcqq",
+                              "fill": "$accent-primary",
+                              "content": "Browse all articles",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
                             }
                           ]
                         }
