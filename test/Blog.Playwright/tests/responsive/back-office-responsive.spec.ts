@@ -3,22 +3,19 @@ import { VIEWPORTS } from '../../helpers/viewport';
 import { SidebarComponent } from '../../page-objects/back-office/components/sidebar.component';
 import { TopBarComponent } from '../../page-objects/back-office/components/top-bar.component';
 import { NavDrawerComponent } from '../../page-objects/back-office/components/nav-drawer.component';
-import { LoginPage } from '../../page-objects/back-office/login.page';
-import { testUser } from '../../fixtures/test-data';
+import * as path from 'path';
 
 const BACK_OFFICE_URL = '/admin/articles';
+const STORAGE_STATE_PATH = path.join(__dirname, '../../.auth-state.json');
 
 test.describe('Back Office – Responsive Layout', () => {
   let sidebar: SidebarComponent;
   let topBar: TopBarComponent;
   let navDrawer: NavDrawerComponent;
 
-  test.beforeEach(async ({ page }) => {
-    const loginPage = new LoginPage(page);
-    await loginPage.goto();
-    await loginPage.login(testUser.email, testUser.password);
-    await page.waitForURL(/\/admin\/articles/);
+  test.use({ storageState: STORAGE_STATE_PATH });
 
+  test.beforeEach(async ({ page }) => {
     sidebar = new SidebarComponent(page.locator('[data-testid="sidebar"]'));
     topBar = new TopBarComponent(page.locator('[data-testid="top-bar"]'));
     navDrawer = new NavDrawerComponent(page.locator('[data-testid="nav-drawer"]'));
