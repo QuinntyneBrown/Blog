@@ -205,6 +205,9 @@ AboutContentDto  {
 
 AboutContentHistoryDto  {
     aboutContentHistoryId: Guid,
+    // aboutContentId is intentionally omitted: AboutContent is a singleton and the back-office
+    // history UI has no need to identify which parent record a snapshot belongs to — there is
+    // only ever one. Including it would expose the singleton PK to the client for no benefit.
     heading:               string,
     body:                  string,       // Markdown source snapshot
     bodyHtml:              string,       // Pre-rendered HTML snapshot (used for preview rendering in history list)
