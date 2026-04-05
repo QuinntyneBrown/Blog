@@ -218,3 +218,18 @@ The design explicitly states (Section 7.3): "Canonical URLs, sitemap URLs, feed 
 - Fixed `Disallow: /admin/` → `Disallow: /admin` in the robots.txt output.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Missing diskSpace health check on /health/ready endpoint
+
+**Design reference:** `docs/detailed-designs/06-restful-api/README.md`, Section 6.11 — GET /health/ready
+
+**Description:**
+The design specifies that the `/health/ready` endpoint returns a response with `checks` containing both `"database"` and `"diskSpace"` health check results. The implementation in `Program.cs` only registered `.AddDbContextCheck<BlogDbContext>("database")` — no disk space health check was configured. As a result, the `/health/ready` response only reported database status, omitting the disk space check that the design requires for operational readiness monitoring. An application running on a volume nearing capacity would still report as fully healthy.
+
+**Fix applied:**
+- Created `src/Blog.Api/Common/HealthChecks/DiskSpaceHealthCheck.cs` — custom `IHealthCheck` that reads available free space on the content root drive and reports unhealthy when below 512 MB.
+- Registered the check as `.AddCheck<DiskSpaceHealthCheck>("diskSpace")` in `Program.cs`.
+
+**Status:** FIXED
