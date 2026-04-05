@@ -81,6 +81,13 @@
                         Prev
                     </a>
                 }
+                else
+                {
+                    <span class="pagination-btn disabled" aria-disabled="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                        Prev
+                    </span>
+                }
                 @for (int i = 1; i <= Model.Articles.TotalPages; i++)
                 {
                     <a href="/?page=@i" class="pagination-page @(i == Model.CurrentPage ? "active" : "")">@i</a>
@@ -91,6 +98,13 @@
                         Next
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
                     </a>
+                }
+                else
+                {
+                    <span class="pagination-btn disabled" aria-disabled="true">
+                        Next
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+                    </span>
                 }
             </nav>
         }
