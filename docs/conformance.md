@@ -699,3 +699,18 @@ The design specifies (Section 3.2, L2-008): "Article pages emit a `Schema.org/Ar
 - `Index.cshtml`: Added a `@section Head` block with a `Schema.org/Blog` object containing `name`, `description`, and `url`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — twitter:card hardcoded to "summary_large_image"; twitter:image tag missing
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.1 — SeoMetaTagHelper, Section 6.1 — L2-009
+
+**Description:**
+The design specifies (Section 6.1, L2-009): "`twitter:card` is 'summary_large_image' when an image is present, 'summary' otherwise." The layout hardcoded `<meta name="twitter:card" content="summary_large_image" />` on every page regardless of whether an image was available. Pages without a featured image (most listing pages, homepage) incorrectly declared `summary_large_image`, causing Twitter/X to attempt to render a large image card with no image — resulting in a broken or blank preview. Additionally, the `twitter:image` meta tag was entirely absent, so even pages with images never communicated the image URL to Twitter's card crawler.
+
+**Fix applied:**
+- Made `twitter:card` conditional: renders `"summary_large_image"` when `ogImage` is set, `"summary"` otherwise.
+- Added `<meta name="twitter:image" content="@ogImage" />` conditionally when an image is present.
+
+**Status:** FIXED
