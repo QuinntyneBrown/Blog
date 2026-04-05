@@ -35,7 +35,7 @@
                 <input class="form-input" type="text" name="title" value="@Model.Article?.Title" placeholder="Article title..." required />
                 @if (!string.IsNullOrEmpty(Model.Article?.Slug))
                 {
-                    <div style="margin-top:4px;font-family:var(--font-mono);font-size:12px;color:var(--fg-tertiary)" data-testid="article-slug">@Model.Article.Slug</div>
+                    <div style="margin-top:4px;font-family:var(--font-mono);font-size:12px;color:var(--fg-tertiary)" data-testid="article-slug" aria-label="Article URL slug"><code>@Model.Article.Slug</code></div>
                 }
             </div>
             <div class="form-group">
@@ -68,7 +68,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Featured Image</label>
-                        <div class="dropzone" style="height:160px;position:relative;cursor:default" id="image-dropzone" data-testid="featured-image-dropzone">
+                        <div class="dropzone" style="height:160px;position:relative;cursor:default" id="image-dropzone" data-testid="featured-image-dropzone" tabindex="0" role="button" aria-label="Open image upload dialog">
                             @if (!string.IsNullOrEmpty(Model.Article?.FeaturedImageUrl))
                             {
                                 <img src="@Model.Article.FeaturedImageUrl" id="featured-image-preview" data-testid="featured-image-preview" style="max-height:140px;max-width:100%;object-fit:contain;border-radius:4px" />
@@ -166,9 +166,16 @@
 
 @section AdminScripts {
 <script>
-    // Featured image dropzone click → open dialog
-    document.getElementById('image-dropzone')?.addEventListener('click', () => {
+    // Featured image dropzone click/keyboard → open dialog
+    const imageDropzone = document.getElementById('image-dropzone');
+    imageDropzone?.addEventListener('click', () => {
         document.getElementById('featured-image-dialog')?.showModal();
+    });
+    imageDropzone?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            document.getElementById('featured-image-dialog')?.showModal();
+        }
     });
 
     // Remove image button

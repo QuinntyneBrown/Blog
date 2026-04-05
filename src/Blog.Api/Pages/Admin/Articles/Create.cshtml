@@ -48,7 +48,7 @@
             <div class="editor-sidebar-label">Article Settings</div>
             <div class="form-group">
                 <label class="form-label">Featured Image</label>
-                <div class="dropzone" style="height:160px;cursor:default" id="image-dropzone" data-testid="featured-image-dropzone">
+                <div class="dropzone" style="height:160px;cursor:default" id="image-dropzone" data-testid="featured-image-dropzone" tabindex="0" role="button" aria-label="Open image upload dialog">
                     <svg id="featured-image-placeholder" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                     <div class="dropzone-text">No image selected</div>
                     <div class="dropzone-hint">Click "Choose Image" to upload</div>
@@ -101,6 +101,18 @@
         }
         const removeBtn = document.getElementById('remove-image-btn');
         if (removeBtn) removeBtn.style.display = 'none';
+    });
+
+    // Image dropzone click/keyboard → open dialog
+    const imageDropzone = document.getElementById('image-dropzone');
+    imageDropzone?.addEventListener('click', () => {
+        document.getElementById('featured-image-dialog')?.showModal();
+    });
+    imageDropzone?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            document.getElementById('featured-image-dialog')?.showModal();
+        }
     });
 
     // Dialog dropzone → file input
