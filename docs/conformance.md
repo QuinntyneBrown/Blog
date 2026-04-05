@@ -1520,3 +1520,18 @@ Design 02 Section 3.4 enables Markdig "advanced extensions: tables, autolinks, t
 Design 10 Section 3.3 establishes the `IArticleRepository` contract and specifies `GetPublishedAsync(int page, int pageSize)` returning `Task<IReadOnlyList<Article>>` with a separate `GetPublishedCountAsync()` for the total. A prior conformance fix corrected `GetPublishedAsync` exactly this way. The admin-facing `GetAllAsync(int page, int pageSize)` was never corrected by the same fix and still returns `Task<(List<Article> Items, int TotalCount)>` — a tuple. This diverges from the design pattern in two ways: (1) the return type is `List<Article>` (not `IReadOnlyList<Article>`), and (2) the total count is bundled into the tuple rather than exposed as a separate `GetAllCountAsync()` method. `GetArticlesHandler` uses tuple destructuring `var (items, total) = await articles.GetAllAsync(...)`, coupling the handler to the non-standard shape. Any test double or alternative implementation of `IArticleRepository` must satisfy the tuple signature rather than the consistent pattern the design establishes.
 
 **Status:** OPEN
+
+---
+
+## 2026-04-05 — Hamburger menu button touch target below 44x44px minimum
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 3.3 — NavBar, Section 6.4 — Navigation (L2-037)
+
+**Description:**
+The design specifies (Section 3.3): "hamburger menu button (44x44px touch target)" and (Section 6.4, L2-037): "All interactive elements maintain a minimum 44x44px touch target area." The `.nav-hamburger` button had `padding: 8px` around three `20×2px` spans with `5px` gap, producing an approximately 36×32px touch target — below the 44×44px minimum. On mobile devices, the undersized target makes the menu button difficult to tap accurately, particularly for users with motor impairments (WCAG 2.1 SC 2.5.5 Target Size).
+
+**Fix applied:**
+- Increased `.nav-hamburger` padding from `8px` to `12px` and added `min-width: 44px; min-height: 44px;` to guarantee the touch target meets the minimum regardless of content size.
+- Added `align-items: center; justify-content: center;` to keep the hamburger icon centered within the enlarged touch area.
+
+**Status:** FIXED
