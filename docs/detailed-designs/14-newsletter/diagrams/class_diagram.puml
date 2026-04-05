@@ -1,0 +1,39 @@
+@startuml class_diagram
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+
+title Newsletter — Domain Model
+
+class Newsletter {
+    +NewsletterID: Guid
+    +Subject: String
+    +Body: String
+    +BodyHtml: String
+    +Status: NewsletterStatus
+    +DateSent: DateTime?
+    +CreatedAt: DateTime
+    +UpdatedAt: DateTime
+    +Version: int
+}
+
+enum NewsletterStatus {
+    Draft
+    Sent
+}
+
+class NewsletterSubscriber {
+    +SubscriberID: Guid
+    +Email: String
+    +ConfirmationToken: String?
+    +TokenExpiresAt: DateTime?
+    +Confirmed: bool
+    +ConfirmedAt: DateTime?
+    +UnsubscribeToken: String
+    +IsActive: bool
+    +CreatedAt: DateTime
+}
+
+Newsletter --> NewsletterStatus : status
+
+@enduml

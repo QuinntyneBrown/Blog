@@ -1,0 +1,26 @@
+@startuml c4_container
+!theme plain
+!include <C4/C4_Container>
+
+title Newsletter — Container Diagram
+
+Person(visitor, "Anonymous Visitor", "")
+Person(author, "Blog Author", "")
+
+System_Boundary(blog, "Blog Platform") {
+    Container(web, "Razor Pages", "ASP.NET Core 8", "Renders public sign-up, archive, and back-office newsletter pages")
+    Container(api, "Web API", "ASP.NET Core 8 / MediatR", "Handles newsletter CRUD, send, subscribe/confirm/unsubscribe")
+    ContainerDb(db, "SQL Server", "EF Core 8", "Stores newsletters, subscribers, confirmation tokens")
+    Container(queue, "Email Queue", "In-process / Background Service", "Buffers outbound email jobs for broadcast and confirmations")
+}
+
+System_Ext(email, "Email Provider", "SMTP / transactional API")
+
+Rel(visitor, web, "Views sign-up and archive", "HTTPS")
+Rel(author, web, "Authors newsletters", "HTTPS")
+Rel(web, api, "Dispatches commands and queries", "MediatR")
+Rel(api, db, "Reads and writes", "EF Core / SQL")
+Rel(api, queue, "Enqueues email jobs")
+Rel(queue, email, "Sends emails", "SMTP / API")
+
+@enduml

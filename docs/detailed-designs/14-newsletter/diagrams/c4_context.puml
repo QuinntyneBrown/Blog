@@ -1,0 +1,16 @@
+@startuml c4_context
+!theme plain
+!include <C4/C4_Context>
+
+title Newsletter — System Context
+
+Person(visitor, "Anonymous Visitor", "Signs up for newsletter, views archive")
+Person(author, "Blog Author", "Creates, edits, and sends newsletters via back office")
+System(blog, "Blog Platform", "ASP.NET Core 8 web application")
+System_Ext(email, "Email Provider", "SMTP / transactional email service (e.g. SendGrid)")
+
+Rel(visitor, blog, "Subscribes, confirms, unsubscribes, views archive", "HTTPS")
+Rel(author, blog, "Authors and sends newsletters", "HTTPS")
+Rel(blog, email, "Sends confirmation and newsletter emails", "SMTP / API")
+
+@enduml

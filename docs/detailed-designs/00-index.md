@@ -15,4 +15,6 @@
 | 11 | [Search Infrastructure](11-search-infrastructure/README.md) | Implemented | SQL Server FTS index, SearchArticlesQuery, GetSearchSuggestionsQuery, and SearchHighlighter |
 | 12 | [Search Input & Autocomplete](12-search-input/README.md) | Implemented | Global header search input, / shortcut, ARIA combobox dropdown, and search.js |
 | 13 | [Search Results Page](13-search-results-page/README.md) | Implemented | /search Razor Page, result cards with mark highlighting, empty state, and pagination |
-| 14 | [About Page](14-about/README.md) | Draft | Public about page and back-office content authoring for site author biography |
+| 14 | [Newsletter](14-newsletter/README.md) | Draft | Subscriber sign-up (double opt-in), newsletter authoring, send, and public archive |
+| 15 | [Events](15-events/README.md) | Draft | Speaking event CRUD, publish/unpublish, upcoming/past public display |
+| 16 | [About Page](16-about/README.md) | Draft | Public about page and back-office content authoring for site author biography |

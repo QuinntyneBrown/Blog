@@ -1,0 +1,38 @@
+@startuml c4_component
+!theme plain
+!include <C4/C4_Component>
+
+title Events — Component Diagram (API)
+
+Container_Boundary(api, "Web API / MediatR Pipeline") {
+    Component(ctrl, "EventsController", "ApiController", "CRUD + publish/unpublish endpoints (auth-guarded)")
+    Component(createCmd, "CreateEventHandler", "IRequestHandler", "Validates input, generates slug, persists draft event")
+    Component(updateCmd, "UpdateEventHandler", "IRequestHandler", "Updates event, regenerates slug from new title")
+    Component(deleteCmd, "DeleteEventHandler", "IRequestHandler", "Removes event; any published state is allowed")
+    Component(publishCmd, "PublishEventHandler", "IRequestHandler", "Sets published=true")
+    Component(unpubCmd, "UnpublishEventHandler", "IRequestHandler", "Sets published=false")
+    Component(listQuery, "GetEventsHandler", "IRequestHandler", "Paginated list for back office (all statuses)")
+    Component(pubQuery, "GetPublishedEventsHandler", "IRequestHandler", "Returns upcoming and past published events")
+    Component(slugQuery, "GetEventBySlugHandler", "IRequestHandler", "Returns published event by slug; 404 if draft or missing")
+    Component(repo, "EventRepository", "EF Core", "Data access: CRUD, slug uniqueness check, upcoming/past split")
+    Component(slugSvc, "ISlugGenerator", "Service", "Generates URL-safe slug from title")
+}
+
+Rel(ctrl, createCmd, "")
+Rel(ctrl, updateCmd, "")
+Rel(ctrl, deleteCmd, "")
+Rel(ctrl, publishCmd, "")
+Rel(ctrl, unpubCmd, "")
+Rel(ctrl, listQuery, "")
+Rel(createCmd, repo, "")
+Rel(createCmd, slugSvc, "")
+Rel(updateCmd, repo, "")
+Rel(updateCmd, slugSvc, "")
+Rel(deleteCmd, repo, "")
+Rel(publishCmd, repo, "")
+Rel(unpubCmd, repo, "")
+Rel(listQuery, repo, "")
+Rel(pubQuery, repo, "")
+Rel(slugQuery, repo, "")
+
+@enduml

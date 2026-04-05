@@ -1,0 +1,31 @@
+@startuml sequence_upsert_about
+!theme plain
+skinparam sequenceMessageAlign center
+
+title Upsert About Content Workflow
+
+actor Author
+participant "About Editor Page" as Page
+participant "AboutController" as API
+participant "UpsertAboutContentHandler" as Handler
+participant "IMarkdownConverter" as MD
+database "SQL Server" as DB
+
+Author -> Page: Edits heading, body (Markdown),\noptionally selects profile image
+Page -> API: PUT /api/about\n{ heading, body, profileImageId? }\n[Authorization: Bearer token]
+API -> Handler: UpsertAboutContentCommand(...)
+Handler -> Handler: Validate (FluentValidation)\nempty heading or body → 400
+Handler -> MD: Convert(body)
+MD --> Handler: bodyHtml (sanitized HTML)
+Handler -> DB: GetCurrentAsync()
+alt No existing record
+    Handler -> DB: Insert AboutContent\n(heading, body, bodyHtml, profileImageId, version=1)
+else Existing record
+    Handler -> DB: Update record\n(all fields, version++)
+end
+DB --> Handler: Saved
+Handler --> API: AboutContentDto
+API --> Page: 200 OK
+Page --> Author: "Saved" toast notification
+
+@enduml

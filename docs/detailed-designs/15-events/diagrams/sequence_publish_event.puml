@@ -1,0 +1,39 @@
+@startuml sequence_publish_event
+!theme plain
+skinparam sequenceMessageAlign center
+
+title Publish / Unpublish Event Workflow
+
+actor Author
+participant "Events List Page" as Page
+participant "EventsController" as API
+participant "PublishEventHandler\n/ UnpublishEventHandler" as Handler
+database "SQL Server" as DB
+participant "Public Events Page" as Public
+
+Author -> Page: Clicks "Publish" on a draft event
+Page -> API: POST /api/events/{id}/publish\n[Authorization: Bearer token]
+API -> Handler: PublishEventCommand(eventId)
+Handler -> DB: GetByIdAsync(eventId)
+alt Event not found
+    Handler --> API: 404 Not Found
+else Event found
+    Handler -> DB: Update published=true
+    Handler --> API: 200 OK
+    API --> Page: Event status → Published
+end
+
+note over Public
+  Event is now visible on /events
+  in upcoming or past section
+  depending on StartDate vs UtcNow
+end note
+
+Author -> Page: Clicks "Unpublish"
+Page -> API: POST /api/events/{id}/unpublish\n[Authorization: Bearer token]
+API -> Handler: UnpublishEventCommand(eventId)
+Handler -> DB: Update published=false
+Handler --> API: 200 OK
+API --> Page: Event status → Draft
+
+@enduml

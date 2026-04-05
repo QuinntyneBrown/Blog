@@ -1,0 +1,16 @@
+@startuml c4_context
+!theme plain
+!include <C4/C4_Context>
+
+title Events — System Context
+
+Person(visitor, "Anonymous Visitor", "Browses upcoming and past speaking events")
+Person(author, "Blog Author", "Creates, edits, publishes, and deletes events via back office")
+System(blog, "Blog Platform", "ASP.NET Core 8 web application")
+System_Ext(calendar, "External Event Site", "Optional external URL linked from event detail (e.g. Sessionize, Meetup)")
+
+Rel(visitor, blog, "Views public events list and detail pages", "HTTPS")
+Rel(author, blog, "Manages speaking events", "HTTPS")
+Rel(blog, calendar, "Links to external event registration/info", "HTTPS")
+
+@enduml

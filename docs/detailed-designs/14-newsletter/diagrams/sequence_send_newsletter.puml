@@ -1,0 +1,36 @@
+@startuml sequence_send_newsletter
+!theme plain
+skinparam sequenceMessageAlign center
+
+title Send Newsletter Workflow
+
+actor Author
+participant "Newsletter Editor" as Page
+participant "NewslettersController" as API
+participant "SendNewsletterHandler" as Handler
+database "SQL Server" as DB
+participant "IEmailSender" as Email
+
+Author -> Page: Clicks "Send Newsletter"
+Page -> API: POST /api/newsletters/{id}/send\n[Authorization: Bearer token]
+API -> Handler: SendNewsletterCommand(newsletterId)
+Handler -> DB: GetNewsletter(id)
+alt Newsletter not found
+    Handler --> API: 404 Not Found
+else Already sent
+    Handler --> API: 409 Conflict\n"Newsletter already sent"
+else No confirmed subscribers
+    DB --> Handler: confirmedSubscribers = 0
+    Handler --> API: 422 Unprocessable Entity\n"No active subscribers"
+else Draft with subscribers
+    DB --> Handler: Newsletter + subscriber list
+    Handler -> DB: Update status=Sent\ndateSent=UtcNow
+    loop For each confirmed subscriber
+        Handler -> Email: EnqueueNewsletterEmail(\n  to: subscriber.email,\n  subject, bodyHtml,\n  unsubscribeToken\n)
+    end
+    Handler --> API: 200 OK
+    API --> Page: Newsletter sent
+    Page --> Author: Status badge → Sent
+end
+
+@enduml

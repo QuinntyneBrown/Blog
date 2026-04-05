@@ -1,0 +1,24 @@
+@startuml c4_component
+!theme plain
+!include <C4/C4_Component>
+
+title About Page — Component Diagram (API)
+
+Container_Boundary(api, "Web API / MediatR Pipeline") {
+    Component(ctrl, "AboutController", "ApiController", "GET (public, cached) and PUT (auth-guarded) endpoints")
+    Component(upsertCmd, "UpsertAboutContentHandler", "IRequestHandler", "Creates or updates the singleton about record; pre-renders Markdown to HTML")
+    Component(getQuery, "GetAboutContentHandler", "IRequestHandler", "Returns current about content; null-safe for empty state")
+    Component(repo, "AboutContentRepository", "EF Core", "GetCurrentAsync, Upsert — single-row semantics")
+    Component(md, "IMarkdownConverter", "Service", "Converts Markdown body to sanitized HTML at save time")
+    Component(assetRepo, "DigitalAssetRepository", "EF Core", "Resolves profile image URL by DigitalAssetId")
+}
+
+Rel(ctrl, upsertCmd, "PUT /api/about")
+Rel(ctrl, getQuery, "GET /api/about")
+Rel(upsertCmd, repo, "")
+Rel(upsertCmd, md, "Convert body Markdown → HTML")
+Rel(upsertCmd, assetRepo, "Validate profileImageId if provided")
+Rel(getQuery, repo, "")
+Rel(getQuery, assetRepo, "Resolve profile image URL")
+
+@enduml

@@ -1,0 +1,32 @@
+@startuml sequence_create_event
+!theme plain
+skinparam sequenceMessageAlign center
+
+title Create Event Workflow
+
+actor Author
+participant "Event Editor Page" as Page
+participant "EventsController" as API
+participant "CreateEventHandler" as Handler
+participant "ISlugGenerator" as Slug
+database "SQL Server" as DB
+
+Author -> Page: Fills in title, description,\nstart date, location
+Page -> API: POST /api/events\n{ title, description, startDate, location, ... }\n[Authorization: Bearer token]
+API -> Handler: CreateEventCommand(...)
+Handler -> Handler: Validate (FluentValidation)\nmissing required fields → 400
+Handler -> Slug: Generate(title)
+Slug --> Handler: "my-talk-title-2026"
+Handler -> DB: SlugExistsAsync(slug)?
+alt Slug already taken
+    DB --> Handler: true
+    Handler --> API: 409 Conflict
+else Slug available
+    Handler -> DB: Insert Event\n(published=false, slug)
+    DB --> Handler: Event saved
+    Handler --> API: EventDto
+    API --> Page: 201 Created
+    Page --> Author: Redirects to event detail/edit
+end
+
+@enduml

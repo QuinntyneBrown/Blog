@@ -1,0 +1,36 @@
+@startuml class_diagram
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+
+title About Page — Domain Model
+
+class AboutContent {
+    +AboutContentId: Guid
+    +Heading: String
+    +Body: String
+    +BodyHtml: String
+    +ProfileImageId: Guid?
+    +CreatedAt: DateTime
+    +UpdatedAt: DateTime
+    +Version: int
+}
+
+class DigitalAsset {
+    +DigitalAssetId: Guid
+    +StoredFileName: String
+    +ContentType: String
+    +AltText: String?
+}
+
+AboutContent "0..1" --> "0..1" DigitalAsset : profileImage
+
+note right of AboutContent
+  Singleton — at most one row exists.
+  UpsertAboutContentHandler uses
+  GetCurrentAsync; creates if null.
+  Body stores raw Markdown source.
+  BodyHtml is pre-rendered at save time.
+end note
+
+@enduml

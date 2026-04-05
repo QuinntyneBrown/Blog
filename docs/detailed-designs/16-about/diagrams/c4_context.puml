@@ -1,0 +1,16 @@
+@startuml c4_context
+!theme plain
+!include <C4/C4_Context>
+
+title About Page — System Context
+
+Person(visitor, "Anonymous Visitor", "Reads biographical information about the site author")
+Person(author, "Blog Author", "Authors and updates the about page content via back office")
+System(blog, "Blog Platform", "ASP.NET Core 8 web application")
+System_Ext(assets, "Digital Asset Library", "Stores and serves profile images uploaded by the author")
+
+Rel(visitor, blog, "Views /about page", "HTTPS")
+Rel(author, blog, "Manages about page content and profile image", "HTTPS")
+Rel(blog, assets, "References profile image by DigitalAssetId", "Internal")
+
+@enduml

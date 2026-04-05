@@ -1,0 +1,21 @@
+@startuml c4_container
+!theme plain
+!include <C4/C4_Container>
+
+title Events — Container Diagram
+
+Person(visitor, "Anonymous Visitor", "")
+Person(author, "Blog Author", "")
+
+System_Boundary(blog, "Blog Platform") {
+    Container(web, "Razor Pages", "ASP.NET Core 8", "Renders /events list, /events/{slug} detail, and back-office event management")
+    Container(api, "Web API", "ASP.NET Core 8 / MediatR", "Event CRUD, publish/unpublish, and public query endpoints")
+    ContainerDb(db, "SQL Server", "EF Core 8", "Stores Event entities with slug, dates, location, publish status")
+}
+
+Rel(visitor, web, "Browses events", "HTTPS")
+Rel(author, web, "Manages events", "HTTPS")
+Rel(web, api, "Dispatches commands and queries", "MediatR")
+Rel(api, db, "Reads and writes", "EF Core / SQL")
+
+@enduml

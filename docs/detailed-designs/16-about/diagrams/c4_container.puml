@@ -1,0 +1,26 @@
+@startuml c4_container
+!theme plain
+!include <C4/C4_Container>
+
+title About Page — Container Diagram
+
+Person(visitor, "Anonymous Visitor", "")
+Person(author, "Blog Author", "")
+
+System_Boundary(blog, "Blog Platform") {
+    Container(web, "Razor Pages", "ASP.NET Core 8", "Renders public /about page and back-office /admin/about editor")
+    Container(api, "Web API", "ASP.NET Core 8 / MediatR", "Handles about content upsert and retrieval")
+    ContainerDb(db, "SQL Server", "EF Core 8", "Stores single AboutContent record with Markdown source and pre-rendered HTML")
+    Container(cache, "Response Cache", "ASP.NET Core", "public, max-age=60, stale-while-revalidate=600 for GET /about")
+}
+
+System_Ext(assets, "Digital Asset Library", "Image storage and CDN")
+
+Rel(visitor, web, "Reads about page", "HTTPS")
+Rel(author, web, "Edits about content", "HTTPS")
+Rel(web, api, "Dispatches commands and queries", "MediatR")
+Rel(api, db, "Reads and writes", "EF Core / SQL")
+Rel(web, cache, "Caches public about response")
+Rel(api, assets, "Looks up profile image URL by DigitalAssetId")
+
+@enduml

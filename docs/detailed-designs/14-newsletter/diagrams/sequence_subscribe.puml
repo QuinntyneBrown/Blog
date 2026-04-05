@@ -1,0 +1,44 @@
+@startuml sequence_subscribe
+!theme plain
+skinparam sequenceMessageAlign center
+
+title Newsletter Subscription — Double Opt-In Flow
+
+actor Visitor
+participant "Sign-Up Page" as Page
+participant "SubscriptionsController" as API
+participant "SubscribeHandler" as Handler
+database "SQL Server" as DB
+participant "IEmailSender" as Email
+
+Visitor -> Page: Enters email address
+Page -> API: POST /api/newsletter-subscriptions\n{ email }
+API -> Handler: SubscribeCommand(email)
+Handler -> DB: Subscriber exists and active?
+alt Email already confirmed and active
+    DB --> Handler: Yes
+    Handler --> API: Success (no-op, prevents enumeration)
+else New or lapsed subscriber
+    Handler -> DB: Upsert subscriber\n(confirmed=false, new token, expires +48h)
+    Handler -> Email: Send confirmation email\nwith token link
+    Email --> Handler: Queued
+    Handler --> API: 200 OK
+end
+API --> Page: 200 OK
+Page --> Visitor: "Check your email to confirm"
+
+Visitor -> API: GET /newsletter/confirm?token={token}
+API -> Handler: ConfirmSubscriptionCommand(token)
+Handler -> DB: Find subscriber by token\ntoken not expired?
+alt Valid token
+    Handler -> DB: confirmed=true, confirmedAt=now\nclear token fields
+    Handler --> API: 200 OK
+    API --> Visitor: "Subscription confirmed"
+else Expired token
+    Handler --> API: 422 Unprocessable Entity
+    API --> Visitor: "Link expired — re-subscribe"
+else Invalid token
+    Handler --> API: 404 Not Found
+end
+
+@enduml

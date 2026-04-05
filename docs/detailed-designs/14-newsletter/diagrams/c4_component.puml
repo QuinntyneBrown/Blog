@@ -1,0 +1,38 @@
+@startuml c4_component
+!theme plain
+!include <C4/C4_Component>
+
+title Newsletter — Component Diagram (API)
+
+Container_Boundary(api, "Web API / MediatR Pipeline") {
+    Component(newsCtrl, "NewslettersController", "ApiController", "CRUD + send endpoints for newsletters")
+    Component(subCtrl, "SubscriptionsController", "ApiController", "Subscribe, confirm, unsubscribe endpoints")
+    Component(createCmd, "CreateNewsletterHandler", "MediatR IRequestHandler", "Persists draft newsletter")
+    Component(updateCmd, "UpdateNewsletterHandler", "MediatR IRequestHandler", "Updates draft; rejects if sent")
+    Component(deleteCmd, "DeleteNewsletterHandler", "MediatR IRequestHandler", "Deletes draft; rejects if sent")
+    Component(sendCmd, "SendNewsletterHandler", "MediatR IRequestHandler", "Marks sent; enqueues email per subscriber")
+    Component(subscribeCmd, "SubscribeHandler", "MediatR IRequestHandler", "Creates pending subscription; sends confirmation email")
+    Component(confirmCmd, "ConfirmSubscriptionHandler", "MediatR IRequestHandler", "Validates token; marks confirmed")
+    Component(unsubCmd, "UnsubscribeHandler", "MediatR IRequestHandler", "Deactivates subscription by token")
+    Component(repo, "NewsletterRepository", "EF Core", "Data access for Newsletter and Subscriber entities")
+    Component(emailSvc, "IEmailSender", "Abstraction", "Sends transactional email via configured provider")
+}
+
+Rel(newsCtrl, createCmd, "")
+Rel(newsCtrl, updateCmd, "")
+Rel(newsCtrl, deleteCmd, "")
+Rel(newsCtrl, sendCmd, "")
+Rel(subCtrl, subscribeCmd, "")
+Rel(subCtrl, confirmCmd, "")
+Rel(subCtrl, unsubCmd, "")
+Rel(createCmd, repo, "")
+Rel(updateCmd, repo, "")
+Rel(deleteCmd, repo, "")
+Rel(sendCmd, repo, "")
+Rel(sendCmd, emailSvc, "")
+Rel(subscribeCmd, repo, "")
+Rel(subscribeCmd, emailSvc, "")
+Rel(confirmCmd, repo, "")
+Rel(unsubCmd, repo, "")
+
+@enduml

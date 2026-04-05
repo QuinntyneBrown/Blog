@@ -1,0 +1,29 @@
+@startuml class_diagram
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+
+title Events — Domain Model
+
+class Event {
+    +EventId: Guid
+    +Title: String
+    +Slug: String
+    +Description: String
+    +StartDate: DateTime
+    +EndDate: DateTime?
+    +Location: String
+    +ExternalUrl: String?
+    +Published: bool
+    +CreatedAt: DateTime
+    +UpdatedAt: DateTime
+    +Version: int
+}
+
+note right of Event
+  Slug is generated from Title.
+  StartDate drives upcoming/past split.
+  Published=false hides event from public.
+end note
+
+@enduml
