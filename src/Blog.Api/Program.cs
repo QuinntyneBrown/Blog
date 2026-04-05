@@ -79,6 +79,14 @@ builder.Services.AddRateLimiter(options =>
         opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         opt.QueueLimit = 0;
     });
+    options.AddSlidingWindowLimiter("write-endpoints", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.SegmentsPerWindow = 6;
+        opt.PermitLimit = 60;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 0;
+    });
     options.RejectionStatusCode = 429;
 });
 
