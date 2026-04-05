@@ -905,3 +905,17 @@ The design specifies `FeaturedImageUrl` (string?) as a resolved URL in the artic
 - Updated `Index.cshtml`, `Articles/Index.cshtml`, and `Articles/Slug.cshtml` to use `FeaturedImageUrl` instead of the bare `FeaturedImageId`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Admin article editor featured image also renders bare FeaturedImageId GUID
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 4.2 — PublicArticleDto; `docs/detailed-designs/02-article-management/README.md`, Section 7.4 — Article Editor
+
+**Description:**
+The previous conformance fix (featured image URLs on public pages) missed the admin article editor page. `Admin/Articles/Edit.cshtml` rendered `<img src="/assets/@Model.Article.FeaturedImageId">` using the bare GUID FK value without the file extension. Since `AssetsController` resolves files by exact filename (including extension), the featured image preview in the editor would 404, showing a broken image to the admin user editing an article. The `ArticleDto` already has the `FeaturedImageUrl` field populated from the previous fix.
+
+**Fix applied:**
+- Updated `Admin/Articles/Edit.cshtml` to check `!string.IsNullOrEmpty(Model.Article?.FeaturedImageUrl)` and use `@Model.Article.FeaturedImageUrl` as the image `src`, matching the pattern used on the public pages.
+
+**Status:** FIXED
