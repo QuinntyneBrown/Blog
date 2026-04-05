@@ -401,3 +401,18 @@ The design resolves Open Question 4: "Resolved: 1 MB. Enforced via Kestrel's `Ma
 - Added `[RequestSizeLimit(10 * 1024 * 1024)]` and `[RequestFormLimits(MultipartBodyLengthLimit = 10 * 1024 * 1024)]` attributes on the `DigitalAssetsController.Upload` action, overriding the global limit to 10 MB for that endpoint only.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Missing write-endpoint rate limiting policy (60 req/min per authenticated user)
+
+**Design reference:** `docs/detailed-designs/08-security-hardening/README.md`, Section 3.3 — RateLimitingMiddleware
+
+**Description:**
+The design specifies two rate limiting policies: (1) authentication endpoints at 10 req/min per IP + 5 req/15min per email, and (2) **write endpoints (POST, PUT, PATCH, DELETE) at 60 requests per minute per authenticated user**. Only the `login-ip` sliding window policy was registered in `Program.cs`. No `write-endpoints` policy existed, and no `[EnableRateLimiting]` attributes were applied to any write actions. This meant an authenticated user (or a compromised token) could issue unlimited write requests — creating, updating, publishing, and deleting articles or uploading/deleting digital assets — with no throttling, violating the abuse protection the design requires for OWASP A07 mitigation.
+
+**Fix applied:**
+- Added a `write-endpoints` sliding window rate limiter policy in `Program.cs`: 60 permits per 1-minute window, 6 segments.
+- Applied `[EnableRateLimiting("write-endpoints")]` to all write actions in `ArticlesController` (Create, Update, Publish, Delete) and `DigitalAssetsController` (Upload, Delete).
+
+**Status:** FIXED

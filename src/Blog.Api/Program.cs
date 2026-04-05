@@ -16,8 +16,7 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Kestrel request size limits.
-// All non-file endpoints are limited to 1 MB (design: Feature 06, Open Question 4).
+// Kestrel request size limits (Design 06, OQ-4: 1 MB default, 10 MB for file uploads).
 // The digital-asset upload endpoint overrides this to 10 MB via [RequestSizeLimit] /
 // [RequestFormLimits] attributes on the action.
 builder.WebHost.ConfigureKestrel(options =>
