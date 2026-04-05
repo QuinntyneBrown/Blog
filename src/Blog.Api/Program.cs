@@ -85,19 +85,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero
         };
-        options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
-        {
-            OnChallenge = context =>
-            {
-                // For Razor Pages (non-API) requests, redirect to login instead of 401
-                if (!context.Request.Path.StartsWithSegments("/api"))
-                {
-                    context.HandleResponse();
-                    context.Response.Redirect("/admin/login");
-                }
-                return Task.CompletedTask;
-            }
-        };
     });
 
 builder.Services.AddAuthorization();
@@ -176,11 +163,7 @@ builder.Services.AddControllers().AddJsonOptions(o =>
 {
     o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
 });
-builder.Services.AddRazorPages(options =>
-{
-    options.Conventions.AuthorizeFolder("/Admin");
-    options.Conventions.AllowAnonymousToPage("/Admin/Login");
-})
+builder.Services.AddRazorPages()
     .AddMvcOptions(options =>
     {
         // Cache profile for public HTML pages: max-age=60, stale-while-revalidate=600
