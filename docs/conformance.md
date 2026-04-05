@@ -966,3 +966,18 @@ The design specifies (Section 3.1, L2-012): "Title pattern `{Article Title} | {S
 - Added truncation in `_Layout.cshtml`: title truncated to 60 characters (with `...` ellipsis if exceeded), description truncated to 160 characters at the nearest word boundary using a `TruncateAtWord` helper function.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — JWT signing key minimum size (256 bits) not validated at startup
+
+**Design reference:** `docs/detailed-designs/01-authentication/README.md`, Section 7.4 — Additional Measures
+
+**Description:**
+The design specifies (Section 7.4): "The JWT signing key must be at least 256 bits." The `Program.cs` JWT configuration read `Jwt:Secret` from configuration and passed it directly to `SymmetricSecurityKey` without any size validation. HMAC-SHA256 accepts shorter keys by padding them internally, so a misconfigured short secret (e.g., `"mysecret"` — 7 bytes) would not cause a startup error but would produce cryptographically weak tokens vulnerable to brute-force attacks. The `appsettings.json` placeholder value is long enough, but there was no guard against an operator deploying with a truncated or placeholder-length secret below the security threshold.
+
+**Fix applied:**
+- Added a startup check in `Program.cs` immediately after reading `Jwt:Secret`: if `Encoding.UTF8.GetByteCount(jwtSecret) < 32`, the application throws `InvalidOperationException` with a clear message and refuses to start.
+- Reused the validated `jwtSecret` variable for the `IssuerSigningKey` construction to avoid reading the config value twice.
+
+**Status:** FIXED
