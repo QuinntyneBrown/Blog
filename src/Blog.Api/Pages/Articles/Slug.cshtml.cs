@@ -20,6 +20,7 @@ public class ArticleDetailModel(IMediator mediator, IETagGenerator eTagGenerator
             if (!article.Published)
             {
                 Article = null;
+                Response.StatusCode = 404;
                 return Page();
             }
 
@@ -40,6 +41,7 @@ public class ArticleDetailModel(IMediator mediator, IETagGenerator eTagGenerator
         catch (NotFoundException)
         {
             Article = null;
+            Response.StatusCode = 404;
             return Page();
         }
     }

@@ -1276,3 +1276,17 @@ The design specifies (Section 3.6): "A plain text document describing the site's
 - Added a "Discovery" section to the `llms.txt` output with the sitemap URL and a note about JSON-LD structured data embedded in article pages.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Article detail page returns 200 OK for non-existent or unpublished articles instead of 404
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 5.2 — Load Article Detail Page (step 8)
+
+**Description:**
+The design specifies (Section 5.2, step 8): "If no published article matches the slug (either the slug does not exist or the article is in draft status), the service returns `null`. The page model returns a 404 Not Found result." The `ArticleDetailModel.OnGetAsync` method set `Article = null` and returned `Page()` for both the not-found and not-published cases. `Page()` returns HTTP 200 OK by default. While the Razor template rendered a user-friendly "Article not found" UI, the HTTP status code was 200, not 404. Search engine crawlers indexing non-existent article URLs (e.g., from deleted or unpublished articles) would see a 200 response and keep the URL in their index indefinitely, treating the "not found" page as valid content — a significant SEO problem known as "soft 404."
+
+**Fix applied:**
+- Added `Response.StatusCode = 404` before `return Page()` in both the `!article.Published` branch and the `catch (NotFoundException)` branch of `Slug.cshtml.cs`. The page still renders the friendly 404 UI but now sends the correct HTTP status code.
+
+**Status:** FIXED
