@@ -74,13 +74,14 @@ The About Page feature provides a publicly visible biography for the site author
 ### 3.5 GetAboutContentHandler
 
 - **Responsibility**: Retrieves the current about content record (singleton). Returns `null` if no record exists.
+- **Returns**: `PublicAboutContentDto?` — the handler projects onto `PublicAboutContentDto` (omitting `body`, `aboutContentId`, `createdAt`, `updatedAt`, and `version`), which is the DTO returned by `GET /api/about`. The back-office editor does not use this handler; it re-uses the upsert response (`AboutContentDto`) which includes `body`, `version`, and all audit fields needed for subsequent edits.
 - **Dependencies**: `AboutContentRepository`, `DigitalAssetRepository` (resolves profile image URL from `ProfileImageId`)
 
 ### 3.6 AboutContentRepository
 
 - **Responsibility**: Single-row data access for `AboutContent`.
 - **Key methods**:
-  - `GetCurrentAsync()` — `FirstOrDefaultAsync()` with profile image join
+  - `GetCurrentAsync()` — `FirstOrDefaultAsync()` with a **LEFT JOIN** to the `DigitalAssets` table on `ProfileImageId`. The join must be a LEFT (outer) join — not an INNER join — so that an `AboutContent` row whose `ProfileImageId` is null, or whose referenced asset has since been deleted, is still returned. An INNER join would silently return null when the profile image asset is missing, hiding the entire about content from visitors as if no content existed.
   - `AddAsync(entity)` — insert
   - `UpdateAsync(entity)` — update (caller increments version)
 - **Notes**: No ID-based lookup needed — there is always at most one row. No `GetAllAsync` or pagination.
@@ -223,7 +224,7 @@ AboutContentHistoryDto  {
 - **XSS**: `BodyHtml` is produced via `IMarkdownConverter`, which uses HtmlSanitizer to strip disallowed tags and attributes before storage.
 - **Image validation**: `profileImageId` is validated against the `DigitalAssets` table and must be owned by the requesting user. Returns 403 if the asset belongs to a different user. Prevents orphaned references and SSRF-style manipulation of the image URL.
 - **Cache invalidation**: `ICacheInvalidator.InvalidateAsync("/about")` is called after both a successful PUT and a successful restore, ensuring visitors see updated content promptly.
-- **Optimistic concurrency**: `PUT /api/about` requires `version` in the request body. A mismatch returns 409 to prevent lost-update conflicts when the author has the page open in two tabs simultaneously. `PUT /api/about/restore/{historyId}` likewise requires `currentVersion` in the request body and returns 409 on mismatch, preventing a restore from silently overwriting a concurrent edit.
+- **Optimistic concurrency — version-in-body vs ETag/If-Match**: `PUT /api/about` and `PUT /api/about/restore/{historyId}` pass `version` / `currentVersion` in the request body rather than using the standard REST `ETag` response header + `If-Match` request header pattern (RFC 7232). This is an intentional deviation shared across all three features (Newsletter, Events, About): the version travels with the rest of the MediatR command payload, simplifying implementation and keeping the concurrency contract explicit in the request body. The trade-off is non-standard REST behaviour; this is accepted because the only client is the purpose-built back-office Razor Pages front end. A mismatch returns 409 to prevent lost-update conflicts when the author has the page open in two tabs simultaneously.
 - **Input length validation**: `UpsertAboutContentHandler` enforces DB column limits server-side: `Heading` ≤ 256 chars. Requests exceeding this limit are rejected with 400 before any persistence occurs. `Body` is `nvarchar(max)` and is bounded instead by the Kestrel 1 MB request body limit (see §6-restful-api global config).
 - **Pagination bounds**: `page` must be ≥ 1 and `pageSize` must be ≥ 1 and ≤ 50. Requests outside these bounds are rejected with 400. Zero or negative values cause division-by-zero or negative offsets in pagination math and must not be forwarded to the repository.
 - **Content-Type enforcement**: The `PUT /api/about` and `PUT /api/about/restore/{historyId}` endpoints must require `Content-Type: application/json`. Requests with a missing or mismatched `Content-Type` are rejected with 415 (Unsupported Media Type). This prevents silent null-model-binding failures.
