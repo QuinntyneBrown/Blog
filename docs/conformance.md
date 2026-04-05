@@ -1010,3 +1010,17 @@ The design specifies (Section 3.4): "Applies a timeout of 5 seconds to prevent h
 - Added a post-configuration block using `Configure<HealthCheckServiceOptions>` that sets `Timeout = TimeSpan.FromSeconds(5)` on the `"database"` health check registration, matching the design's 5-second requirement.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Health check endpoints not excluded from ResponseEnvelopeMiddleware
+
+**Design reference:** `docs/detailed-designs/06-restful-api/README.md`, Section 3.4 — ResponseEnvelopeMiddleware
+
+**Description:**
+The design specifies (Section 3.4): "Skips wrapping for streaming responses (e.g., file downloads) and health check endpoints." The `ResponseEnvelopeMiddleware` only checked for the `[RawResponse]` attribute to skip wrapping. The `/health/ready` endpoint uses a custom response writer that sets `Content-Type: application/json`, so the middleware's `isJson` check passed and the health check response was wrapped in the `{ data, timestamp }` envelope. This produced `{ "data": { "status": "healthy", "checks": { ... } }, "timestamp": "..." }` instead of the design's plain `{ "status": "healthy", "checks": { ... } }`. Load balancers and monitoring tools parsing the health check response would fail to find the expected top-level `status` field.
+
+**Fix applied:**
+- Added `|| context.Request.Path.StartsWithSegments("/health")` to the `skipEnvelope` condition in `ResponseEnvelopeMiddleware`, so both `/health` and `/health/ready` endpoints bypass envelope wrapping.
+
+**Status:** FIXED

@@ -38,7 +38,8 @@ public class ResponseEnvelopeMiddleware(RequestDelegate next)
 
         // Determine whether this endpoint opts out of envelope wrapping.
         var endpoint = context.GetEndpoint();
-        var skipEnvelope = endpoint?.Metadata.GetMetadata<RawResponseAttribute>() != null;
+        var skipEnvelope = endpoint?.Metadata.GetMetadata<RawResponseAttribute>() != null
+            || context.Request.Path.StartsWithSegments("/health");
 
         var status = context.Response.StatusCode;
         var isSuccess = status is >= 200 and <= 299;
