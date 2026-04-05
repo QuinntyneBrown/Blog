@@ -1899,6 +1899,21 @@ The design specifies (L2-010): "Canonical URLs — absolute, lowercase, no trail
 
 ---
 
+## 2026-04-04 — IAssetStorage abstraction never registered or used; upload and delete handlers bypass it via direct filesystem access
+
+**Design reference:** `docs/detailed-designs/04-digital-asset-management/README.md`, Section 3.5 — AssetStorage, Section 5.1 — Upload Flow (steps 10–11), Section 5.2 — Serve with Optimization Flow (step 5)
+
+**Description:**
+The design specifies an `AssetStorage` component (Section 3.5) that "abstracts file persistence" and "provides a consistent interface regardless of whether the backing store is a local filesystem directory or a cloud blob storage service." It defines the following methods: `SaveAsync(string storedFileName, Stream content)`, `GetAsync(string storedFileName)`, `DeleteAsync(string storedFileName)`, and `GetPublicUrl(string storedFileName)`. The upload flow (Section 5.1, steps 10–11) explicitly calls `AssetStorage.SaveAsync()` for the original file and again for each generated variant.
+
+`IAssetStorage` and `LocalFileAssetStorage` exist in the project at `src/Blog.Infrastructure/Storage/` but are never registered in the DI container (`Program.cs` has no `AddScoped`/`AddSingleton` call for `IAssetStorage`). Neither `UploadDigitalAssetCommandHandler` nor `DeleteDigitalAssetCommandHandler` injects or calls `IAssetStorage`. Instead, both handlers directly access the filesystem via `env.WebRootPath`, `File.Create`, `File.Delete`, and `File.Exists`. As a result, the abstraction boundary the design establishes — which allows the storage backend to be swapped to Azure Blob Storage or S3 without changing handler code — does not exist at runtime. Any future operator who needs cloud storage would have to rewrite both handlers rather than simply registering a different `IAssetStorage` implementation.
+
+Additionally, `LocalFileAssetStorage.SaveAsync` generates its own GUID-based filename internally, but the upload handler must control the filename (using the `assetGuid` that also becomes the `DigitalAssetId`) so that variant filenames (`{assetId}-{width}w.webp`) can be derived from the entity ID alone. The `IAssetStorage.SaveAsync` signature must accept a caller-supplied `storedFileName` rather than generating one internally.
+
+**Status:** OPEN
+
+---
+
 ## 2026-04-05 — Custom 404 page not used for non-existent URLs; bare 404 returned instead
 
 **Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 5.2 — Load Article Detail Page (step 8)
