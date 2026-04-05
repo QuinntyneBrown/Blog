@@ -1,9 +1,9 @@
+using System.Text.Encodings.Web;
 using Blog.Api.Common.Models;
 using Blog.Api.Features.Articles.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Text.Encodings.Web;
 
 namespace Blog.Api.Pages.Search;
 
