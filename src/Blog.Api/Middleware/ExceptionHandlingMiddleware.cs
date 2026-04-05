@@ -27,6 +27,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             ValidationException ve => (400, "Validation Error", "One or more validation errors occurred.",
                 ve.Errors.GroupBy(e => e.PropertyName.ToLowerInvariant())
                     .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray())),
+            BadRequestException bre => (400, "Bad Request", bre.Message, (Dictionary<string, string[]>?)null),
             UnauthorizedException ue => (401, "Unauthorized", ue.Message, (Dictionary<string, string[]>?)null),
             UnauthorizedAccessException => (401, "Unauthorized", "Authentication is required.", (Dictionary<string, string[]>?)null),
             NotFoundException nfe => (404, "Not Found", nfe.Message, (Dictionary<string, string[]>?)null),
