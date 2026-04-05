@@ -801,7 +801,7 @@
     <a href="#main-content" class="skip-link">Skip to content</a>
     <header role="banner">
     <nav class="nav" id="main-nav" aria-label="Main navigation">
-        <a href="/" class="nav-logo">@(Configuration["Site:SiteName"] ?? "Quinn Brown")</a>
+        <a href="/" class="nav-logo">@(Configuration["Site:LogoText"] ?? "QB")</a>
         <ul class="nav-links">
             <li><a href="/articles" class="@(ViewBag.ActiveNav == "articles" ? "active" : "")">Articles</a></li>
             <li><a href="/feed" class="@(ViewBag.ActiveNav == "feed" ? "active" : "")">Feed</a></li>
