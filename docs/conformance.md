@@ -2115,3 +2115,24 @@ The design specifies (Section 4.2): "`Body` (Markdown source) and `BodyHtml` (pr
 - Replaced the `.Include(a => a.FeaturedImage).ToListAsync()` pattern in `ArticleRepository.GetAllAsync` and `GetPublishedAsync` with `.AsNoTracking().Select(a => new Article { ... Body = string.Empty, BodyHtml = string.Empty, FeaturedImage = a.FeaturedImage, ... }).ToListAsync()`. The `Select` projection causes EF Core to omit `Body` and `BodyHtml` from the generated SQL (they are not referenced in the projection), while still including the `FeaturedImage` navigation property via a LEFT JOIN (EF Core 8 translates the navigation reference inside `Select` to a join). `Body` and `BodyHtml` are set to `string.Empty` on the returned `Article` objects so callers that only use list fields receive valid (non-null) strings. The single-entity `GetByIdAsync` and `GetBySlugAsync` methods are unchanged — they continue to load all fields including `Body` and `BodyHtml` because the article detail view requires the full content.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Database health check timeout hardcoded instead of read from HealthChecks:DatabaseTimeoutSeconds configuration
+
+**Design reference:** `docs/detailed-designs/09-observability/README.md`, Section 7.2 — appsettings.json Configuration, Section 3.4 — DbHealthCheck
+
+**Description:**
+The design's Section 7.2 shows `appsettings.json` containing:
+```json
+"HealthChecks": {
+    "DatabaseTimeoutSeconds": 5
+}
+```
+This key is the operator-visible configuration value for the database health check timeout, matching the design's Section 3.4 specification that the check "applies a timeout of 5 seconds to prevent hanging." The implementation in `Program.cs` configured the timeout by calling `reg.Timeout = TimeSpan.FromSeconds(5)` with a hardcoded integer. The `HealthChecks:DatabaseTimeoutSeconds` key was entirely absent from `appsettings.json`. As a result, an operator who needs to adjust the timeout (e.g., for a slow network link to the database in a remote environment) had no configuration surface to do so without a code change and redeployment. Any monitoring or deployment tooling that validates required configuration keys would also not find the expected `HealthChecks` section.
+
+**Fix applied:**
+- Added `"HealthChecks": { "DatabaseTimeoutSeconds": 5 }` to `src/Blog.Api/appsettings.json`, establishing the configuration key specified in the design's Section 7.2 example.
+- Updated `Program.cs` to read the timeout from `builder.Configuration.GetValue<int>("HealthChecks:DatabaseTimeoutSeconds", 5)` (falling back to 5 if the key is absent for backward compatibility) and pass it to `TimeSpan.FromSeconds(dbHealthCheckTimeoutSeconds)` in the `HealthCheckServiceOptions` post-configuration, replacing the hardcoded `5`.
+
+**Status:** FIXED

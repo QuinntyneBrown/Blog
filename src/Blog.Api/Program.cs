@@ -182,12 +182,14 @@ builder.Services.AddHealthChecks()
     .AddDbContextCheck<BlogDbContext>("database")
     .AddCheck<Blog.Api.Common.HealthChecks.DiskSpaceHealthCheck>("diskSpace");
 
-// Database health check timeout (Design 09, Section 3.4: 5 seconds)
+// Database health check timeout — read from HealthChecks:DatabaseTimeoutSeconds configuration.
+// Design reference: docs/detailed-designs/09-observability/README.md, Section 3.4 and Section 7.2.
+var dbHealthCheckTimeoutSeconds = builder.Configuration.GetValue<int>("HealthChecks:DatabaseTimeoutSeconds", 5);
 builder.Services.Configure<Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckServiceOptions>(options =>
 {
     foreach (var reg in options.Registrations)
         if (reg.Name == "database")
-            reg.Timeout = TimeSpan.FromSeconds(5);
+            reg.Timeout = TimeSpan.FromSeconds(dbHealthCheckTimeoutSeconds);
 });
 
 // Swagger
