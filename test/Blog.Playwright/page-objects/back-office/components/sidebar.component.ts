@@ -1,25 +1,27 @@
-import { type Locator } from '@playwright/test';
+import { Page, Locator } from '@playwright/test';
 
 export class SidebarComponent {
-  readonly root: Locator;
-  readonly brand: Locator;
-  readonly navItems: Locator;
+  readonly page: Page;
   readonly articlesLink: Locator;
   readonly assetsLink: Locator;
+  readonly signOutButton: Locator;
 
-  constructor(root: Locator) {
-    this.root = root;
-    this.brand = root.getByText('QB');
-    this.navItems = root.getByRole('link');
-    this.articlesLink = root.getByRole('link', { name: /articles/i });
-    this.assetsLink = root.getByRole('link', { name: /assets/i });
+  constructor(page: Page) {
+    this.page = page;
+    this.articlesLink = page.locator('a[href="/admin/articles"]');
+    this.assetsLink = page.locator('a[href="/admin/digital-assets"]');
+    this.signOutButton = page.locator('button:has-text("Sign out")');
   }
 
-  async isVisible(): Promise<boolean> {
-    return await this.root.isVisible();
+  async navigateToArticles() {
+    await this.articlesLink.click();
   }
 
-  async getActiveItem(): Promise<string> {
-    return await this.root.locator('[aria-current="page"]').innerText();
+  async navigateToAssets() {
+    await this.assetsLink.click();
+  }
+
+  async signOut() {
+    await this.signOutButton.click();
   }
 }

@@ -1,7 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Blog.Api.Domain.Entities;
+using Blog.Domain.Entities;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Blog.Api.Services;

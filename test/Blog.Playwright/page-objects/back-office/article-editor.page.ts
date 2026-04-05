@@ -1,80 +1,43 @@
-import { type Page, type Locator } from '@playwright/test';
+import { Page, Locator } from '@playwright/test';
 
-export class ArticleEditorPage {
+export class AdminArticleEditorPage {
   readonly page: Page;
   readonly titleInput: Locator;
-  readonly bodyEditor: Locator;
   readonly abstractInput: Locator;
-  readonly saveButton: Locator;
+  readonly bodyTextarea: Locator;
+  readonly saveDraftButton: Locator;
   readonly publishButton: Locator;
-  readonly unpublishButton: Locator;
-  readonly deleteButton: Locator;
   readonly statusBadge: Locator;
-  readonly slugDisplay: Locator;
-  readonly featuredImageButton: Locator;
-  readonly featuredImagePreview: Locator;
-  readonly removeFeaturedImageButton: Locator;
-  readonly backButton: Locator;
-  readonly validationErrors: Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.titleInput = page.getByLabel('Title');
-    this.bodyEditor = page.getByLabel('Body');
-    this.abstractInput = page.getByLabel('Abstract');
-    this.saveButton = page.getByRole('button', { name: /save/i });
-    this.publishButton = page.getByRole('button', { name: /publish/i });
-    this.unpublishButton = page.getByRole('button', { name: /unpublish/i });
-    this.deleteButton = page.getByRole('button', { name: /delete/i });
-    this.statusBadge = page.locator('[data-testid="status-badge"]');
-    this.slugDisplay = page.locator('[data-testid="slug-display"]');
-    this.featuredImageButton = page.getByRole('button', { name: /featured image/i });
-    this.featuredImagePreview = page.locator('[data-testid="featured-image-preview"]');
-    this.removeFeaturedImageButton = page.getByRole('button', { name: /remove image/i });
-    this.backButton = page.getByRole('link', { name: /back/i });
-    this.validationErrors = page.locator('[data-testid="validation-error"]');
+    this.titleInput = page.locator('input[name="title"]');
+    this.abstractInput = page.locator('textarea[name="abstract"]');
+    this.bodyTextarea = page.locator('textarea[name="body"]');
+    this.saveDraftButton = page.locator('button[value="save"]');
+    this.publishButton = page.locator('button[value="publish"]');
+    this.statusBadge = page.locator('.toolbar-left .badge');
   }
 
-  async goto(articleId?: string) {
-    if (articleId) {
-      await this.page.goto(`/articles/${articleId}/edit`);
-    } else {
-      await this.page.goto('/articles/new');
-    }
+  async gotoCreate() {
+    await this.page.goto('/admin/articles/create');
   }
 
-  async fillArticle(title: string, body: string, abstract: string) {
-    await this.titleInput.fill(title);
-    await this.bodyEditor.fill(body);
-    await this.abstractInput.fill(abstract);
+  async fillArticle(data: { title: string; abstract: string; body: string }) {
+    await this.titleInput.fill(data.title);
+    await this.abstractInput.fill(data.abstract);
+    await this.bodyTextarea.fill(data.body);
   }
 
-  async save() {
-    await this.saveButton.click();
+  async saveDraft() {
+    await this.saveDraftButton.click();
   }
 
   async publish() {
     await this.publishButton.click();
   }
 
-  async unpublish() {
-    await this.unpublishButton.click();
-  }
-
-  async delete() {
-    await this.deleteButton.click();
-  }
-
-  async getSlugText(): Promise<string> {
-    return await this.slugDisplay.innerText();
-  }
-
-  async getStatusText(): Promise<string> {
-    return await this.statusBadge.innerText();
-  }
-
-  async getValidationErrorTexts(): Promise<string[]> {
-    const errors = await this.validationErrors.allInnerTexts();
-    return errors;
+  async getStatusText() {
+    return this.statusBadge.textContent();
   }
 }

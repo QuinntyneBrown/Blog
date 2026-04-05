@@ -1,9 +1,10 @@
 using System.Text;
 using Blog.Api.Common.Behaviors;
-using Blog.Api.Infrastructure.Data;
-using Blog.Api.Infrastructure.Data.Repositories;
 using Blog.Api.Middleware;
 using Blog.Api.Services;
+using Blog.Domain.Interfaces;
+using Blog.Infrastructure.Data;
+using Blog.Infrastructure.Data.Repositories;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -129,7 +130,7 @@ builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
-// Apply migrations on startup
+// Apply migrations and seed data on startup
 using (var scope = app.Services.CreateScope())
 {
     try
@@ -137,10 +138,15 @@ using (var scope = app.Services.CreateScope())
         var db = scope.ServiceProvider.GetRequiredService<BlogDbContext>();
         await db.Database.MigrateAsync();
         app.Logger.LogInformation("Database migrations applied successfully.");
+
+        var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        var seedLogger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<Blog.Infrastructure.Data.SeedData>();
+        var seedData = new Blog.Infrastructure.Data.SeedData(uow, seedLogger, builder.Configuration);
+        await seedData.SeedAsync();
     }
     catch (Exception ex)
     {
-        app.Logger.LogCritical(ex, "Failed to apply database migrations. Application will terminate.");
+        app.Logger.LogCritical(ex, "Failed to apply database migrations or seed data. Application will terminate.");
         throw;
     }
 }

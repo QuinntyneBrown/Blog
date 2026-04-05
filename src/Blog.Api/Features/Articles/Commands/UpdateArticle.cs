@@ -1,5 +1,6 @@
+using Blog.Domain.Interfaces;
 using Blog.Api.Common.Exceptions;
-using Blog.Api.Infrastructure.Data;
+using Blog.Infrastructure.Data;
 using Blog.Api.Services;
 using FluentValidation;
 using MediatR;

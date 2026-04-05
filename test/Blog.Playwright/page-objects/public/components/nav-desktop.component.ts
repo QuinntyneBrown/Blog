@@ -1,25 +1,21 @@
-import { type Locator } from '@playwright/test';
+import { Page, Locator } from '@playwright/test';
 
 export class NavDesktopComponent {
-  readonly root: Locator;
+  readonly page: Page;
   readonly logo: Locator;
-  readonly links: Locator;
   readonly articlesLink: Locator;
+  readonly feedLink: Locator;
   readonly rssLink: Locator;
 
-  constructor(root: Locator) {
-    this.root = root;
-    this.logo = root.locator('[data-testid="site-logo"]');
-    this.links = root.getByRole('link');
-    this.articlesLink = root.getByRole('link', { name: /articles/i });
-    this.rssLink = root.getByRole('link', { name: /rss|feed/i });
+  constructor(page: Page) {
+    this.page = page;
+    this.logo = page.locator('.nav-logo');
+    this.articlesLink = page.locator('.nav-links a[href="/articles"]');
+    this.feedLink = page.locator('.nav-links a[href="/feed"]');
+    this.rssLink = page.locator('.nav-links .rss-link');
   }
 
-  async isVisible(): Promise<boolean> {
-    return await this.root.isVisible();
-  }
-
-  async getLinkCount(): Promise<number> {
-    return await this.links.count();
-  }
+  async clickLogo() { await this.logo.click(); }
+  async clickArticles() { await this.articlesLink.click(); }
+  async clickFeed() { await this.feedLink.click(); }
 }

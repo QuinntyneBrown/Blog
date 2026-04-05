@@ -1,36 +1,37 @@
-import { type Page, type Locator } from '@playwright/test';
-import { ArticleCardComponent } from './components/article-card.component';
-import { PaginationComponent } from './components/pagination.component';
+import { Page, Locator } from '@playwright/test';
 
 export class PublicArticleListPage {
   readonly page: Page;
-  readonly heading: Locator;
   readonly articleCards: Locator;
+  readonly heroTitle: Locator;
   readonly emptyState: Locator;
-  readonly pagination: PaginationComponent;
+  readonly pagination: Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.heading = page.getByRole('heading', { level: 1 });
-    this.articleCards = page.locator('[data-testid="article-card"]');
-    this.emptyState = page.getByTestId('empty-state');
-    this.pagination = new PaginationComponent(page.getByRole('navigation', { name: /pagination/i }));
+    this.articleCards = page.locator('.article-card');
+    this.heroTitle = page.locator('.hero-title');
+    this.emptyState = page.locator('.empty-state');
+    this.pagination = page.locator('.pagination');
   }
 
-  async goto(pageNum = 1) {
-    const url = pageNum === 1 ? '/articles' : `/articles?page=${pageNum}`;
-    await this.page.goto(url);
+  async goto() {
+    await this.page.goto('/');
   }
 
-  async getCardCount(): Promise<number> {
-    return await this.articleCards.count();
+  async gotoArticles() {
+    await this.page.goto('/articles');
   }
 
-  getCard(index: number): ArticleCardComponent {
-    return new ArticleCardComponent(this.articleCards.nth(index));
+  async getCardCount() {
+    return this.articleCards.count();
   }
 
-  async getHeadingText(): Promise<string> {
-    return await this.heading.innerText();
+  async getCardTitles() {
+    return this.articleCards.locator('.article-card-title').allTextContents();
+  }
+
+  async clickCard(index: number) {
+    await this.articleCards.nth(index).locator('.article-card-link').click();
   }
 }

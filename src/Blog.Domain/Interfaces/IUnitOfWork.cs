@@ -1,0 +1,12 @@
+namespace Blog.Domain.Interfaces;
+
+public interface IUnitOfWork
+{
+    IArticleRepository Articles { get; }
+    IUserRepository Users { get; }
+    IDigitalAssetRepository DigitalAssets { get; }
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task BeginTransactionAsync(CancellationToken cancellationToken = default);
+    Task CommitTransactionAsync(CancellationToken cancellationToken = default);
+    Task RollbackTransactionAsync(CancellationToken cancellationToken = default);
+}

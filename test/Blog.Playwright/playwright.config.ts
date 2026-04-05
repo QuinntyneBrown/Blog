@@ -1,4 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
+
+const baseURL = process.env.BASE_URL || 'http://localhost:5000';
+const apiURL = process.env.API_URL || 'http://localhost:5001';
 
 export default defineConfig({
   testDir: './tests',
@@ -6,63 +12,34 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: [['html'], ['json', { outputFile: 'test-results/results.json' }]],
-  globalSetup: './global-setup.ts',
-  globalTeardown: './global-teardown.ts',
+  reporter: [
+    ['list'],
+    ['html', { outputFolder: 'playwright-report', open: 'never' }],
+  ],
   use: {
+    baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
   projects: [
+    { name: 'setup', testMatch: /global-setup\.ts/ },
     {
-      name: 'back-office-desktop',
-      use: {
-        ...devices['Desktop Chrome'],
-        baseURL: process.env.API_BASE_URL || 'http://localhost:5001',
-        storageState: '.auth/admin.json',
-      },
-      testMatch: ['auth/**', 'article-management/**', 'digital-assets/**'],
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+      dependencies: ['setup'],
     },
     {
-      name: 'public-desktop',
-      use: {
-        ...devices['Desktop Chrome'],
-        baseURL: process.env.WEB_BASE_URL || 'http://localhost:5000',
-      },
-      testMatch: ['public-site/**', 'seo/**', 'security/**', 'performance/**', 'accessibility/**', 'observability/**'],
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+      dependencies: ['setup'],
     },
     {
-      name: 'public-tablet',
-      use: {
-        ...devices['iPad (gen 7)'],
-        baseURL: process.env.WEB_BASE_URL || 'http://localhost:5000',
-      },
-      testMatch: ['responsive/**'],
-    },
-    {
-      name: 'public-mobile',
-      use: {
-        ...devices['iPhone 13'],
-        baseURL: process.env.WEB_BASE_URL || 'http://localhost:5000',
-      },
-      testMatch: ['responsive/**'],
-    },
-    {
-      name: 'back-office-mobile',
-      use: {
-        ...devices['iPhone 13'],
-        baseURL: process.env.API_BASE_URL || 'http://localhost:5001',
-        storageState: '.auth/admin.json',
-      },
-      testMatch: ['responsive/back-office-responsive.spec.ts'],
-    },
-    {
-      name: 'api',
-      use: {
-        baseURL: process.env.API_BASE_URL || 'http://localhost:5001',
-      },
-      testMatch: ['api/**'],
+      name: 'mobile-chrome',
+      use: { ...devices['Pixel 5'] },
+      dependencies: ['setup'],
     },
   ],
+  globalSetup: './global-setup.ts',
+  globalTeardown: './global-teardown.ts',
 });

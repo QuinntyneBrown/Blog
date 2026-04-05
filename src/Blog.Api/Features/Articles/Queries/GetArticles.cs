@@ -1,5 +1,6 @@
+using Blog.Domain.Interfaces;
 using Blog.Api.Common.Models;
-using Blog.Api.Infrastructure.Data.Repositories;
+
 using MediatR;
 
 namespace Blog.Api.Features.Articles.Queries;

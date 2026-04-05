@@ -1,4 +1,5 @@
-using Blog.Api.Infrastructure.Data.Repositories;
+using Blog.Domain.Interfaces;
+
 using MediatR;
 
 namespace Blog.Api.Features.DigitalAssets.Queries;

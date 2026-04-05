@@ -1,23 +1,22 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "module": "CommonJS",
+    "lib": ["ES2022"],
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "declaration": false,
-    "noEmit": true,
-    "baseUrl": ".",
-    "paths": {
-      "@fixtures/*": ["fixtures/*"],
-      "@helpers/*": ["helpers/*"],
-      "@page-objects/*": ["page-objects/*"]
-    }
+    "outDir": "dist",
+    "rootDir": ".",
+    "skipLibCheck": true
   },
   "include": [
     "**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test-results",
+    "playwright-report"
   ]
 }

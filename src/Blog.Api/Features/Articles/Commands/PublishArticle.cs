@@ -1,5 +1,6 @@
+using Blog.Domain.Interfaces;
 using Blog.Api.Common.Exceptions;
-using Blog.Api.Infrastructure.Data;
+using Blog.Infrastructure.Data;
 using MediatR;
 using Blog.Api.Features.Articles.Queries;
 

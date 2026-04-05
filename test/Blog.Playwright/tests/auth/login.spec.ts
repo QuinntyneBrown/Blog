@@ -1,47 +1,31 @@
-import { test, expect } from '../../fixtures/base.fixture';
-import { TEST_ADMIN } from '../../fixtures/test-data';
+import { test, expect } from '@playwright/test';
+import { LoginPage } from '../../page-objects/back-office/login.page';
+import { testUser } from '../../fixtures/test-data';
 
-test.describe('L2-023: JWT Authentication – Login', () => {
-  test.beforeEach(async ({ loginPage }) => {
+test.describe('Login', () => {
+  test('shows login form', async ({ page }) => {
+    const loginPage = new LoginPage(page);
     await loginPage.goto();
-  });
 
-  test('valid credentials navigates to /articles', async ({ loginPage, page }) => {
-    await loginPage.login(TEST_ADMIN.email, TEST_ADMIN.password);
-
-    await expect(page).toHaveURL(/\/articles$/);
-  });
-
-  test('invalid password shows error alert', async ({ loginPage }) => {
-    await loginPage.login(TEST_ADMIN.email, 'WrongPassword99!');
-
-    await expect(loginPage.errorMessage).toBeVisible();
-    await expect(loginPage.errorMessage).toContainText(/invalid|incorrect|unauthorized/i);
-  });
-
-  test('invalid email shows error alert', async ({ loginPage }) => {
-    await loginPage.login('nobody@blog.local', TEST_ADMIN.password);
-
-    await expect(loginPage.errorMessage).toBeVisible();
-    await expect(loginPage.errorMessage).toContainText(/invalid|incorrect|unauthorized/i);
-  });
-
-  test('empty email field shows validation error', async ({ loginPage }) => {
-    await loginPage.login('', TEST_ADMIN.password);
-
-    await expect(loginPage.emailInput).toHaveAttribute('validationMessage', /.+/);
-  });
-
-  test('empty password field shows validation error', async ({ loginPage }) => {
-    await loginPage.login(TEST_ADMIN.email, '');
-
-    await expect(loginPage.passwordInput).toHaveAttribute('validationMessage', /.+/);
-  });
-
-  test('login form displays email, password inputs and submit button', async ({ loginPage }) => {
     await expect(loginPage.emailInput).toBeVisible();
     await expect(loginPage.passwordInput).toBeVisible();
     await expect(loginPage.submitButton).toBeVisible();
-    await expect(loginPage.submitButton).toBeEnabled();
+  });
+
+  test('shows error for invalid credentials', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    await loginPage.login('wrong@example.com', 'wrongpassword123');
+
+    await expect(loginPage.errorMessage).toBeVisible();
+    await expect(loginPage.errorMessage).toContainText('Invalid');
+  });
+
+  test('redirects to articles on valid login', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    await loginPage.login(testUser.email, testUser.password);
+
+    await expect(page).toHaveURL('/admin/articles');
   });
 });

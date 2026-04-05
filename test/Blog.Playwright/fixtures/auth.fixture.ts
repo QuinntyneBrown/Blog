@@ -1,14 +1,18 @@
-import { test as base } from '@playwright/test';
-import { LoginPage } from '../page-objects/back-office/login.page';
-import { TEST_ADMIN } from './test-data';
+import { test as base, Page } from '@playwright/test';
+import { testUser } from './test-data';
 
-export const test = base.extend<{ authenticatedPage: LoginPage }>({
+type AuthFixtures = {
+  authenticatedPage: Page;
+};
+
+export const test = base.extend<AuthFixtures>({
   authenticatedPage: async ({ page }, use) => {
-    const loginPage = new LoginPage(page);
-    await loginPage.goto();
-    await loginPage.login(TEST_ADMIN.email, TEST_ADMIN.password);
-    await page.waitForURL('**/articles');
-    await use(loginPage);
+    await page.goto('/admin/login');
+    await page.fill('input[name="email"]', testUser.email);
+    await page.fill('input[name="password"]', testUser.password);
+    await page.click('button[type="submit"]');
+    await page.waitForURL('/admin/articles');
+    await use(page);
   },
 });
 

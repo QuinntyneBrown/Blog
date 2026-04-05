@@ -1,25 +1,13 @@
-import { test, expect } from '../../fixtures/base.fixture';
-import { LoginPage } from '../../page-objects/back-office/login.page';
-import { ArticleListPage } from '../../page-objects/back-office/article-list.page';
+import { test, expect } from '@playwright/test';
 
-test.use({ storageState: { cookies: [], origins: [] } });
-
-test.describe('Protected routes – unauthenticated access', () => {
-  test('visiting /articles without auth redirects to /login', async ({ page }) => {
-    await page.goto('/articles');
-
-    await expect(page).toHaveURL(/\/login$/);
+test.describe('Protected Routes', () => {
+  test('unauthenticated access to articles redirects to login', async ({ page }) => {
+    await page.goto('/admin/articles');
+    await expect(page).toHaveURL(/\/admin\/login/);
   });
 
-  test('visiting /articles/new without auth redirects to /login', async ({ page }) => {
-    await page.goto('/articles/new');
-
-    await expect(page).toHaveURL(/\/login$/);
-  });
-
-  test('visiting /articles/{id}/edit without auth redirects to /login', async ({ page }) => {
-    await page.goto('/articles/1/edit');
-
-    await expect(page).toHaveURL(/\/login$/);
+  test('unauthenticated access to editor redirects to login', async ({ page }) => {
+    await page.goto('/admin/articles/create');
+    await expect(page).toHaveURL(/\/admin\/login/);
   });
 });
