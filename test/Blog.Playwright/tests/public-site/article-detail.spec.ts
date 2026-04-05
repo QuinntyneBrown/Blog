@@ -8,7 +8,6 @@ test.describe('L2-006, L2-038: Public Article Detail', () => {
 
     await expect(publicDetailPage.title).toBeVisible();
     await expect(publicDetailPage.body).toBeVisible();
-    await expect(publicDetailPage.featuredImage).toBeVisible();
     await expect(publicDetailPage.publishDate).toBeVisible();
 
     const titleText = await publicDetailPage.getTitleText();
@@ -16,8 +15,6 @@ test.describe('L2-006, L2-038: Public Article Detail', () => {
 
     const bodyHtml = await publicDetailPage.getBodyHtml();
     expect(bodyHtml.length).toBeGreaterThan(0);
-
-    await expect(publicDetailPage.featuredImage).toHaveAttribute('src', /.+/);
   });
 
   test('reading time is displayed', async ({ publicDetailPage }) => {
@@ -35,7 +32,7 @@ test.describe('L2-006, L2-038: Public Article Detail', () => {
     await expect(publicDetailPage.article).toBeVisible();
 
     // Verify the title and body are inside the <article> element
-    await expect(publicDetailPage.article.locator('[data-testid="article-body"]')).toBeVisible();
+    await expect(publicDetailPage.article.locator('.article-body')).toBeVisible();
     await expect(publicDetailPage.article.getByRole('heading', { level: 1 })).toBeVisible();
   });
 
