@@ -88,10 +88,38 @@
                         </div>
                     }
                 </div>
+                @if (Model.Article != null)
+                {
+                    <button type="button" class="btn btn-destructive" style="width:100%;margin-top:16px" onclick="showDeleteModal()">Delete Article</button>
+                }
             </div>
         </aside>
     </div>
 </form>
+
+@if (Model.Article != null)
+{
+    <div class="modal-overlay modal-hidden" id="delete-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">Delete Article</span>
+                <button class="btn-icon" onclick="closeDeleteModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">Delete "@Model.Article.Title"? This action cannot be undone.</div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <form method="post" asp-page-handler="Delete" style="display:inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Article.ArticleId" />
+                    <input type="hidden" name="version" value="@Model.Article.Version" />
+                    <button type="submit" class="btn btn-destructive">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+}
 
 @section AdminScripts {
 <script>
@@ -108,5 +136,10 @@
         ta.selectionStart = start + before.length;
         ta.selectionEnd = end + before.length;
     }
+
+    const deleteModal = document.getElementById('delete-modal');
+    function showDeleteModal() { deleteModal?.classList.remove('modal-hidden'); }
+    function closeDeleteModal() { deleteModal?.classList.add('modal-hidden'); }
+    deleteModal?.addEventListener('click', e => { if (e.target === deleteModal) closeDeleteModal(); });
 </script>
 }
