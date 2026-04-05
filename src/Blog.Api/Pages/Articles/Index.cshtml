@@ -30,15 +30,13 @@
                     <div class="article-card-image">
                         @if (!string.IsNullOrEmpty(article.FeaturedImageUrl))
                         {
-                            @{
-                                var cardFileName = article.FeaturedImageUrl.StartsWith("/assets/")
-                                    ? article.FeaturedImageUrl.Substring("/assets/".Length)
-                                    : System.IO.Path.GetFileName(article.FeaturedImageUrl);
-                                var cardAssetId = System.IO.Path.GetFileNameWithoutExtension(cardFileName);
-                                var cardWebpSrcset = string.Join(", ",
-                                    new[] { 320, 640, 960 }
-                                        .Select(w => $"/assets/{cardAssetId}-{w}w.webp {w}w"));
-                            }
+                            var cardFileName = article.FeaturedImageUrl.StartsWith("/assets/")
+                                ? article.FeaturedImageUrl.Substring("/assets/".Length)
+                                : System.IO.Path.GetFileName(article.FeaturedImageUrl);
+                            var cardAssetId = System.IO.Path.GetFileNameWithoutExtension(cardFileName);
+                            var cardWebpSrcset = string.Join(", ",
+                                new[] { 320, 640, 960 }
+                                    .Select(w => $"/assets/{cardAssetId}-{w}w.webp {w}w"));
                             <picture>
                                 <source type="image/webp"
                                         srcset="@cardWebpSrcset"
