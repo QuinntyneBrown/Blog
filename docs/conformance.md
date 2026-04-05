@@ -1779,3 +1779,16 @@ The design specifies (Section 7.4): the editor metadata sidebar contains "action
 - Added `OnPostDeleteAsync` handler in `Edit.cshtml.cs` that sends a `DeleteArticleCommand` with the article's `If-Match` version token and redirects to the listing on success.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — JwtMiddleware absent; TokenService.ValidateToken never called; token validation bypasses the designed abstraction
+
+**Design reference:** `docs/detailed-designs/01-authentication/README.md`, Section 3.5 — JwtMiddleware; Section 5.2 — Token Validation Flow
+
+**Description:**
+The design specifies a custom `JwtMiddleware` class (Section 3.5) that "intercepts requests to protected endpoints, extracts the `Authorization: Bearer <token>` header, validates the token via `TokenService`, and sets `HttpContext.User`." Section 5.2 describes the Token Validation Flow: step 2 is "JwtMiddleware extracts the token from the header," step 3 is "JwtMiddleware calls `TokenService.ValidateToken()`," and step 5 is "On success, a `ClaimsPrincipal` is constructed and assigned to `HttpContext.User`."
+
+No `JwtMiddleware` class exists anywhere in the codebase. A prior conformance fix added `ValidateToken(string token)` to `ITokenService` and `TokenService`, fulfilling the service contract — but `ValidateToken` is never called from any code path. Instead, `Program.cs` registers the built-in `AddJwtBearer` handler and calls `app.UseAuthentication()`, which validates tokens entirely inside the framework without touching `TokenService`. As a result, the `ITokenService` abstraction boundary is incomplete: the interface declares `ValidateToken`, the implementation is correct, but no component ever invokes it. Any code that depends on the designed `JwtMiddleware` → `TokenService.ValidateToken()` call chain (custom middleware, unit tests, future extensions) cannot reach the method. The designed separation of concerns between the token-validation middleware and the `TokenService` service is not enforced.
+
+**Status:** OPEN
