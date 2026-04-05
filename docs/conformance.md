@@ -1882,3 +1882,17 @@ The design specifies (Section 7.1): "Other nav items include **Media** and Setti
 - Changed the sidebar nav label from "Digital Assets" to "Media" in `_AdminLayout.cshtml`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Feed page missing canonical URL
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.1 — SeoMetaTagHelper, L2-010 — Canonical URLs
+
+**Description:**
+The design specifies (L2-010): "Canonical URLs — absolute, lowercase, no trailing slashes" on every public page. A prior conformance fix added canonical URLs to the homepage, article listing, and article detail pages, but missed the Feed landing page (`/feed`). Without a canonical URL, search engines that discover the Feed page via different URL variants have no signal for which is authoritative.
+
+**Fix applied:**
+- Added `ViewBag.CanonicalUrl = $"{Configuration["Site:SiteUrl"]?.TrimEnd('/')}/feed"` to `Feed.cshtml`.
+
+**Status:** FIXED
