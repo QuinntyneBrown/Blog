@@ -32,6 +32,8 @@ public class DigitalAssetsController(IMediator mediator) : ApiControllerBase(med
 
     [HttpPost]
     [Authorize]
+    [RequestSizeLimit(10 * 1024 * 1024)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 10 * 1024 * 1024)]
     public async Task<IActionResult> Upload(IFormFile file, CancellationToken ct)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)

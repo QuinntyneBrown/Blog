@@ -16,6 +16,15 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Kestrel request size limits.
+// All non-file endpoints are limited to 1 MB (design: Feature 06, Open Question 4).
+// The digital-asset upload endpoint overrides this to 10 MB via [RequestSizeLimit] /
+// [RequestFormLimits] attributes on the action.
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 1 * 1024 * 1024; // 1 MB default
+});
+
 // Serilog
 builder.Host.UseSerilog((context, services, config) =>
     config.ReadFrom.Configuration(context.Configuration).ReadFrom.Services(services)
