@@ -32,7 +32,7 @@
     <meta property="og:type" content="@ogType" />
     <meta property="og:title" content="@title" />
     <meta property="og:description" content="@description" />
-    <meta property="og:site_name" content="Quinn Brown" />
+    <meta property="og:site_name" content="@(Configuration["Site:SiteName"] ?? "Quinn Brown")" />
     @if (!string.IsNullOrEmpty(canonicalUrl))
     {
         <meta property="og:url" content="@canonicalUrl" />

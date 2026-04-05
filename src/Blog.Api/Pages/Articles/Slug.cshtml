@@ -84,11 +84,11 @@ else
             "mainEntityOfPage": "@siteUrl/articles/@Model.Article.Slug",
             "author": {
                 "@@type": "Person",
-                "name": "Quinn Brown"
+                "name": "@(Configuration["Site:AuthorName"] ?? "Quinn Brown")"
             },
             "publisher": {
                 "@@type": "Organization",
-                "name": "Quinn Brown",
+                "name": "@(Configuration["Site:SiteName"] ?? "Quinn Brown")",
                 "logo": {
                     "@@type": "ImageObject",
                     "url": "@Html.Raw(publisherLogoUrl)"

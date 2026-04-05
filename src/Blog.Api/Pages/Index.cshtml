@@ -90,8 +90,8 @@
     {
         "@@context": "https://schema.org",
         "@@type": "Blog",
-        "name": "Quinn Brown",
-        "description": "Personal blog about software engineering, .NET architecture, and building systems that last.",
+        "name": "@(Configuration["Site:SiteName"] ?? "Quinn Brown")",
+        "description": "@(Configuration["Site:SiteDescription"] ?? "Personal blog")",
         "url": "@(Configuration["Site:SiteUrl"]?.TrimEnd('/'))"
     }
     </script>
