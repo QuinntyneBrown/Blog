@@ -1599,6 +1599,7 @@ The design specifies (Section 3.5) that article images are transformed into `<pi
 - `Pages/Articles/Slug.cshtml`: Replaced the `<img>` hero with a `<picture>` element. Derives the asset ID from `FeaturedImageUrl` (strips `/assets/` prefix and file extension), builds a WebP `srcset` at breakpoints 320, 640, 960, 1280, 1920 w with a `sizes` attribute appropriate for the full-width hero. The original-format `<img>` is retained as a fallback. `loading="eager"`, `fetchpriority="high"`, and `decoding="async"` are preserved on the `<img>`.
 - `Pages/Index.cshtml`: Replaced the card `<img>` with a `<picture>` element. Uses breakpoints 320, 640, 960 w (card images are never rendered at the largest breakpoints) with a `sizes` attribute appropriate for the responsive grid. `loading="lazy"` and `decoding="async"` are preserved on the `<img>` fallback.
 - `Pages/Articles/Index.cshtml`: Same change as `Index.cshtml` — card images use `<picture>` with WebP srcset at 320/640/960 w breakpoints.
+- All `srcset` entries use the `{assetId}-{width}w.webp` naming convention from the `ImageVariantGenerator`.
 
 **Status:** FIXED
 
