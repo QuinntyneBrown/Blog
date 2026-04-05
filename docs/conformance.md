@@ -495,3 +495,14 @@ The design specifies the meta title pattern as `{Article Title} | {Site Name}` u
 - Replaced `—` with `|` in `ViewBag.Title` assignments across all six pages: `Slug.cshtml`, `Articles/Index.cshtml`, `Index.cshtml`, `Error.cshtml`, `Feed.cshtml`, and `NotFound.cshtml`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — ICacheInvalidator not implemented; response cache never purged on article publish or update
+
+**Design reference:** `docs/detailed-designs/07-web-performance/README.md`, Section 3.1 — ResponseCachingMiddleware, Section 7.2 — Caching Strategy
+
+**Description:**
+The design specifies that when an author publishes or updates an article, the `ICacheInvalidator` service evicts the relevant entries from the in-memory response cache so the next request triggers a fresh render. Section 3.1 documents this under "Invalidation: Time-based expiry; explicit purge via `ICacheInvalidator` on content update." Section 7.2 states explicitly: "When an author publishes or updates a post, the `ICacheInvalidator` service evicts the relevant entries from the in-memory response cache." Neither an `ICacheInvalidator` interface nor any concrete implementation existed anywhere in the codebase. `PublishArticleCommandHandler` and `UpdateArticleCommandHandler` both save changes and return without calling any cache invalidation. As a result, after an article is published or its content is updated, the in-memory response cache continues serving the stale pre-change HTML for up to the 60-second TTL — meaning live readers may see outdated content immediately after a publish action, and a newly-published article's page may show draft content until the cache naturally expires.
+
+**Status:** OPEN
