@@ -33,13 +33,9 @@ public class JwtMiddleware(RequestDelegate next)
             token = authHeader[BearerPrefix.Length..].Trim();
         }
         // Priority 2: Check session-stored JWT (for authenticated Razor Pages)
-        else
+        else if (context.Session.IsAvailable)
         {
-            var sessionFeature = context.Features.Get<ISessionFeature>();
-            if (sessionFeature?.Session != null)
-            {
-                token = sessionFeature.Session.GetString(SessionTokenKey);
-            }
+            token = context.Session.GetString(SessionTokenKey);
         }
 
         // Validate token and set HttpContext.User if valid
