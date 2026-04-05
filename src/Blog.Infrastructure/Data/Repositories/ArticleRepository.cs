@@ -32,6 +32,9 @@ public class ArticleRepository(BlogDbContext context) : IArticleRepository
     public async Task<int> GetPublishedCountAsync(CancellationToken cancellationToken = default)
         => await context.Articles.CountAsync(a => a.Published, cancellationToken);
 
+    public async Task<int> GetAllCountAsync(CancellationToken cancellationToken = default)
+        => await context.Articles.CountAsync(cancellationToken);
+
     public async Task<bool> SlugExistsAsync(string slug, Guid? excludeId = null, CancellationToken cancellationToken = default)
         => await context.Articles.AnyAsync(a => a.Slug == slug && (excludeId == null || a.ArticleId != excludeId), cancellationToken);
 
