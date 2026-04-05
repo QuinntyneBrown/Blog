@@ -779,6 +779,22 @@ The design specifies that article body HTML must be sanitized using the `HtmlSan
 
 ---
 
+## 2026-04-04 — DigitalAssetDto exposes internal StoredFileName field
+
+**Design reference:** `docs/detailed-designs/04-digital-asset-management/README.md`, Section 4.2 — DTOs (DigitalAssetDto)
+
+**Description:**
+The design's `DigitalAssetDto` (Section 4.2) specifies these fields: `DigitalAssetId`, `OriginalFileName`, `Url`, `ContentType`, `FileSizeBytes`, `Width`, `Height`, `CreatedAt`. The implementation's `DigitalAssetDto` record included an extra `StoredFileName` field — an internal storage implementation detail (the GUID-based filename on disk). Exposing `StoredFileName` in the API response leaks the file storage naming convention to clients, which is unnecessary since the `Url` field already provides the public serving path. The admin page also referenced `StoredFileName` directly instead of using the `Url` property.
+
+**Fix applied:**
+- Removed `StoredFileName` from the `DigitalAssetDto` record definition.
+- Updated all three construction sites (`GetDigitalAssetsHandler`, `GetDigitalAssetByIdHandler`, `UploadDigitalAssetCommandHandler`) to omit `StoredFileName` while keeping the `Url` field populated from it internally.
+- Updated the admin assets page (`Admin/DigitalAssets/Index.cshtml`) to use `@asset.Url` instead of `/assets/@asset.StoredFileName`.
+
+**Status:** FIXED
+
+---
+
 ## 2026-04-04 — Sitemap includes non-article pages (/articles, /feed) contrary to design resolution
 
 **Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.3 — SitemapGenerator, Section 8 — Open Question #5
