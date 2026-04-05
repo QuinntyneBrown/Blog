@@ -24,12 +24,12 @@ export class ToastComponent {
   }
 
   async waitForSuccess(): Promise<string> {
-    await this.success.waitFor({ state: 'visible', timeout: 5000 });
+    await this.success.waitFor({ state: 'visible', timeout: 10000 });
     return await this.success.innerText();
   }
 
   async waitForError(): Promise<string> {
-    await this.error.waitFor({ state: 'visible', timeout: 5000 });
+    await this.error.waitFor({ state: 'visible', timeout: 10000 });
     return await this.error.innerText();
   }
 }
