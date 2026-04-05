@@ -1390,3 +1390,17 @@ The design specifies (Section 6.2, L2-035): "XL (>=1200px): 3 columns, LG (>=992
 - Moved the `.article-grid { grid-template-columns: repeat(2, 1fr) }` rule from the `max-width: 991px` media query to the `max-width: 1199px` media query, so both LG (992-1199px) and MD (768-991px) display 2 columns.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Article body images missing max-width constraint; overflow on small screens
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 6.3 — Article Detail Body Width (L2-036)
+
+**Description:**
+The design specifies (Section 6.3): "Images within the article body scale fluidly with `max-width: 100%; height: auto;` to prevent overflow on small screens." No `.article-body img` CSS rule existed. Images embedded in article body HTML (via Markdown `![alt](url)` syntax) would render at their native dimensions, potentially overflowing the `720px` content wrapper and causing horizontal scrolling — a Core Web Vitals CLS violation and a failure of the design's responsive layout requirement.
+
+**Fix applied:**
+- Added `.article-body img { max-width: 100%; height: auto; }` to the layout stylesheet.
+
+**Status:** FIXED
