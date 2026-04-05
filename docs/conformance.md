@@ -427,3 +427,18 @@ The design specifies two rate limiting policies: (1) authentication endpoints at
 - Applied `[EnableRateLimiting("write-endpoints")]` to all write actions in `ArticlesController` (Create, Update, Publish, Delete) and `DigitalAssetsController` (Upload, Delete).
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — HTTPS redirection not enabled; HTTP requests served without redirect to HTTPS
+
+**Design reference:** `docs/detailed-designs/08-security-hardening/README.md`, Section 3.1 — HttpsRedirectionMiddleware, Section 5.1 — Request Security Pipeline (step 2)
+
+**Description:**
+The design specifies: "Ensures all communication occurs over TLS by redirecting HTTP requests to HTTPS. Issues a 301 Permanent Redirect from `http://` to `https://` for all requests. Configured via ASP.NET Core's built-in `UseHttpsRedirection()`." The `Program.cs` middleware pipeline did not call `app.UseHttpsRedirection()` anywhere. While the `SecurityHeadersMiddleware` correctly emits the `Strict-Transport-Security` header (which tells browsers to prefer HTTPS on subsequent visits), the initial HTTP request from a first-time visitor or a non-browser client would be served over plaintext without any redirect, defeating the HTTPS enforcement the design requires as the first defense against protocol downgrade attacks and credential interception.
+
+**Fix applied:**
+- Added `app.UseHttpsRedirection()` in the middleware pipeline after `SecurityHeadersMiddleware` and before `UseResponseCompression()`, matching the design's pipeline order (step 2 in Section 5.1).
+- Gated behind `!app.Environment.IsDevelopment()` to avoid redirect loops in local development without HTTPS configured.
+
+**Status:** FIXED

@@ -179,6 +179,11 @@ app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<ResponseEnvelopeMiddleware>();
 app.UseMiddleware<SecurityHeadersMiddleware>();
 
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseResponseCompression();
 
 if (app.Environment.IsDevelopment())
