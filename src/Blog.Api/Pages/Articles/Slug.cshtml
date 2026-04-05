@@ -106,7 +106,7 @@ else
             },
             "publisher": {
                 "@@type": "Organization",
-                "name": "@(Configuration["Site:SiteName"] ?? "Quinn Brown")",
+                "name": "@(Configuration["Site:PublisherName"] ?? Configuration["Site:SiteName"] ?? "Quinn Brown")",
                 "logo": {
                     "@@type": "ImageObject",
                     "url": "@Html.Raw(publisherLogoUrl)"

@@ -1660,3 +1660,18 @@ The design specifies `SiteDescription` as a configurable value in `SiteConfigura
 - Changed the `rawDescription` fallback chain in `_Layout.cshtml` from `ViewBag.Description ?? "hardcoded string"` to `ViewBag.Description ?? Configuration["Site:SiteDescription"] ?? "hardcoded fallback"`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Site:PublisherName absent from configuration; JSON-LD publisher.name incorrectly uses Site:SiteName
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 4.6 — SiteConfiguration, Section 3.2 — JsonLdGenerator
+
+**Description:**
+The design's `SiteConfiguration` model (Section 4.6) defines two distinct fields: `SiteName` (display name of the blog) and `PublisherName` (organization name for the JSON-LD `publisher` object). Section 3.2 specifies that the JSON-LD `publisher` object is `{ "@type": "Organization", "name": PublisherName, "logo": { ... } }`. The `Site:PublisherName` key is entirely absent from `appsettings.json`. In `Pages/Articles/Slug.cshtml`, the JSON-LD `publisher.name` reads `Configuration["Site:SiteName"]` instead of `Configuration["Site:PublisherName"]`. The two fields are semantically distinct: `SiteName` is the human-readable brand name rendered in page titles and `og:site_name`, while `PublisherName` is the organization name embedded in structured data for search-engine rich-result processing. Conflating them makes it impossible for an operator to configure a short display name (e.g. "Quinn's Blog") and a different full organization name (e.g. "Quinntyne Brown") simultaneously. Any code that later reads `Site:PublisherName` would silently receive `null` because the key does not exist in configuration.
+
+**Fix applied:**
+- Added `"PublisherName": "Quinntyne Brown"` to the `Site` section in `src/Blog.Api/appsettings.json`, establishing the key that the design's `SiteConfiguration` model requires.
+- Updated `Pages/Articles/Slug.cshtml` JSON-LD `publisher.name` to read `Configuration["Site:PublisherName"]` with fallback to `Configuration["Site:SiteName"]` (then `"Quinn Brown"`) so existing deployments without the new key degrade gracefully.
+
+**Status:** FIXED
