@@ -574,3 +574,17 @@ The design specifies (Section 3.6): "Uses `<nav aria-label="Pagination">` for ac
 - Added `aria-label="Pagination"` to the `<nav class="pagination">` element in `Articles/Index.cshtml`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — DigitalAsset CreatedBy FK relationship not explicitly configured with DeleteBehavior.Restrict
+
+**Design reference:** `docs/detailed-designs/10-data-persistence/README.md`, Section 3.2 — Entity Configurations (DigitalAssetConfiguration), Section 4.5 — Relationships
+
+**Description:**
+The design specifies (Section 3.2): "CreatedBy: required FK to Users, with `DeleteBehavior.Restrict`." Table 4.5 confirms: "Asset creator | DigitalAsset | User | Many-to-one (required) | CreatedBy | Restrict." The `DigitalAssetConfiguration` only configured `builder.Property(d => d.CreatedBy).IsRequired()` — the property constraint — but did not configure the relationship itself via `HasOne`/`WithMany`/`HasForeignKey`/`OnDelete`. EF Core inferred the relationship from the `Creator` navigation property and happened to produce `ON DELETE NO ACTION` in the migration (due to SQL Server's multiple cascade path restriction), but this was accidental rather than intentional. If the cascade path constraint were ever relaxed (e.g., by changing the Article FK), EF Core's convention would flip to `Cascade`, silently deleting all of a user's uploaded assets when the user is removed.
+
+**Fix applied:**
+- Added explicit relationship configuration to `DigitalAssetConfiguration`: `builder.HasOne(d => d.Creator).WithMany().HasForeignKey(d => d.CreatedBy).OnDelete(DeleteBehavior.Restrict)`.
+
+**Status:** FIXED
