@@ -13,13 +13,14 @@ public class ArticleRepository(BlogDbContext context) : IArticleRepository
         => await context.Articles.Include(a => a.FeaturedImage).FirstOrDefaultAsync(a => a.Slug == slug, cancellationToken);
 
     public async Task<IReadOnlyList<Article>> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken = default)
+        // Body and BodyHtml are nvarchar(max) columns excluded from list projections per design 02, Section 4.2.
+        // The Select projection omits those columns so the SQL query does not transfer large content for listing queries.
+        // FeaturedImage is included via the navigation property inside Select (EF Core translates it to a LEFT JOIN).
         => await context.Articles
-            .Include(a => a.FeaturedImage)
+            .AsNoTracking()
             .OrderByDescending(a => a.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            // Body and BodyHtml are nvarchar(max) columns excluded from list projections per design 02, Section 4.2.
-            // Project to Article without loading those columns to avoid unnecessary large-column I/O on every listing request.
             .Select(a => new Article
             {
                 ArticleId = a.ArticleId,
@@ -43,13 +44,12 @@ public class ArticleRepository(BlogDbContext context) : IArticleRepository
         => await context.Articles.CountAsync(cancellationToken);
 
     public async Task<IReadOnlyList<Article>> GetPublishedAsync(int page, int pageSize, CancellationToken cancellationToken = default)
+        // Body and BodyHtml are nvarchar(max) columns excluded from list projections per design 02, Section 4.2.
         => await context.Articles
-            .Include(a => a.FeaturedImage)
             .Where(a => a.Published)
             .OrderByDescending(a => a.DatePublished)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            // Body and BodyHtml are nvarchar(max) columns excluded from list projections per design 02, Section 4.2.
             .Select(a => new Article
             {
                 ArticleId = a.ArticleId,
