@@ -51,7 +51,7 @@ The About Page feature provides a publicly visible biography for the site author
 
 ### 3.2 UpsertAboutContentHandler
 
-- **Validator**: `UpsertAboutContentCommandValidator` (ADR-0005 FluentValidation pipeline behaviour; validates `Heading` ≤ 256 chars, `Body` non-empty, `version` ≥ 1 on update path)
+- **Validator**: `UpsertAboutContentCommandValidator` (ADR-0005 FluentValidation pipeline behaviour; validates `Heading` ≤ 256 chars, `Body` non-empty; `version` rule: on the **update path** (existing record found) `version` must be ≥ 1 — a value of 0 is rejected with 400. On the **first-insert path** (no record exists), the client has no prior version and must send `version: 0`; the validator must allow `version = 0` in this case and the handler must not apply an optimistic concurrency check on insert. Clients always include `version` in the request body — the field is never omitted — but the value is `0` for the very first save and ≥ 1 for all subsequent saves.)
 - **Responsibility**: Creates the about record if it does not exist; updates it if it does. This is the only mutation handler for about content.
 - **Dependencies**: `AboutContentRepository`, `IMarkdownConverter`, `ICacheInvalidator`, `DigitalAssetRepository` (to validate `profileImageId` and verify asset ownership matches the requesting user)
 - **Pre-render**: Markdown `Body` is converted to sanitized HTML at save time and stored in `BodyHtml`. Runtime rendering is not performed (same pattern as articles).
@@ -172,7 +172,7 @@ Key points:
 | Method | Path | Auth | Body / Params | Success | Errors |
 |--------|------|------|---------------|---------|--------|
 | `GET` | `/api/about` | None | — | 200 + `AboutContentDto?` | — |
-| `PUT` | `/api/about` | Bearer token | `{ heading, body, profileImageId?, version }` | 200 + `AboutContentDto` | 400, 401, 403, 409 |
+| `PUT` | `/api/about` | Bearer token | `{ heading, body, profileImageId?, version }` — `version` must be `0` on first-ever insert (no prior version exists); must be ≥ 1 (current stored version) on subsequent updates | 200 + `AboutContentDto` | 400, 401, 403, 409 |
 | `GET` | `/api/about/history` | Bearer token | `?page&pageSize` (default pageSize=20, max 50) | 200 + `PagedResponse<AboutContentHistoryDto>` | 401 |
 | `PUT` | `/api/about/restore/{historyId}` | Bearer token | `{ currentVersion }` | 200 + `AboutContentDto` | 401, 403, 404, 409 |
 

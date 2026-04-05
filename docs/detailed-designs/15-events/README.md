@@ -71,7 +71,7 @@ The Events feature allows the blog author to manage a list of speaking engagemen
 | Handler | Query | Returns |
 |---------|-------|---------|
 | `GetEventsHandler` | `GetEventsQuery(page, pageSize)` | Paginated list, all statuses, descending by `StartDate` (most distant future events appear first; most recent past events at the end of the list — this order reflects a forward-planning back-office UX where upcoming engagements are the primary concern; if a "recently created/modified" view is preferred in future, sort by `CreatedAt DESC` instead) |
-| `GetPublishedEventsHandler` | `GetPublishedEventsQuery(upcomingPage, pastPage, pageSize)` | `{ upcoming: PagedResponse<PublicEventDto>, past: PagedResponse<PublicEventDto> }` split by `StartDate` vs `UtcNow` |
+| `GetPublishedEventsHandler` | `GetPublishedEventsQuery(upcomingPage, pastPage, pageSize)` | `{ upcoming: PagedResponse<PublicEventDto>, past: PagedResponse<PublicEventDto> }` split by `StartDate` vs `UtcNow`; upcoming section ordered `StartDate ASC` (next event first), past section ordered `StartDate DESC` (most recent past event first). When both sections are empty (no published events), the handler returns 200 with empty `PagedResponse` arrays (`items: [], totalCount: 0`) — not 204. |
 | `GetEventBySlugHandler` | `GetEventBySlugQuery(slug)` | Single published event; 404 if not found or not published |
 | `GetEventByIdHandler` | `GetEventByIdQuery(eventId)` | Admin detail by ID |
 
