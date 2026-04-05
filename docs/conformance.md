@@ -1102,6 +1102,21 @@ The design specifies (Section 7.2): "When an author publishes or updates a post,
 
 ---
 
+## 2026-04-05 — No development seed data for local development environment
+
+**Design reference:** `docs/detailed-designs/10-data-persistence/README.md`, Section 6.3 — Seed Data Strategy
+
+**Description:**
+The design specifies (Section 6.3): "A separate `SeedDevelopmentData` method (called only in Development environment) populates sample articles and assets for local development." No such method existed. After setting up a fresh development environment, developers would see an empty blog with no sample content to verify the article listing, detail pages, pagination, or reading time display are working correctly. The admin-only user seed existed but no content seed.
+
+**Fix applied:**
+- Added `SeedDevelopmentDataAsync()` to `SeedData.cs` that creates two sample published articles with Markdown body, pre-rendered HTML, slugs, abstracts, and reading times when no articles exist.
+- Updated `SeedDataHostedService` to call `SeedDevelopmentDataAsync()` only when `env.IsDevelopment()`, after the standard seed completes.
+
+**Status:** FIXED
+
+---
+
 ## 2026-04-04 — JSON-LD Article structured data missing `image` and `publisher.logo` properties
 
 **Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.2 — JsonLdGenerator; Section 4.3 — JsonLdArticle
