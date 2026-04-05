@@ -9,10 +9,10 @@ async function globalSetup(config: FullConfig) {
   const page = await browser.newPage();
 
   // Wait for the application to be ready
-  let retries = 10;
+  let retries = 30;
   while (retries-- > 0) {
     try {
-      await page.goto(`${baseURL}/health`);
+      await page.goto(`${baseURL}/health`, { timeout: 5000 });
       const text = await page.textContent('body');
       if (text?.includes('healthy')) break;
     } catch {
@@ -28,7 +28,7 @@ async function globalSetup(config: FullConfig) {
   await page.locator('input[name="email"]').fill(email);
   await page.locator('input[name="password"]').fill(password);
   await page.locator('button[type="submit"]').click();
-  await page.waitForURL(/\/admin\/articles/, { timeout: 15000 });
+  await page.waitForURL(/\/admin\/articles/, { timeout: 30000 });
 
   // Save authenticated state
   await page.context().storageState({ path: STORAGE_STATE_PATH });
