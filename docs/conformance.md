@@ -1215,3 +1215,16 @@ The design defines a `SiteConfiguration` model (Section 4.6) with configurable f
 - Replaced all hardcoded string literals in the controller (llms.txt header/description, RSS channel title/description and `dc:creator`, Atom feed title/subtitle and author names, JSON Feed title/description) with the configuration-backed properties.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Responsive image variant generation absent; upload stores only the original file and serving endpoint does not perform content negotiation
+
+**Design reference:** `docs/detailed-designs/04-digital-asset-management/README.md`, Section 3.4 — ImageProcessor, Section 5.1 — Upload Flow (steps 11–12), Section 5.2 — Serve with Optimization Flow
+
+**Description:**
+The design specifies that after saving the original uploaded file, `DigitalAssetService` calls `ImageProcessor.GenerateVariants()` to eagerly produce WebP and AVIF variants at each responsive breakpoint (320, 640, 960, 1280, 1920 px) that is smaller than the original image width (Section 5.1, step 11). Each generated variant is saved via `AssetStorage.SaveAsync()` and named `{assetId}-{width}w.{format}` (Section 3.4). The asset serving endpoint (`GET /assets/{filename}`) is designed to parse a `?w=` query parameter, read the `Accept` header for format negotiation, resolve the nearest pre-generated variant, and set a `Vary: Accept` header (Section 5.2).
+
+The `UploadDigitalAssetCommandHandler` saved the original file to disk and recorded dimensions but never called any variant generation logic — no WebP or AVIF variants were ever created. The `AssetsController.Serve` method performed no content negotiation and no variant resolution; it served only the exact filename given in the URL path, ignoring the `Accept` header and any `?w=` parameter entirely. As a result, every article image was served in its original format at full resolution regardless of the client's capabilities, violating the modern-format delivery and responsive image delivery requirements (L2-020, L2-029).
+
+**Status:** OPEN
