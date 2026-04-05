@@ -733,6 +733,20 @@ The design specifies a `PaginationHelper` component (Section 3.3) that "generate
 
 ---
 
+## 2026-04-04 — Footer missing "Articles" navigation link
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 3.4 — Footer
+
+**Description:**
+The design specifies (Section 3.4): "Displays navigation links (Articles, About, RSS), copyright notice, and optional social links." The footer in `_Layout.cshtml` contained links to RSS Feed, Atom Feed, and Sitemap, plus the copyright notice, but was missing the "Articles" navigation link. The "About" page does not exist in the v1 scope so its absence is expected, but "Articles" is a core page that the design explicitly lists as a footer navigation item.
+
+**Fix applied:**
+- Added `<a href="/articles">Articles</a>` as the first link in the footer's `footer-links` div in `_Layout.cshtml`.
+
+**Status:** FIXED
+
+---
+
 ## 2026-04-04 — Missing dns-prefetch fallback hints for font origins
 
 **Design reference:** `docs/detailed-designs/07-web-performance/README.md`, Section 3.6 — ResourceHintTagHelper
