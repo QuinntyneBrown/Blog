@@ -30,7 +30,21 @@
                     <div class="article-card-image">
                         @if (!string.IsNullOrEmpty(article.FeaturedImageUrl))
                         {
-                            <img src="@article.FeaturedImageUrl" alt="@article.Title" loading="lazy" decoding="async" />
+                            @{
+                                var cardFileName = article.FeaturedImageUrl.StartsWith("/assets/")
+                                    ? article.FeaturedImageUrl.Substring("/assets/".Length)
+                                    : System.IO.Path.GetFileName(article.FeaturedImageUrl);
+                                var cardAssetId = System.IO.Path.GetFileNameWithoutExtension(cardFileName);
+                                var cardWebpSrcset = string.Join(", ",
+                                    new[] { 320, 640, 960 }
+                                        .Select(w => $"/assets/{cardAssetId}-{w}w.webp {w}w"));
+                            }
+                            <picture>
+                                <source type="image/webp"
+                                        srcset="@cardWebpSrcset"
+                                        sizes="(max-width: 576px) 100vw, (max-width: 1200px) 50vw, 33vw" />
+                                <img src="@article.FeaturedImageUrl" alt="@article.Title" loading="lazy" decoding="async" />
+                            </picture>
                         }
                         else
                         {

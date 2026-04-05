@@ -34,8 +34,25 @@ else
     <article class="article-detail">
     @if (!string.IsNullOrEmpty(Model.Article.FeaturedImageUrl))
     {
+        @{
+            // Build WebP srcset from the pre-generated variants: {assetId}-{width}w.webp
+            // FeaturedImageUrl is "/assets/{assetId}.ext" — strip prefix and extension to get the assetId.
+            var heroFileName = Model.Article.FeaturedImageUrl.StartsWith("/assets/")
+                ? Model.Article.FeaturedImageUrl.Substring("/assets/".Length)
+                : System.IO.Path.GetFileName(Model.Article.FeaturedImageUrl);
+            var heroAssetId = System.IO.Path.GetFileNameWithoutExtension(heroFileName);
+            var heroWebpSrcset = string.Join(", ",
+                new[] { 320, 640, 960, 1280, 1920 }
+                    .Select(w => $"/assets/{heroAssetId}-{w}w.webp {w}w"));
+        }
         <figure class="article-featured-image">
-            <img src="@Model.Article.FeaturedImageUrl" alt="@Model.Article.Title" loading="eager" fetchpriority="high" decoding="async" />
+            <picture>
+                <source type="image/webp"
+                        srcset="@heroWebpSrcset"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 960px, 1280px" />
+                <img src="@Model.Article.FeaturedImageUrl" alt="@Model.Article.Title"
+                     loading="eager" fetchpriority="high" decoding="async" />
+            </picture>
         </figure>
     }
     else
