@@ -122,6 +122,8 @@ The Events feature allows the blog author to manage a list of speaking engagemen
 
 **Recommended indexes**: `IX_Events_Published_StartDate` on `(Published, StartDate)` to support efficient upcoming/past queries. `IX_Events_Slug` unique on `Slug`.
 
+**`EndDate >= StartDate` constraint**: There is **no DB-level CHECK constraint** for this rule. The `EndDate >= StartDate` invariant is enforced exclusively at the application layer via `CreateEventCommandValidator` and `UpdateEventCommandValidator` (FluentValidation `Must` predicate — see §3.2). A developer writing `IEntityTypeConfiguration<Event>` must **not** add `CHECK (EndDate >= StartDate)` to the migration. Application-layer enforcement is sufficient here: the back-office UI is the only write path, all writes pass through the validator before the command reaches EF Core, and a CHECK constraint in the DB would add migration complexity with no correctness benefit given the single-writer design.
+
 ---
 
 ## 5. Key Workflows
