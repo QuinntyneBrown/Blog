@@ -62,15 +62,7 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
             new XElement(ns + "url",
                 new XElement(ns + "loc", $"{BaseUrl}/"),
                 new XElement(ns + "changefreq", "daily"),
-                new XElement(ns + "priority", "1.0")),
-            new XElement(ns + "url",
-                new XElement(ns + "loc", $"{BaseUrl}/articles"),
-                new XElement(ns + "changefreq", "daily"),
-                new XElement(ns + "priority", "0.9")),
-            new XElement(ns + "url",
-                new XElement(ns + "loc", $"{BaseUrl}/feed"),
-                new XElement(ns + "changefreq", "monthly"),
-                new XElement(ns + "priority", "0.3"))
+                new XElement(ns + "priority", "1.0"))
         };
 
         foreach (var article in result.Items)
