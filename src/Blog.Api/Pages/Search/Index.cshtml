@@ -255,14 +255,14 @@
                     @if (Model.Results.HasNextPage)
                     {
                         <a href="/search?q=@Uri.EscapeDataString(Model.Query)&page=@(Model.CurrentPage + 1)"
-                           rel="next" class="pagination-btn">
+                           rel="next" class="pagination-btn pagination-btn-next">
                             Next
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
                         </a>
                     }
                     else
                     {
-                        <span class="pagination-btn disabled" aria-disabled="true">
+                        <span class="pagination-btn pagination-btn-next disabled" aria-disabled="true">
                             Next
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
                         </span>
