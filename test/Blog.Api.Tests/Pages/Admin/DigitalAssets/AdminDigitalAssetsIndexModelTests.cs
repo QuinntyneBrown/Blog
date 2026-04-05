@@ -1,3 +1,4 @@
+using Blog.Api.Features.DigitalAssets.Commands;
 using Blog.Api.Features.DigitalAssets.Queries;
 using Blog.Api.Pages.Admin.DigitalAssets;
 using FluentAssertions;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Routing;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using System.Security.Claims;
 using Xunit;
 
@@ -108,6 +110,165 @@ public class AdminDigitalAssetsIndexModelTests
         await _mediator.DidNotReceive().Send(
             Arg.Is<GetDigitalAssetsQuery>(q => q.UserId == otherUserId),
             Arg.Any<CancellationToken>());
+    }
+
+    // ─── OnPostAsync (upload) ───────────────────────────────────────────────────
+
+    [Fact]
+    public async Task OnPostAsync_WhenNotAuthenticated_RedirectsToLogin()
+    {
+        // Arrange
+        var context = CreateHttpContext();
+        _pageModel.PageContext = CreatePageContext(context);
+        var file = Substitute.For<IFormFile>();
+
+        // Act
+        var result = await _pageModel.OnPostAsync(file);
+
+        // Assert
+        var redirect = result.Should().BeOfType<RedirectToPageResult>().Subject;
+        redirect.PageName.Should().Be("/Admin/Login");
+    }
+
+    [Fact]
+    public async Task OnPostAsync_WhenAuthenticated_SendsUploadCommandWithCurrentUserId()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var context = CreateAuthenticatedHttpContext(userId);
+        _pageModel.PageContext = CreatePageContext(context);
+        var file = Substitute.For<IFormFile>();
+
+        _mediator.Send(Arg.Any<UploadDigitalAssetCommand>(), Arg.Any<CancellationToken>())
+            .Returns(new DigitalAssetDto(Guid.NewGuid(), "photo.jpg", "image/jpeg", 1024, 800, 600,
+                "/assets/photo.jpg", DateTime.UtcNow));
+
+        // Act
+        var result = await _pageModel.OnPostAsync(file);
+
+        // Assert
+        await _mediator.Received(1).Send(
+            Arg.Is<UploadDigitalAssetCommand>(c => c.UserId == userId),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task OnPostAsync_WhenUploadSucceeds_RedirectsWithSuccessMessage()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var context = CreateAuthenticatedHttpContext(userId);
+        _pageModel.PageContext = CreatePageContext(context);
+        var file = Substitute.For<IFormFile>();
+
+        _mediator.Send(Arg.Any<UploadDigitalAssetCommand>(), Arg.Any<CancellationToken>())
+            .Returns(new DigitalAssetDto(Guid.NewGuid(), "photo.jpg", "image/jpeg", 1024, 800, 600,
+                "/assets/photo.jpg", DateTime.UtcNow));
+
+        // Act
+        var result = await _pageModel.OnPostAsync(file);
+
+        // Assert
+        var redirect = result.Should().BeOfType<RedirectToPageResult>().Subject;
+        redirect.RouteValues.Should().ContainKey("success");
+        redirect.RouteValues!["success"].Should().Be("Asset uploaded.");
+    }
+
+    [Fact]
+    public async Task OnPostAsync_WhenUploadFails_RedirectsWithErrorMessage()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var context = CreateAuthenticatedHttpContext(userId);
+        _pageModel.PageContext = CreatePageContext(context);
+        var file = Substitute.For<IFormFile>();
+        var errorMessage = "File size exceeds the 10 MB limit.";
+
+        _mediator.Send(Arg.Any<UploadDigitalAssetCommand>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException(errorMessage));
+
+        // Act
+        var result = await _pageModel.OnPostAsync(file);
+
+        // Assert
+        var redirect = result.Should().BeOfType<RedirectToPageResult>().Subject;
+        redirect.RouteValues.Should().ContainKey("error");
+        redirect.RouteValues!["error"].Should().Be(errorMessage);
+    }
+
+    [Fact]
+    public async Task OnPostAsync_DoesNotShortCircuitWhenUserIdIsEmpty()
+    {
+        // Arrange: authenticated session but no claims populated (Guid.Empty scenario)
+        var context = CreateHttpContext();
+        context.Session.SetString("jwt_token", "valid.jwt.token");
+        context.Session.SetString("jwt_expires", DateTime.UtcNow.AddMinutes(30).ToString("O"));
+        // No ClaimsPrincipal set — GetCurrentUserId() will return Guid.Empty
+        _pageModel.PageContext = CreatePageContext(context);
+        var file = Substitute.For<IFormFile>();
+
+        _mediator.Send(Arg.Any<UploadDigitalAssetCommand>(), Arg.Any<CancellationToken>())
+            .Returns(new DigitalAssetDto(Guid.NewGuid(), "photo.jpg", "image/jpeg", 1024, 800, 600,
+                "/assets/photo.jpg", DateTime.UtcNow));
+
+        // Act
+        var result = await _pageModel.OnPostAsync(file);
+
+        // Assert: should NOT redirect to login — upload proceeds even with Guid.Empty userId
+        result.Should().BeOfType<RedirectToPageResult>()
+            .Which.PageName.Should().NotBe("/Admin/Login");
+    }
+
+    // ─── OnPostDeleteAsync ──────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task OnPostDeleteAsync_WhenNotAuthenticated_RedirectsToLogin()
+    {
+        // Arrange
+        var context = CreateHttpContext();
+        _pageModel.PageContext = CreatePageContext(context);
+
+        // Act
+        var result = await _pageModel.OnPostDeleteAsync(Guid.NewGuid());
+
+        // Assert
+        var redirect = result.Should().BeOfType<RedirectToPageResult>().Subject;
+        redirect.PageName.Should().Be("/Admin/Login");
+    }
+
+    [Fact]
+    public async Task OnPostDeleteAsync_WhenAuthenticated_SendsDeleteCommandWithId()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var assetId = Guid.NewGuid();
+        var context = CreateAuthenticatedHttpContext(userId);
+        _pageModel.PageContext = CreatePageContext(context);
+
+        // Act
+        await _pageModel.OnPostDeleteAsync(assetId);
+
+        // Assert
+        await _mediator.Received(1).Send(
+            Arg.Is<DeleteDigitalAssetCommand>(c => c.Id == assetId),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task OnPostDeleteAsync_WhenAuthenticated_RedirectsWithSuccessMessage()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var context = CreateAuthenticatedHttpContext(userId);
+        _pageModel.PageContext = CreatePageContext(context);
+
+        // Act
+        var result = await _pageModel.OnPostDeleteAsync(Guid.NewGuid());
+
+        // Assert
+        var redirect = result.Should().BeOfType<RedirectToPageResult>().Subject;
+        redirect.RouteValues.Should().ContainKey("success");
+        redirect.RouteValues!["success"].Should().Be("Asset deleted.");
     }
 
     // ─── helpers ────────────────────────────────────────────────────────────────
