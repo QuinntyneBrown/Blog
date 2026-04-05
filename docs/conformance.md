@@ -265,3 +265,18 @@ The design specifies Brotli at `CompressionLevel.Optimal` (level 4) for dynamic 
 - Added `image/svg+xml` to the response compression MIME types via `ResponseCompressionDefaults.MimeTypes.Concat(["image/svg+xml"])`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — CorrelationIdMiddleware accepts any X-Correlation-Id header value without validation
+
+**Design reference:** `docs/detailed-designs/09-observability/README.md`, Section 3.1 — CorrelationIdMiddleware
+
+**Description:**
+The design specifies: "Accept it only when it matches a safe character set (`A-Z`, `a-z`, `0-9`, `-`, `_`) and length limit (64 chars). Otherwise, discard it and generate a new value." The implementation blindly accepted any value from the `X-Correlation-Id` request header — no character validation, no length check. A malicious header like `'; DROP TABLE--` or a multi-kilobyte string would be accepted, stored in `HttpContext.Items`, pushed into the Serilog `LogContext`, and echoed back in the response header. This creates a log injection vector and could pollute log aggregation systems.
+
+**Fix applied:**
+- Added a compiled `GeneratedRegex(@"^[A-Za-z0-9\-_]+$")` pattern and a 64-character length check.
+- The middleware now validates the incoming header value; if it fails either check (or is empty), a new GUID is generated instead.
+
+**Status:** FIXED
