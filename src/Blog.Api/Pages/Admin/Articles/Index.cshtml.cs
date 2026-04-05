@@ -14,7 +14,6 @@ public class AdminArticlesIndexModel(IMediator mediator) : AdminPageModelBase
 
     public async Task<IActionResult> OnGetAsync(int page = 1)
     {
-        Console.Error.WriteLine($"[INDEX] IsAuthenticated={IsAuthenticated()}");
         if (!IsAuthenticated()) return RedirectToPage("/Admin/Login");
         CurrentPage = page;
         Articles = await mediator.Send(new GetArticlesQuery(page, 20));
