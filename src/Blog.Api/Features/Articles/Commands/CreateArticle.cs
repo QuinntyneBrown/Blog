@@ -58,7 +58,7 @@ public class CreateArticleCommandHandler(
 
         return new ArticleDto(
             article.ArticleId, article.Title, article.Slug, article.Abstract,
-            article.Body, article.BodyHtml, article.FeaturedImageId,
+            article.Body, article.BodyHtml, article.FeaturedImageId, null,
             article.Published, article.DatePublished,
             article.ReadingTimeMinutes, article.CreatedAt, article.UpdatedAt, article.Version);
     }

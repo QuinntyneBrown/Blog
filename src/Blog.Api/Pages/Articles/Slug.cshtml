@@ -27,10 +27,10 @@
 else
 {
     <article class="article-detail">
-    @if (Model.Article.FeaturedImageId.HasValue)
+    @if (!string.IsNullOrEmpty(Model.Article.FeaturedImageUrl))
     {
         <figure class="article-featured-image">
-            <img src="/assets/@Model.Article.FeaturedImageId" alt="@Model.Article.Title" loading="eager" fetchpriority="high" decoding="async" />
+            <img src="@Model.Article.FeaturedImageUrl" alt="@Model.Article.Title" loading="eager" fetchpriority="high" decoding="async" />
         </figure>
     }
     else
