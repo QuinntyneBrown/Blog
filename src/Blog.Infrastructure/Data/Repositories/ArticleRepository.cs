@@ -31,6 +31,9 @@ public class ArticleRepository(BlogDbContext context) : IArticleRepository
     public async Task<bool> SlugExistsAsync(string slug, Guid? excludeId = null, CancellationToken cancellationToken = default)
         => await context.Articles.AnyAsync(a => a.Slug == slug && (excludeId == null || a.ArticleId != excludeId), cancellationToken);
 
+    public async Task<bool> AnyByFeaturedImageIdAsync(Guid digitalAssetId, CancellationToken cancellationToken = default)
+        => await context.Articles.AnyAsync(a => a.FeaturedImageId == digitalAssetId, cancellationToken);
+
     public async Task AddAsync(Article article, CancellationToken cancellationToken = default)
         => await context.Articles.AddAsync(article, cancellationToken);
 

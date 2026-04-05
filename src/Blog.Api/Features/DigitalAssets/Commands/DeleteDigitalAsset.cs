@@ -14,6 +14,9 @@ public class DeleteDigitalAssetCommandHandler(IUnitOfWork uow, IWebHostEnvironme
         var asset = await uow.DigitalAssets.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException($"Digital asset with ID '{request.Id}' was not found.");
 
+        if (await uow.Articles.AnyByFeaturedImageIdAsync(request.Id, cancellationToken))
+            throw new ConflictException("Cannot delete this asset because it is referenced by one or more articles.");
+
         var filePath = Path.Combine(env.WebRootPath, "assets", asset.StoredFileName);
         if (File.Exists(filePath)) File.Delete(filePath);
 
