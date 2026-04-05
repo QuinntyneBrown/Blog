@@ -30,7 +30,9 @@ public class MarkdownConverter : IMarkdownConverter
             "strong", "em",
             "code", "pre",
             "blockquote",
-            "figure", "figcaption"
+            "figure", "figcaption",
+            "table", "thead", "tbody", "tr", "th", "td",
+            "input"
         })
         {
             sanitizer.AllowedTags.Add(tag);
@@ -45,6 +47,9 @@ public class MarkdownConverter : IMarkdownConverter
         sanitizer.AllowedAttributes.Add("width");  // <img>
         sanitizer.AllowedAttributes.Add("height"); // <img>
         sanitizer.AllowedAttributes.Add("id");     // heading anchors
+        sanitizer.AllowedAttributes.Add("type");    // <input type="checkbox"> (task lists)
+        sanitizer.AllowedAttributes.Add("checked"); // <input checked> (task lists)
+        sanitizer.AllowedAttributes.Add("disabled"); // <input disabled> (task lists)
 
         // Only allow safe URI schemes on href/src to block javascript: URLs.
         sanitizer.AllowedSchemes.Clear();
