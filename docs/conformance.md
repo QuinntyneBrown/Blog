@@ -481,3 +481,17 @@ The design specifies (Section 7.1): "`<article>` elements wrap each ArticleCard 
 - Changed the featured image container from `<div class="article-featured-image">` to `<figure class="article-featured-image">` when an image is present.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Page titles use em-dash separator instead of pipe character
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.1 — SeoMetaTagHelper, L2-012
+
+**Description:**
+The design specifies the meta title pattern as `{Article Title} | {Site Name}` using a pipe (`|`) separator (Section 3.1, L2-012). All six public Razor pages used an em-dash (`—`) instead: `Slug.cshtml` (`"{Title} — Quinn Brown"`), `Articles/Index.cshtml` (`"Articles — Quinn Brown"`), `Index.cshtml` (`"Quinn Brown — Personal Blog"`), `Error.cshtml`, `Feed.cshtml`, and `NotFound.cshtml`. While visually similar, the pipe separator is the SEO convention specified in the design and expected by title-parsing tools and search engine snippet generators that treat `|` as a standard site-name delimiter.
+
+**Fix applied:**
+- Replaced `—` with `|` in `ViewBag.Title` assignments across all six pages: `Slug.cshtml`, `Articles/Index.cshtml`, `Index.cshtml`, `Error.cshtml`, `Feed.cshtml`, and `NotFound.cshtml`.
+
+**Status:** FIXED
