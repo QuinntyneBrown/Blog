@@ -37,4 +37,36 @@ public class TokenService(IConfiguration configuration) : ITokenService
         var minutes = int.Parse(configuration["Jwt:ExpirationMinutes"] ?? "60");
         return DateTime.UtcNow.AddMinutes(minutes);
     }
+
+    /// <summary>
+    /// Validates the signature, expiration, issuer, and audience of the supplied JWT.
+    /// Returns the <see cref="ClaimsPrincipal"/> on success, or <c>null</c> if validation fails.
+    /// </summary>
+    public ClaimsPrincipal? ValidateToken(string token)
+    {
+        var jwtSettings = configuration.GetSection("Jwt");
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Secret"]!));
+
+        var validationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = key,
+            ValidateIssuer = true,
+            ValidIssuer = jwtSettings["Issuer"],
+            ValidateAudience = true,
+            ValidAudience = jwtSettings["Audience"],
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+
+        try
+        {
+            var handler = new JwtSecurityTokenHandler();
+            return handler.ValidateToken(token, validationParameters, out _);
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }

@@ -1194,6 +1194,10 @@ The design specifies (Section 3.4): "Parses the Markdown body with a configured 
 **Description:**
 The design specifies that `TokenService` exposes two methods: `GenerateToken(User user)` — creates a signed JWT, and `ValidateToken(string token)` — validates signature, expiration, issuer, and audience; returns a `ClaimsPrincipal` (Section 3.3). Section 5.2 (Token Validation Flow) describes `JwtMiddleware` calling `TokenService.ValidateToken()` as step 3 of the validation pipeline. The `ITokenService` interface only declares `GenerateToken(User user)` and `GetExpiration()` — `ValidateToken` is entirely absent from both the interface and the concrete `TokenService` class. The validation responsibility has been absorbed entirely by ASP.NET Core's built-in `AddJwtBearer` middleware, bypassing the `TokenService` abstraction the design defines. This means any code that depends on the `ITokenService` contract (e.g., future unit tests, components that need to validate a token programmatically, or a custom `JwtMiddleware`) cannot call `ValidateToken` on the service. The designed abstraction boundary between the token-validation concern and the rest of the application is not enforced.
 
-**Status:** OPEN
+**Fix applied:**
+- Added `ClaimsPrincipal? ValidateToken(string token)` to `src/Blog.Api/Services/ITokenService.cs`.
+- Implemented `ValidateToken` in `src/Blog.Api/Services/TokenService.cs`: reads `Jwt:Secret`, `Jwt:Issuer`, and `Jwt:Audience` from configuration, constructs `TokenValidationParameters` with `ValidateIssuerSigningKey`, `ValidateIssuer`, `ValidateAudience`, and `ValidateLifetime = true` with zero clock skew (matching the design's validation requirements from Section 3.3), and returns `null` on any validation failure rather than propagating exceptions. The existing `AddJwtBearer` middleware continues to handle request-pipeline authentication; `ValidateToken` provides the programmatic validation surface the design contract requires.
+
+**Status:** FIXED
 
 ---
