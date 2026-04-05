@@ -952,3 +952,17 @@ The design specifies (Section 3.3): "Each `<url>` entry includes `<lastmod>` (ar
 - Changed the sitemap `<lastmod>` value from `(article.DatePublished ?? article.CreatedAt).ToString("yyyy-MM-dd")` to `article.UpdatedAt.ToString("yyyy-MM-dd")` in `SeoController.Sitemap()`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Meta title and description not truncated to SEO length limits
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.1 — SeoMetaTagHelper, L2-012
+
+**Description:**
+The design specifies (Section 3.1, L2-012): "Title pattern `{Article Title} | {Site Name}`, truncated to 60 characters" and "`<meta name="description">` with article abstract or page description, truncated to 160 characters at the nearest word boundary." The layout used `ViewBag.Title` and `ViewBag.Description` values without any truncation. Article titles can be up to 256 characters (DB constraint) plus the ` | Quinn Brown` suffix (15 chars), potentially producing a 271-character `<title>` tag. Abstracts can be up to 512 characters. Search engines truncate titles beyond ~60 chars and descriptions beyond ~160 chars with ellipsis in search results, and excessively long values can cause SEO audit tools (Lighthouse, Screaming Frog) to flag the pages as non-compliant.
+
+**Fix applied:**
+- Added truncation in `_Layout.cshtml`: title truncated to 60 characters (with `...` ellipsis if exceeded), description truncated to 160 characters at the nearest word boundary using a `TruncateAtWord` helper function.
+
+**Status:** FIXED
