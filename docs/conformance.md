@@ -495,3 +495,20 @@ The design specifies the meta title pattern as `{Article Title} | {Site Name}` u
 - Replaced `—` with `|` in `ViewBag.Title` assignments across all six pages: `Slug.cshtml`, `Articles/Index.cshtml`, `Index.cshtml`, `Error.cshtml`, `Feed.cshtml`, and `NotFound.cshtml`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Canonical URLs never set on public pages; `<link rel="canonical">` tag never rendered
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.1 — SeoMetaTagHelper, L2-010 — Canonical URLs
+
+**Description:**
+The design requires (L2-010): "Canonical URLs — absolute, lowercase, no trailing slashes" and (Section 3.1): "`<link rel="canonical">` with absolute, lowercase URL, no trailing slash." The layout (`_Layout.cshtml`) correctly renders `<link rel="canonical" href="...">` when `ViewBag.CanonicalUrl` is non-empty, but no Razor page ever set this property. As a result, the canonical tag was never emitted on any page. Search engines that crawl the site via different URL variants (www vs non-www, trailing slash vs none, mixed case) would see duplicate content with no canonical signal, risking SEO penalties and diluted ranking signals.
+
+**Fix applied:**
+- `Pages/Articles/Slug.cshtml`: Injected `IConfiguration`, set `ViewBag.CanonicalUrl` to `{SiteUrl}/articles/{slug}` when the article is found.
+- `Pages/Articles/Index.cshtml`: Injected `IConfiguration`, set `ViewBag.CanonicalUrl` to `{SiteUrl}/articles`.
+- `Pages/Index.cshtml`: Injected `IConfiguration`, set `ViewBag.CanonicalUrl` to `{SiteUrl}` (homepage).
+- All canonical URLs are built from the configured `Site:SiteUrl` (not the request Host header), absolute, lowercase, and without trailing slashes.
+
+**Status:** FIXED
