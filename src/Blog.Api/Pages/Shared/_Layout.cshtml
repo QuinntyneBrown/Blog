@@ -3,6 +3,7 @@
     var description = ViewBag.Description ?? "Personal blog about software engineering, architecture, and .NET";
     var canonicalUrl = ViewBag.CanonicalUrl ?? "";
     var ogImage = ViewBag.OgImage ?? "";
+    var ogType = ViewBag.OgType ?? "website";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -16,7 +17,7 @@
         <link rel="canonical" href="@canonicalUrl" />
     }
     <!-- Open Graph -->
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content="@ogType" />
     <meta property="og:title" content="@title" />
     <meta property="og:description" content="@description" />
     <meta property="og:site_name" content="Quinn Brown" />

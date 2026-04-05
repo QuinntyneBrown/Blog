@@ -624,3 +624,17 @@ The design specifies (Section 3.5, Table): above-fold images must have `loading=
 - Added `loading="eager" fetchpriority="high" decoding="async"` to the featured image `<img>` tag in `Slug.cshtml`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Article listing card images missing decoding="async"
+
+**Design reference:** `docs/detailed-designs/07-web-performance/README.md`, Section 3.5 — ImageTagHelper
+
+**Description:**
+The design specifies (Section 3.5, Table): below-fold images must have `loading="lazy"` **and** `decoding="async"`. The article card images on both the homepage (`Index.cshtml`) and the articles listing page (`Articles/Index.cshtml`) had `loading="lazy"` but were missing `decoding="async"`. Without `decoding="async"`, the browser blocks the main thread while decoding each image, which can increase INP (Interaction to Next Paint) on pages with multiple card images, especially on lower-powered mobile devices.
+
+**Fix applied:**
+- Added `decoding="async"` to the article card `<img>` tags in both `Index.cshtml` and `Articles/Index.cshtml`.
+
+**Status:** FIXED
