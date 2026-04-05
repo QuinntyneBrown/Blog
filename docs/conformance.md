@@ -1024,3 +1024,21 @@ The design specifies (Section 3.4): "Skips wrapping for streaming responses (e.g
 - Added `|| context.Request.Path.StartsWithSegments("/health")` to the `skipEnvelope` condition in `ResponseEnvelopeMiddleware`, so both `/health` and `/health/ready` endpoints bypass envelope wrapping.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — SlugRedirectMiddleware does not return 404 for file-extension or numeric-ID slug patterns
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.7 — SlugRedirectMiddleware
+
+**Description:**
+The design specifies (Section 3.7): "If the URL contains file extensions or numeric IDs, returns 404 (these patterns are not valid)." The implementation in `SlugRedirectMiddleware` handles only two of the three documented behaviours — it issues 301 redirects for uppercase slugs and trailing slashes — but it never checks for file extensions (e.g., `/articles/my-post.html`, `/articles/my-post.php`) or pure numeric IDs (e.g., `/articles/12345`). Both patterns are invalid under the clean-URL contract the design establishes: the platform uses hyphenated slug strings only, never extensions or numeric IDs. Without the middleware check, a request to `/articles/my-post.html` flows all the way through routing to the Razor page model, which performs a database lookup for a slug of `"my-post.html"`, finds nothing, and returns a generic 404. The behaviour is eventually correct but it violates the design's intent that the middleware should short-circuit these requests immediately before routing, and it means the Razor page model absorbs database traffic from invalid URL patterns (bots and scrapers frequently probe `.html`, `.php`, `.asp` extensions on blog URLs).
+
+**Fix applied:**
+- Added a file-extension check in `SlugRedirectMiddleware`: if the (post-correction) slug contains a `.` character, the middleware immediately returns 404.
+- Added a pure-numeric-ID check: if the slug consists entirely of decimal digits, the middleware immediately returns 404.
+- Both checks run after the trailing-slash and lowercase corrections, so a request like `/articles/My-POST.html` is normalised first (lowercased) and then rejected by the extension check in the same request.
+
+**Status:** FIXED
+
+**Date:** 2026-04-04
