@@ -195,14 +195,14 @@
         /* Toast */
         .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 12px; z-index: 1000; }
         .toast {
-            width: 340px; padding: 14px 16px; border-radius: 8px; border: 1px solid;
+            width: 360px; padding: 16px; border-radius: var(--radius); border: 1px solid;
             display: flex; align-items: flex-start; gap: 12px; animation: slideIn 0.2s ease;
         }
         .toast-success { background: var(--success-bg); border-color: var(--success); }
         .toast-error { background: #2D0A0A; border-color: var(--destructive); }
         .toast-body { flex: 1; }
-        .toast-title { font-size: 13px; font-weight: 600; color: var(--fg-primary); margin-bottom: 2px; }
-        .toast-msg { font-size: 12px; color: var(--fg-secondary); line-height: 1.4; }
+        .toast-title { font-size: 14px; font-weight: 600; color: var(--fg-primary); margin-bottom: 2px; }
+        .toast-msg { font-size: 13px; color: var(--fg-secondary); line-height: 1.4; }
         .toast-close { background: none; border: none; cursor: pointer; color: var(--fg-tertiary); padding: 0; display: flex; }
         @@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
