@@ -16,6 +16,11 @@ public class DigitalAssetConfiguration : IEntityTypeConfiguration<DigitalAsset>
         builder.Property(d => d.FileSizeBytes).IsRequired();
         builder.Property(d => d.CreatedBy).IsRequired();
 
+        builder.HasOne(d => d.Creator)
+            .WithMany()
+            .HasForeignKey(d => d.CreatedBy)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasIndex(d => d.StoredFileName).IsUnique().HasDatabaseName("IX_DigitalAssets_StoredFileName");
         builder.HasIndex(d => d.CreatedBy).HasDatabaseName("IX_DigitalAssets_CreatedBy");
         builder.HasIndex(d => d.ContentType).HasDatabaseName("IX_DigitalAssets_ContentType");
