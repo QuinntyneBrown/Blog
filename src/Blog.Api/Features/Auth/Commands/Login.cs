@@ -25,10 +25,14 @@ public class LoginCommandValidator : AbstractValidator<LoginCommand>
 public class LoginCommandHandler(
     IUserRepository userRepository,
     IPasswordHasher passwordHasher,
-    ITokenService tokenService) : IRequestHandler<LoginCommand, LoginResponse>
+    ITokenService tokenService,
+    IEmailRateLimitService emailRateLimitService) : IRequestHandler<LoginCommand, LoginResponse>
 {
     public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
+        if (!emailRateLimitService.TryAcquire(request.Email))
+            throw new TooManyRequestsException("Too many login attempts for this email address. Please try again later.");
+
         var user = await userRepository.GetByEmailAsync(request.Email, cancellationToken)
             ?? throw new UnauthorizedException("Invalid email or password.");
 
