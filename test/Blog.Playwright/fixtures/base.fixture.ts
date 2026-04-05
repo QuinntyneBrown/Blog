@@ -1,4 +1,4 @@
-import { test as base, BrowserContext } from '@playwright/test';
+import { test as base } from '@playwright/test';
 import { LoginPage } from '../page-objects/back-office/login.page';
 import { ArticleListPage } from '../page-objects/back-office/article-list.page';
 import { ArticleEditorPage } from '../page-objects/back-office/article-editor.page';
@@ -18,28 +18,30 @@ type BlogFixtures = {
   publicListPage: PublicArticleListPage;
   publicDetailPage: PublicArticleDetailPage;
   notFoundPage: NotFoundPage;
+  authenticatedPage: import('@playwright/test').Page;
 };
 
 export const test = base.extend<BlogFixtures>({
+  // Authenticated page for admin operations — uses saved storage state
+  authenticatedPage: async ({ browser }, use) => {
+    const ctx = await browser.newContext({ storageState: STORAGE_STATE_PATH });
+    const page = await ctx.newPage();
+    await use(page);
+    await ctx.close();
+  },
+
   loginPage: async ({ page }, use) => { await use(new LoginPage(page)); },
-  articleListPage: async ({ browser }, use) => {
-    const ctx = await browser.newContext({ storageState: STORAGE_STATE_PATH });
-    const page = await ctx.newPage();
-    await use(new ArticleListPage(page));
-    await ctx.close();
+
+  articleListPage: async ({ authenticatedPage }, use) => {
+    await use(new ArticleListPage(authenticatedPage));
   },
-  articleEditorPage: async ({ browser }, use) => {
-    const ctx = await browser.newContext({ storageState: STORAGE_STATE_PATH });
-    const page = await ctx.newPage();
-    await use(new ArticleEditorPage(page));
-    await ctx.close();
+  articleEditorPage: async ({ authenticatedPage }, use) => {
+    await use(new ArticleEditorPage(authenticatedPage));
   },
-  digitalAssetModal: async ({ browser }, use) => {
-    const ctx = await browser.newContext({ storageState: STORAGE_STATE_PATH });
-    const page = await ctx.newPage();
-    await use(new DigitalAssetModalPage(page));
-    await ctx.close();
+  digitalAssetModal: async ({ authenticatedPage }, use) => {
+    await use(new DigitalAssetModalPage(authenticatedPage));
   },
+
   publicListPage: async ({ page }, use) => { await use(new PublicArticleListPage(page)); },
   publicDetailPage: async ({ page }, use) => { await use(new PublicArticleDetailPage(page)); },
   notFoundPage: async ({ page }, use) => { await use(new NotFoundPage(page)); },

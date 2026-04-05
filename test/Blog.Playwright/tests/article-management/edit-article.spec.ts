@@ -5,9 +5,8 @@ import { ToastComponent } from '../../page-objects/back-office/components/toast.
 test.describe('L2-002: Edit Article', () => {
   test('should update the slug when the title is edited', async ({
     articleEditorPage,
-    page,
   }) => {
-    const toast = new ToastComponent(page);
+    const toast = new ToastComponent(articleEditorPage.page);
     const article = createArticleData();
 
     // Create an article first
@@ -29,9 +28,8 @@ test.describe('L2-002: Edit Article', () => {
 
   test('should preserve title when editing body and abstract', async ({
     articleEditorPage,
-    page,
   }) => {
-    const toast = new ToastComponent(page);
+    const toast = new ToastComponent(articleEditorPage.page);
     const article = createArticleData();
 
     // Create an article first
@@ -56,9 +54,8 @@ test.describe('L2-002: Edit Article', () => {
 
   test('should show success toast when saving edits', async ({
     articleEditorPage,
-    page,
   }) => {
-    const toast = new ToastComponent(page);
+    const toast = new ToastComponent(articleEditorPage.page);
     const article = createArticleData();
 
     await articleEditorPage.goto();
@@ -77,11 +74,10 @@ test.describe('L2-002: Edit Article', () => {
 
   test('should show 404 when navigating to a non-existent article ID', async ({
     articleEditorPage,
-    page,
   }) => {
     const nonExistentId = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
     await articleEditorPage.goto(nonExistentId);
 
-    await expect(page.getByText(/not found|404/i)).toBeVisible();
+    await expect(articleEditorPage.page.getByText(/not found|404/i)).toBeVisible();
   });
 });

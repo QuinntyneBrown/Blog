@@ -5,9 +5,8 @@ import { ToastComponent } from '../../page-objects/back-office/components/toast.
 test.describe('L2-001: Create Article', () => {
   test('should create an article with title, body, and abstract and show success toast', async ({
     articleEditorPage,
-    page,
   }) => {
-    const toast = new ToastComponent(page);
+    const toast = new ToastComponent(articleEditorPage.page);
     const article = createArticleData();
 
     await articleEditorPage.goto();
@@ -33,9 +32,8 @@ test.describe('L2-001: Create Article', () => {
 
   test('should navigate back to article list after creating an article', async ({
     articleEditorPage,
-    page,
   }) => {
-    const toast = new ToastComponent(page);
+    const toast = new ToastComponent(articleEditorPage.page);
     const article = createArticleData();
 
     await articleEditorPage.goto();
@@ -43,15 +41,14 @@ test.describe('L2-001: Create Article', () => {
     await articleEditorPage.save();
     await toast.waitForSuccess();
 
-    await expect(page).toHaveURL(/\/articles$/);
+    await expect(articleEditorPage.page).toHaveURL(/\/articles/);
   });
 
   test('should show new article in the article list with Draft status', async ({
     articleEditorPage,
     articleListPage,
-    page,
   }) => {
-    const toast = new ToastComponent(page);
+    const toast = new ToastComponent(articleEditorPage.page);
     const article = createArticleData();
 
     await articleEditorPage.goto();
