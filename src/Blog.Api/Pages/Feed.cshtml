@@ -14,7 +14,7 @@
         <div class="feed-header">
             <span class="feed-tag">Subscribe</span>
             <h1 class="feed-title">Follow via Feed</h1>
-            <p class="feed-subtitle">Stay up to date with new articles. Choose your preferred feed format below.</p>
+            <p class="feed-subtitle">Stay up to date with new articles using your favorite feed reader.</p>
         </div>
         <div class="feed-cards">
             <div class="feed-card">
@@ -23,14 +23,11 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
                     </div>
                     <div>
-                        <div class="feed-card-title">RSS Feed</div>
-                        <div class="feed-card-desc">Subscribe with any RSS reader — Feedly, NetNewsWire, Reeder.</div>
+                        <div class="feed-card-title">RSS 2.0 Feed</div>
+                        <div class="feed-card-desc">/feed.xml — Compatible with all major feed readers</div>
                     </div>
                 </div>
-                <a href="/feed.xml" class="feed-card-btn" target="_blank">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
-                    Subscribe
-                </a>
+                <button type="button" class="feed-card-btn" onclick="copyFeedUrl('/feed.xml', this)">Copy URL</button>
             </div>
             <div class="feed-card">
                 <div class="feed-card-left">
@@ -39,13 +36,10 @@
                     </div>
                     <div>
                         <div class="feed-card-title">Atom Feed</div>
-                        <div class="feed-card-desc">An alternative feed format supported by most feed readers.</div>
+                        <div class="feed-card-desc">/atom.xml — Standard Atom 1.0 format</div>
                     </div>
                 </div>
-                <a href="/atom.xml" class="feed-card-btn" target="_blank">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
-                    Subscribe
-                </a>
+                <button type="button" class="feed-card-btn" onclick="copyFeedUrl('/atom.xml', this)">Copy URL</button>
             </div>
             <div class="feed-card">
                 <div class="feed-card-left">
@@ -54,14 +48,24 @@
                     </div>
                     <div>
                         <div class="feed-card-title">JSON Feed</div>
-                        <div class="feed-card-desc">Machine-readable feed in JSON format for developers and tools.</div>
+                        <div class="feed-card-desc">/feed/json — For modern feed readers and apps</div>
                     </div>
                 </div>
-                <a href="/feed/json" class="feed-card-btn" target="_blank">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                    View
-                </a>
+                <button type="button" class="feed-card-btn" onclick="copyFeedUrl('/feed/json', this)">Copy URL</button>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+<script>
+    function copyFeedUrl(path, btn) {
+        const url = window.location.origin + path;
+        navigator.clipboard.writeText(url).then(() => {
+            const orig = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => { btn.textContent = orig; }, 2000);
+        });
+    }
+</script>
+}
