@@ -83,14 +83,14 @@
                     @if (Model.Article != null)
                     {
                         <div style="padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px">
-                            <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--fg-tertiary)">Reading time</span><span style="color:var(--fg-secondary);font-family:var(--font-mono)" data-testid="reading-time">@Model.Article.ReadingTimeMinutes min</span></div>
-                            <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--fg-tertiary)">Created</span><span style="color:var(--fg-secondary);font-family:var(--font-mono)" data-testid="created-at">@Model.Article.CreatedAt.ToString("MMM d, yyyy")</span></div>
-                            <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--fg-tertiary)">Updated</span><span style="color:var(--fg-secondary);font-family:var(--font-mono)" data-testid="updated-at">@Model.Article.UpdatedAt.ToString("MMM d, yyyy")</span></div>
+                            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--fg-tertiary)">Reading time</span><span style="color:var(--fg-primary);font-family:var(--font-mono)" data-testid="reading-time">@Model.Article.ReadingTimeMinutes min</span></div>
+                            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--fg-tertiary)">Created</span><span style="color:var(--fg-primary);font-family:var(--font-mono)" data-testid="created-at">@Model.Article.CreatedAt.ToString("MMM d, yyyy")</span></div>
+                            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--fg-tertiary)">Updated</span><span style="color:var(--fg-primary);font-family:var(--font-mono)" data-testid="updated-at">@Model.Article.UpdatedAt.ToString("MMM d, yyyy")</span></div>
                             @if (Model.Article.Published && Model.Article.DatePublished.HasValue)
                             {
-                                <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--fg-tertiary)">Published</span><span style="color:var(--fg-secondary);font-family:var(--font-mono)" data-testid="date-published">@Model.Article.DatePublished.Value.ToString("MMM d, yyyy")</span></div>
+                                <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--fg-tertiary)">Published</span><span style="color:var(--fg-primary);font-family:var(--font-mono)" data-testid="date-published">@Model.Article.DatePublished.Value.ToString("MMM d, yyyy")</span></div>
                             }
-                            <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--fg-tertiary)">Version</span><span style="color:var(--fg-secondary);font-family:var(--font-mono)" data-testid="article-version">v@Model.Article.Version</span></div>
+                            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--fg-tertiary)">Version</span><span style="color:var(--fg-primary);font-family:var(--font-mono)" data-testid="article-version">v@Model.Article.Version</span></div>
                         </div>
                     }
                 </div>
