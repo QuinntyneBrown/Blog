@@ -1,9 +1,11 @@
+using Blog.Api.Common.Attributes;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Blog.Api.Controllers;
 
 [Route("assets")]
 [ApiController]
+[RawResponse]
 public class AssetsController(IWebHostEnvironment env) : ControllerBase
 {
     [HttpGet("{fileName}")]
