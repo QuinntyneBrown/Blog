@@ -1646,3 +1646,17 @@ A prior conformance fix (gap #78) added `aria-hidden="true"` to 11 decorative SV
 - Added `aria-hidden="true"` to the empty-state icon SVG in `Articles/Index.cshtml`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Layout default meta description hardcoded instead of reading from Site:SiteDescription
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 4.6 — SiteConfiguration
+
+**Description:**
+The design specifies `SiteDescription` as a configurable value in `SiteConfiguration` (Section 4.6): "Default site-level meta description." The layout's fallback for `ViewBag.Description` was the hardcoded string `"Personal blog about software engineering, architecture, and .NET"` instead of reading `Configuration["Site:SiteDescription"]`. Pages that don't set `ViewBag.Description` (e.g., Error, NotFound) would use this hardcoded fallback rather than the configured site description, making the default meta description non-configurable.
+
+**Fix applied:**
+- Changed the `rawDescription` fallback chain in `_Layout.cshtml` from `ViewBag.Description ?? "hardcoded string"` to `ViewBag.Description ?? Configuration["Site:SiteDescription"] ?? "hardcoded fallback"`.
+
+**Status:** FIXED
