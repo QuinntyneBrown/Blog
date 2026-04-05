@@ -60,13 +60,17 @@ builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
+var jwtSecret = jwtSettings["Secret"]!;
+if (Encoding.UTF8.GetByteCount(jwtSecret) < 32)
+    throw new InvalidOperationException("JWT signing key must be at least 256 bits (32 bytes). Check the Jwt:Secret configuration value.");
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Secret"]!)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
             ValidateIssuer = true,
             ValidIssuer = jwtSettings["Issuer"],
             ValidateAudience = true,
