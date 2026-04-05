@@ -648,7 +648,12 @@ The design specifies (Section 3.5, Table): below-fold images must have `loading=
 **Description:**
 The design specifies that all public HTML pages (article detail, articles listing, homepage) must be served with `Cache-Control: max-age=60, stale-while-revalidate=600` (Section 3.1: "Cache profiles are applied per-route — Article pages: `max-age=60, stale-while-revalidate=600`; Home / listing pages: `max-age=60, stale-while-revalidate=600`"). `Program.cs` correctly registers `app.UseResponseCaching()`, but ASP.NET Core's `ResponseCachingMiddleware` will only cache and serve a response from cache if the response carries a `Cache-Control: public, max-age=N` header. Without a `[ResponseCache]` attribute or equivalent header on the page model, no cache headers are set and the middleware is inert for every public page request. The three public Razor Page models — `IndexModel` (homepage), `ArticlesIndexModel` (listing), and `ArticleDetailModel` (detail) — had no `[ResponseCache]` attribute and set no `Cache-Control` headers. Every request therefore triggered a full database query and Razor re-render, negating the performance benefit the design requires.
 
-**Status:** OPEN
+**Fix applied:**
+- Registered a named `"HtmlPage"` cache profile in `Program.cs` via `.AddRazorPages().AddMvcOptions(...)` with `Duration = 60`, `Location = Any`, and `VaryByHeader = "Accept-Encoding"`.
+- Added `[ResponseCache(CacheProfileName = "HtmlPage")]` to `IndexModel`, `ArticlesIndexModel`, and `ArticleDetailModel`.
+- Added `Response.Headers.Append("Cache-Control", "public, max-age=60, stale-while-revalidate=600")` in each page's `OnGetAsync` (after successful data retrieval for the detail page) so browsers and intermediate caches receive the full designed directive including the `stale-while-revalidate=600` extension that `[ResponseCache]` alone does not emit.
+
+**Status:** FIXED
 
 ---
 
