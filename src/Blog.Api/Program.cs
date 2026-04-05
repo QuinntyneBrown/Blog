@@ -5,6 +5,7 @@ using Blog.Api.Services;
 using Blog.Domain.Interfaces;
 using Blog.Infrastructure.Data;
 using Blog.Infrastructure.Data.Repositories;
+using Blog.Infrastructure.Storage;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -38,6 +39,10 @@ builder.Services.AddScoped<IArticleRepository, ArticleRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IDigitalAssetRepository, DigitalAssetRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// Asset storage abstraction — allows swapping to cloud blob storage without changing handlers.
+// Design reference: docs/detailed-designs/04-digital-asset-management/README.md, Section 3.5.
+builder.Services.AddSingleton<IAssetStorage, LocalFileAssetStorage>();
 
 // Services
 builder.Services.AddSingleton<ISlugGenerator, SlugGenerator>();
