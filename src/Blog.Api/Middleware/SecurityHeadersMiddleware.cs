@@ -17,11 +17,11 @@ public class SecurityHeadersMiddleware(RequestDelegate next, IHostEnvironment en
 
     public async Task InvokeAsync(HttpContext context)
     {
-        // Generate a cryptographically-random per-request nonce (16 bytes → base64url).
-        // Uses base64url encoding (no +, /, =) to avoid HTML entity encoding mismatches
-        // between the nonce attribute in HTML and the nonce value in the CSP header.
+        // Generate a cryptographically-random per-request nonce (32 hex chars).
+        // Hex encoding avoids HTML entity encoding issues that occur with base64's
+        // +, /, = characters in nonce attributes.
         var nonceBytes = RandomNumberGenerator.GetBytes(16);
-        var nonce = Convert.ToBase64String(nonceBytes).Replace('+', '-').Replace('/', '_').TrimEnd('=');
+        var nonce = Convert.ToHexString(nonceBytes).ToLowerInvariant();
 
         // Store the nonce so Razor views/tag-helpers can embed it into <style> blocks.
         context.Items[CspNonceKey] = nonce;
