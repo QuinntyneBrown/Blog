@@ -224,6 +224,12 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHostedService<Blog.Infrastructure.Data.MigrationRunner>();
 builder.Services.AddHostedService<Blog.Infrastructure.Data.SeedDataHostedService>();
 
+// HTTPS Redirection — 301 Permanent per design (Design 08, Section 3.1)
+builder.Services.AddHttpsRedirection(options =>
+{
+    options.RedirectStatusCode = StatusCodes.Status301MovedPermanently;
+});
+
 var app = builder.Build();
 
 // Middleware Pipeline

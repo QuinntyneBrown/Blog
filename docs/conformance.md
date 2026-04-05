@@ -1611,3 +1611,17 @@ The design's `SeoMetadata` record (Section 4.2) specifies `ArticlePublishedTime`
 - `_Layout.cshtml`: Added conditional `<meta property="article:published_time">` and `<meta property="article:modified_time">` tags in the OG section, rendered only on article pages.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — HTTPS redirection uses 307 Temporary instead of design-specified 301 Permanent
+
+**Design reference:** `docs/detailed-designs/08-security-hardening/README.md`, Section 3.1 — HttpsRedirectionMiddleware
+
+**Description:**
+The design specifies (Section 3.1): "Issues a **301 Permanent Redirect** from `http://` to `https://` for all requests." ASP.NET Core's `UseHttpsRedirection()` defaults to HTTP 307 Temporary Redirect. Without explicit configuration, HTTP requests would receive a 307 which browsers and search engines treat as temporary — the browser re-checks the HTTP URL on every visit rather than permanently remembering to use HTTPS. A 301 tells clients to permanently update their cached URL, reducing future HTTP round-trips and improving security posture.
+
+**Fix applied:**
+- Added `builder.Services.AddHttpsRedirection(options => options.RedirectStatusCode = StatusCodes.Status301MovedPermanently)` to `Program.cs`.
+
+**Status:** FIXED
