@@ -1416,7 +1416,11 @@ The design's `SiteConfiguration` model (Section 4.6) defines `TwitterHandle: str
 
 `Site:TwitterHandle` is entirely absent from `appsettings.json` — the key is not present under the `Site` section. `_Layout.cshtml` renders four Twitter Card tags (`twitter:card`, `twitter:title`, `twitter:description`, `twitter:image`) but never renders `twitter:site`. As a result, Twitter/X link previews for every page on the site omit the site attribution tag, and any future operator who sets `Site:TwitterHandle` in configuration will see no effect because no code reads or renders it.
 
-**Status:** OPEN
+**Fix applied:**
+- Added `"TwitterHandle": ""` to the `Site` section in `appsettings.json` (empty string by default; operators set this to their `@handle` in environment-specific configuration).
+- Added a conditional `<meta name="twitter:site" content="@twitterHandle" />` block to `_Layout.cshtml` immediately after the existing `twitter:image` tag, rendered only when `Site:TwitterHandle` is non-empty.
+
+**Status:** FIXED
 
 ---
 

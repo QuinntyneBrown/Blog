@@ -49,6 +49,13 @@
     {
         <meta name="twitter:image" content="@ogImage" />
     }
+    @{
+        var twitterHandle = Configuration["Site:TwitterHandle"];
+    }
+    @if (!string.IsNullOrEmpty(twitterHandle))
+    {
+        <meta name="twitter:site" content="@twitterHandle" />
+    }
     <!-- Feeds -->
     <link rel="alternate" type="application/rss+xml" title="@(Configuration["Site:SiteName"] ?? "Quinn Brown") RSS Feed" href="/feed.xml" />
     <link rel="alternate" type="application/atom+xml" title="@(Configuration["Site:SiteName"] ?? "Quinn Brown") Atom Feed" href="/atom.xml" />
