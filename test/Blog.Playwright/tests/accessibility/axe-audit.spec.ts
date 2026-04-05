@@ -14,7 +14,7 @@ test.describe('Axe Accessibility Audit - L2-039', () => {
   });
 
   test('article detail page has zero critical axe-core violations', async ({ page }) => {
-    await page.goto('/articles/test-article');
+    await page.goto('/articles/hello-world');
 
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa'])
@@ -36,7 +36,7 @@ test.describe('Axe Accessibility Audit - L2-039', () => {
   });
 
   test('zero serious axe-core violations on article detail page', async ({ page }) => {
-    await page.goto('/articles/test-article');
+    await page.goto('/articles/hello-world');
 
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa'])

@@ -13,7 +13,7 @@ test.describe('Color Contrast - L2-039', () => {
   });
 
   test('no color contrast violations on article detail page', async ({ page }) => {
-    await page.goto('/articles/test-article');
+    await page.goto('/articles/hello-world');
 
     const results = await new AxeBuilder({ page })
       .withRules(['color-contrast'])

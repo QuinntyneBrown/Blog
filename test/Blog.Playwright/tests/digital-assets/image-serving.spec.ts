@@ -1,7 +1,7 @@
 import { test, expect } from '../../fixtures/base.fixture';
 
 test.describe('L2-020, L2-029: Image Serving – Responsive & Lazy Loading', () => {
-  const PUBLISHED_SLUG = 'test-article-with-images';
+  const PUBLISHED_SLUG = 'hello-world';
 
   test.beforeEach(async ({ publicDetailPage }) => {
     await publicDetailPage.goto(PUBLISHED_SLUG);
