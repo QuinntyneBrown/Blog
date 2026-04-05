@@ -966,3 +966,20 @@ The design specifies (Section 3.1, L2-012): "Title pattern `{Article Title} | {S
 - Added truncation in `_Layout.cshtml`: title truncated to 60 characters (with `...` ellipsis if exceeded), description truncated to 160 characters at the nearest word boundary using a `TruncateAtWord` helper function.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Serilog.Enrichers.Thread NuGet package missing; WithThreadId enricher referenced but unresolvable
+
+**Design reference:** `docs/detailed-designs/09-observability/README.md`, Section 7.2 — appsettings.json Configuration, Section 7.3 — NuGet Packages
+
+**Description:**
+The design lists `Serilog.Enrichers.Thread` as a required NuGet package (Section 7.3) and specifies `"WithThreadId"` in the `Enrich` array of `appsettings.json` (Section 7.2). A prior conformance fix added `"Serilog.Enrichers.Thread"` to the `Using` array and `"WithThreadId"` to the `Enrich` array in `appsettings.json`, but never added the `<PackageReference Include="Serilog.Enrichers.Thread">` entry to `Blog.Api.csproj`. As a result, `Serilog.Settings.Configuration` — which uses reflection to resolve enricher types from the assembly names in `Using` — cannot load `Serilog.Enrichers.Thread` at startup. The assembly is absent from the build output, causing the `WithThreadId` enricher to be silently skipped (or throw a `TypeLoadException` depending on Serilog version), meaning thread IDs are never included in structured log entries despite the configuration specifying them.
+
+**Fix applied:**
+- Added `<PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />` to `src/Blog.Api/Blog.Api.csproj`, immediately after the `Serilog.Enrichers.Environment` entry.
+- Ran `dotnet restore` to confirm the package resolves correctly. The `WithThreadId` enricher now loads from the installed assembly at startup, and thread IDs are included in all structured log entries.
+
+**Status:** FIXED
+
+**Date:** 2026-04-04
