@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace Blog.Api.Pages.Admin.DigitalAssets;
 
-public class AdminDigitalAssetsIndexModel(IMediator mediator) : PageModel
+public class AdminDigitalAssetsIndexModel(IMediator mediator) : AdminPageModelBase
 {
     public List<DigitalAssetDto> Assets { get; private set; } = new();
 
@@ -43,18 +43,5 @@ public class AdminDigitalAssetsIndexModel(IMediator mediator) : PageModel
         return RedirectToPage(new { success = "Asset deleted." });
     }
 
-    private bool IsAuthenticated()
-    {
-        var token = HttpContext.Session.GetString("jwt_token");
-        var expires = HttpContext.Session.GetString("jwt_expires");
-        if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(expires)) return false;
-        if (!DateTime.TryParse(expires, out var exp)) return false;
-        return exp > DateTime.UtcNow;
-    }
 
-    private Guid GetCurrentUserId()
-    {
-        // For demo: use a placeholder. Real implementation reads from session/claims.
-        return Guid.Empty;
-    }
 }

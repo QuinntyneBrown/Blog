@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Blog.Api.Pages.Admin.Articles;
 
-public class AdminArticlesIndexModel(IMediator mediator) : PageModel
+public class AdminArticlesIndexModel(IMediator mediator) : AdminPageModelBase
 {
     public PagedResponse<ArticleListDto> Articles { get; private set; } = new();
     public int CurrentPage { get; private set; } = 1;
@@ -30,14 +30,5 @@ public class AdminArticlesIndexModel(IMediator mediator) : PageModel
         }
         catch { }
         return RedirectToPage("/Admin/Articles/Index");
-    }
-
-    private bool IsAuthenticated()
-    {
-        var token = HttpContext.Session.GetString("jwt_token");
-        var expires = HttpContext.Session.GetString("jwt_expires");
-        if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(expires)) return false;
-        if (!DateTime.TryParse(expires, out var exp)) return false;
-        return exp > DateTime.UtcNow;
     }
 }

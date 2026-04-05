@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Blog.Api.Pages.Admin.Articles;
 
-public class AdminArticleEditModel(IMediator mediator) : PageModel
+public class AdminArticleEditModel(IMediator mediator) : AdminPageModelBase
 {
     public ArticleDto? Article { get; private set; }
 
@@ -54,14 +54,5 @@ public class AdminArticleEditModel(IMediator mediator) : PageModel
             TempData["Error"] = ex.Message;
             return RedirectToPage("/Admin/Articles/Edit", new { id });
         }
-    }
-
-    private bool IsAuthenticated()
-    {
-        var token = HttpContext.Session.GetString("jwt_token");
-        var expires = HttpContext.Session.GetString("jwt_expires");
-        if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(expires)) return false;
-        if (!DateTime.TryParse(expires, out var exp)) return false;
-        return exp > DateTime.UtcNow;
     }
 }
