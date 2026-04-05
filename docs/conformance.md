@@ -1325,3 +1325,18 @@ The design specifies `SiteName` as a configurable value in `SiteConfiguration` (
 - Changed the footer copyright text to use `Configuration["Site:SiteName"]` with fallback.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Google Fonts stylesheet loaded synchronously as render-blocking resource
+
+**Design reference:** `docs/detailed-designs/07-web-performance/README.md`, Section 3.4 — CriticalCssInliner, Section 6 — Performance Budget (L2-021: 0 render-blocking resources)
+
+**Description:**
+The design specifies (Section 3.4): non-critical CSS should be loaded asynchronously via `<link rel="preload" as="style" onload="this.rel='stylesheet'">` with a `<noscript>` fallback. The performance budget (Section 6) requires "Render-blocking resources: 0." The Google Fonts stylesheet in `_Layout.cshtml` was loaded synchronously with `<link rel="stylesheet">`, making it a render-blocking resource. The browser must download and parse the font CSS before rendering any content, delaying First Contentful Paint (FCP). Since the font declaration uses `display=swap`, text renders with system fonts first and swaps later — the font CSS is not critical for initial render and can be deferred.
+
+**Fix applied:**
+- Changed the Google Fonts `<link>` from `rel="stylesheet"` to `rel="preload" as="style" onload="this.rel='stylesheet'"`, making it non-render-blocking.
+- Added `<noscript><link rel="stylesheet" ...></noscript>` fallback for browsers with JavaScript disabled.
+
+**Status:** FIXED
