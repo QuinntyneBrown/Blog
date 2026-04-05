@@ -1972,6 +1972,24 @@ Two schema discrepancies exist between the EF Core entity configuration and the 
 
 ---
 
+## 2026-04-04 — `<img>` elements inside `<picture>` blocks missing `width` and `height` attributes; browser cannot reserve layout space, causing CLS
+
+**Design reference:** `docs/detailed-designs/07-web-performance/README.md`, Section 7.4 — Image Pipeline (step 4)
+
+**Description:**
+The design specifies (Section 7.4, step 4): "Width and height attributes are always set to prevent CLS." CLS (Cumulative Layout Shift) is a Core Web Vitals metric; without explicit `width` and `height` attributes on `<img>` elements, the browser cannot reserve the correct space for images before they load, causing the surrounding page content to shift downward as each image arrives — a direct Core Web Vitals failure.
+
+The `DigitalAsset` entity already stores `Width` (int) and `Height` (int) for every uploaded image (set during upload by `ImageVariantGenerator`). However, this information is never propagated to the article DTOs:
+
+1. `ArticleDto` (used on the article detail page) has `FeaturedImageUrl` but no `FeaturedImageWidth` or `FeaturedImageHeight`.
+2. `ArticleListDto` (used on the homepage and articles listing page) has `FeaturedImageUrl` but no `FeaturedImageWidth` or `FeaturedImageHeight`.
+
+As a result, all three public Razor pages that emit `<picture>` elements for article featured images — `Pages/Articles/Slug.cshtml` (hero image), `Pages/Index.cshtml` (article card grid), and `Pages/Articles/Index.cshtml` (article card grid) — render `<img>` fallback tags without `width` or `height` attributes. The browser must wait for each image to load before it knows its intrinsic dimensions, causing layout shift as images arrive. This violates the design's CLS < 0.1 budget (Section 6) and the Core Web Vitals requirement from L2-022.
+
+**Status:** OPEN
+
+---
+
 ## 2026-04-04 — CSP `style-src` and `font-src` directives block Google Fonts; fonts never load under enforced CSP
 
 **Design reference:** `docs/detailed-designs/08-security-hardening/README.md`, Section 3.2 — SecurityHeadersMiddleware, Section 7 — Security Headers Reference
