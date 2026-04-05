@@ -24,6 +24,7 @@ public class PublishArticleCommandHandler(IUnitOfWork uow) : IRequestHandler<Pub
             article.DatePublished = DateTime.UtcNow;
 
         article.UpdatedAt = DateTime.UtcNow;
+        article.Version++;
         uow.Articles.Update(article);
         await uow.SaveChangesAsync(cancellationToken);
 

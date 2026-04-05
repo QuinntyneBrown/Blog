@@ -19,6 +19,7 @@ public class DeleteArticleCommandHandler(IUnitOfWork uow) : IRequestHandler<Dele
             throw new PreconditionFailedException("The article has been modified. Please refresh and try again.");
 
         article.FeaturedImageId = null;
+        article.Version++;
         uow.Articles.Remove(article);
         await uow.SaveChangesAsync(cancellationToken);
     }
