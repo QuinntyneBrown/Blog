@@ -1,3 +1,4 @@
+using Blog.Api.Common.Exceptions;
 using Blog.Api.Features.DigitalAssets.Commands;
 using Blog.Api.Features.DigitalAssets.Queries;
 using MediatR;
@@ -37,8 +38,18 @@ public class AdminDigitalAssetsIndexModel(IMediator mediator) : AdminPageModelBa
     public async Task<IActionResult> OnPostDeleteAsync(Guid id)
     {
         if (!IsAuthenticated()) return RedirectToPage("/Admin/Login");
-        try { await mediator.Send(new DeleteDigitalAssetCommand(id)); }
-        catch { }
+        try
+        {
+            await mediator.Send(new DeleteDigitalAssetCommand(id));
+        }
+        catch (Exception ex) when (ex is ConflictException or NotFoundException)
+        {
+            return RedirectToPage(new { error = ex.Message });
+        }
+        catch
+        {
+            return RedirectToPage(new { error = "An error occurred while deleting the asset." });
+        }
         return RedirectToPage(new { success = "Asset deleted." });
     }
 

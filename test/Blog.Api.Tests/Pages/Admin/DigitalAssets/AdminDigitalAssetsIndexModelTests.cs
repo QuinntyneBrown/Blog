@@ -1,3 +1,4 @@
+using Blog.Api.Common.Exceptions;
 using Blog.Api.Features.DigitalAssets.Commands;
 using Blog.Api.Features.DigitalAssets.Queries;
 using Blog.Api.Pages.Admin.DigitalAssets;
@@ -269,6 +270,28 @@ public class AdminDigitalAssetsIndexModelTests
         var redirect = result.Should().BeOfType<RedirectToPageResult>().Subject;
         redirect.RouteValues.Should().ContainKey("success");
         redirect.RouteValues!["success"].Should().Be("Asset deleted.");
+    }
+
+    [Fact]
+    public async Task OnPostDeleteAsync_WhenDeleteThrowsConflictException_RedirectsWithErrorMessage()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var assetId = Guid.NewGuid();
+        var context = CreateAuthenticatedHttpContext(userId);
+        _pageModel.PageContext = CreatePageContext(context);
+        var errorMessage = "Cannot delete this asset because it is referenced by one or more articles.";
+
+        _mediator.Send(Arg.Any<DeleteDigitalAssetCommand>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ConflictException(errorMessage));
+
+        // Act
+        var result = await _pageModel.OnPostDeleteAsync(assetId);
+
+        // Assert
+        var redirect = result.Should().BeOfType<RedirectToPageResult>().Subject;
+        redirect.RouteValues.Should().ContainKey("error");
+        redirect.RouteValues!["error"].Should().Be(errorMessage);
     }
 
     // ─── helpers ────────────────────────────────────────────────────────────────
