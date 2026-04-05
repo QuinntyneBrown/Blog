@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Blog.Api.Controllers;
 
-public class AuthController(IMediator mediator) : ApiControllerBase(mediator)
+public class AuthController(IMediator mediator, IConfiguration configuration) : ApiControllerBase(mediator, configuration)
 {
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)

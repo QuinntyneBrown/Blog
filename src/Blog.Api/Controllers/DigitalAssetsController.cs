@@ -10,7 +10,7 @@ using System.Security.Claims;
 namespace Blog.Api.Controllers;
 
 [Route("api/digital-assets")]
-public class DigitalAssetsController(IMediator mediator) : ApiControllerBase(mediator)
+public class DigitalAssetsController(IMediator mediator, IConfiguration configuration) : ApiControllerBase(mediator, configuration)
 {
     [HttpGet]
     [Authorize]

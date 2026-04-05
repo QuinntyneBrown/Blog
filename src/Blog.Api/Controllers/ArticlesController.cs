@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.RateLimiting;
 
 namespace Blog.Api.Controllers;
 
-public class ArticlesController(IMediator mediator) : ApiControllerBase(mediator)
+public class ArticlesController(IMediator mediator, IConfiguration configuration) : ApiControllerBase(mediator, configuration)
 {
     [HttpGet]
     [Authorize]

@@ -714,3 +714,16 @@ The design specifies (Section 6.1, L2-009): "`twitter:card` is 'summary_large_im
 - Added `<meta name="twitter:image" content="@ogImage" />` conditionally when an image is present.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — PaginationHelper not implemented; PreviousPageUrl and NextPageUrl always null in paginated responses
+
+**Design reference:** `docs/detailed-designs/06-restful-api/README.md`, Section 3.3 — PaginationHelper
+
+**Description:**
+The design specifies a `PaginationHelper` component (Section 3.3) that "generates `NextPageUrl` and `PreviousPageUrl` using ASP.NET Core link generation from route values and configured application URLs rather than blindly echoing raw host headers." The `PagedResponse<T>` model declares both `PreviousPageUrl` and `NextPageUrl` string properties, but neither is ever populated. Both `GetArticlesHandler` and `GetPublishedArticlesHandler` construct `PagedResponse<T>` objects leaving these fields as `null`. The `ApiControllerBase.PagedResult` helper simply calls `Ok(response)` without injecting navigation URLs. As a result, every paginated API response (`GET /api/articles` and `GET /api/public/articles`) returns `"previousPageUrl": null` and `"nextPageUrl": null` regardless of the current page, making it impossible for API consumers and headless clients to navigate pages programmatically without constructing URLs themselves.
+
+**Status:** OPEN
+
+---
