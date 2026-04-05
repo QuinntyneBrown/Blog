@@ -273,7 +273,9 @@ app.UseRouting();
 app.UseCors();
 app.UseSession();
 app.UseRateLimiter();
-app.UseResponseCaching();
+// Response caching disabled — incompatible with per-request CSP nonces.
+// Cache-Control headers are still sent for reverse proxies/CDNs.
+// app.UseResponseCaching();
 app.UseMiddleware<JwtMiddleware>();
 app.UseAuthorization();
 
