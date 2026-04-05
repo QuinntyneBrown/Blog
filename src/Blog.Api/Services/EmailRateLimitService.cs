@@ -4,16 +4,22 @@ namespace Blog.Api.Services;
 
 /// <summary>
 /// In-memory sliding-window rate limiter scoped to a normalized email address.
-/// Enforces a maximum of 5 login attempts per email within any 15-minute window.
+/// Enforces a maximum of <c>RateLimiting:EmailLoginMaxAttempts</c> login attempts per email
+/// within any 15-minute window (default: 5).
 /// Thread-safe via <see cref="ConcurrentDictionary{TKey,TValue}"/>.
 /// </summary>
 public sealed class EmailRateLimitService : IEmailRateLimitService
 {
-    private const int MaxAttempts = 5;
+    private readonly int _maxAttempts;
     private static readonly TimeSpan Window = TimeSpan.FromMinutes(15);
 
     // email (normalized) -> ordered queue of attempt timestamps
     private readonly ConcurrentDictionary<string, Queue<DateTime>> _attempts = new(StringComparer.OrdinalIgnoreCase);
+
+    public EmailRateLimitService(IConfiguration configuration)
+    {
+        _maxAttempts = configuration.GetValue("RateLimiting:EmailLoginMaxAttempts", 5);
+    }
 
     public bool TryAcquire(string email, out int retryAfterSeconds)
     {
@@ -31,7 +37,7 @@ public sealed class EmailRateLimitService : IEmailRateLimitService
             while (queue.Count > 0 && queue.Peek() < cutoff)
                 queue.Dequeue();
 
-            if (queue.Count >= MaxAttempts)
+            if (queue.Count >= _maxAttempts)
             {
                 // The oldest attempt in the queue is the one that will expire first.
                 // Retry-After = seconds until that timestamp slides out of the window.
