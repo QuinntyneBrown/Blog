@@ -291,3 +291,24 @@ The design specifies: "Accept it only when it matches a safe character set (`A-Z
 - The middleware now validates the incoming header value; if it fails either check (or is empty), a new GUID is generated instead.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Serilog configuration: wrong formatter, missing enricher, missing log-level override
+
+**Design reference:** `docs/detailed-designs/09-observability/README.md`, Section 6.1 — Format, Section 7.2 — appsettings.json Configuration
+
+**Description:**
+The design specifies three Serilog configuration requirements that were all absent or incorrect:
+1. **Console/File formatter** (Section 6.1, 7.2): Must use `CompactJsonFormatter` from `Serilog.Formatting.Compact` for compact structured JSON (`@t`, `@l`, `@mt` fields). The implementation used `Serilog.Formatting.Json.JsonFormatter` — a verbose format that does not produce the compact field names the design shows, and the `Serilog.Formatting.Compact` NuGet package was not installed.
+2. **Enrichers** (Section 7.2): The design specifies `Enrich: ["FromLogContext", "WithMachineName", "WithThreadId"]`. The implementation only had `["FromLogContext", "WithMachineName"]` — missing `WithThreadId`. The `Serilog.Enrichers.Thread` and `Serilog.Enrichers.Environment` NuGet packages were also absent.
+3. **MinimumLevel override** (Section 7.2): The design specifies `"Microsoft.Hosting.Lifetime": "Information"` so ASP.NET Core startup/shutdown messages are logged even though the general `Microsoft` namespace is suppressed to `Warning`. This override was missing.
+
+**Fix applied:**
+- Installed NuGet packages: `Serilog.Formatting.Compact`, `Serilog.Enrichers.Thread`, `Serilog.Enrichers.Environment`.
+- Changed both Console and File sink formatters from `Serilog.Formatting.Json.JsonFormatter` to `Serilog.Formatting.Compact.CompactJsonFormatter`.
+- Added `"WithThreadId"` to the `Enrich` array.
+- Added `"Microsoft.Hosting.Lifetime": "Information"` to the `MinimumLevel.Override` section.
+- Updated the `Using` array to include the new assemblies.
+
+**Status:** FIXED
