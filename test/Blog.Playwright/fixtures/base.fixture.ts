@@ -23,8 +23,11 @@ type BlogFixtures = {
 
 export const test = base.extend<BlogFixtures>({
   // Authenticated page for admin operations — uses saved storage state
-  authenticatedPage: async ({ browser }, use) => {
-    const ctx = await browser.newContext({ storageState: STORAGE_STATE_PATH });
+  authenticatedPage: async ({ browser, baseURL }, use) => {
+    const ctx = await browser.newContext({
+      storageState: STORAGE_STATE_PATH,
+      baseURL: baseURL ?? undefined,
+    });
     const page = await ctx.newPage();
     await use(page);
     await ctx.close();
