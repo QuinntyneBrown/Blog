@@ -144,7 +144,6 @@
             letter-spacing: -1px;
             color: var(--foreground-primary);
         }
-        .nav-logo-full { display: none; }
         .nav-links {
             display: flex;
             align-items: center;
@@ -541,9 +540,7 @@
             .nav { height: 56px; padding: 0 24px; }
             .nav-links { display: none; }
             .nav-hamburger { display: flex; }
-            .nav-logo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
-            .nav-logo-abbr { display: none; }
-            .nav-logo-full { display: inline; }
+            .nav-logo { font-size: 22px; }
             .hero { padding: 40px 24px; }
             .hero-title { font-size: 32px; letter-spacing: -1px; }
             .hero-subtitle { font-size: 16px; }
@@ -554,6 +551,7 @@
         }
         @@media (max-width: 575px) {
             .nav { padding: 0 16px; }
+            .nav-logo { font-size: 20px; }
             .hero { padding: 32px 16px; }
             .hero-title { font-size: 28px; }
             .hero-tag { font-size: 10px; }
@@ -838,7 +836,7 @@
     <a href="#main-content" class="skip-link">Skip to content</a>
     <header role="banner">
     <nav class="nav" id="main-nav" aria-label="Main navigation">
-        <a href="/" class="nav-logo"><span class="nav-logo-abbr">@(Configuration["Site:LogoText"] ?? "QB")</span><span class="nav-logo-full">@(Configuration["Site:AuthorName"] ?? Configuration["Site:SiteName"] ?? "Quinn Brown")</span></a>
+        <a href="/" class="nav-logo">@(Configuration["Site:LogoText"] ?? "QB")</a>
         <ul class="nav-links">
             <li><a href="/articles" class="@(ViewBag.ActiveNav == "articles" ? "active" : "")">Articles</a></li>
             <li><a href="/feed" class="@(ViewBag.ActiveNav == "feed" ? "active" : "")">Feed</a></li>
