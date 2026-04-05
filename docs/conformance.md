@@ -344,9 +344,13 @@ The design specifies a `LogSanitizer` (at `src/Blog.Api/Core/LogSanitizer.cs`) i
 **Design reference:** `docs/detailed-designs/08-security-hardening/README.md`, Section 3.4 — CorsMiddleware
 
 **Description:**
-The design specifies a strict CORS policy: "Only origins explicitly listed in configuration are allowed. Requests from unlisted origins receive no CORS headers, causing the browser to block the response." Allowed origins are to be loaded from `appsettings.json` under `Cors:AllowedOrigins`. The implementation in `Program.cs` registers the CORS policy with `policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()` — a fully-open policy that permits every origin without restriction. The `Cors:AllowedOrigins` key is entirely absent from `appsettings.json`. This means any web page on any domain can make credentialed or non-credentialed cross-origin requests to the API, bypassing the cross-origin access control that the design lists as the mitigation for OWASP A01 (Broken Access Control) via CORS.
+The design specifies a strict CORS policy: "Only origins explicitly listed in configuration are allowed. Requests from unlisted origins receive no CORS headers, causing the browser to block the response." Allowed origins are to be loaded from `appsettings.json` under `Cors:AllowedOrigins`. The implementation in `Program.cs` registered the CORS policy with `policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()` — a fully-open policy that permitted every origin without restriction. The `Cors:AllowedOrigins` key was entirely absent from `appsettings.json`. This meant any web page on any domain could make cross-origin requests to the API, bypassing the cross-origin access control that the design lists as the mitigation for OWASP A01 (Broken Access Control) via CORS.
 
-**Status:** OPEN
+**Fix applied:**
+- Added `"Cors": { "AllowedOrigins": [ "https://localhost:5001" ] }` to `appsettings.json` as the base configuration value (operators override this per environment with the real site origin).
+- Replaced the open `AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()` CORS policy in `Program.cs` with `WithOrigins(allowedOrigins).AllowAnyHeader().WithMethods("GET","POST","PUT","PATCH","DELETE","OPTIONS").SetPreflightMaxAge(TimeSpan.FromSeconds(7200))`, reading `Cors:AllowedOrigins` from configuration at startup.
+
+**Status:** FIXED
 
 ---
 
