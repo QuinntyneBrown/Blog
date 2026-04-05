@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-This feature defines the RESTful API design conventions, request pipeline, error handling, and pagination strategy for the Blog platform. The API serves as the single integration point for both the back-office SPA and the public-facing web application. All endpoints follow consistent naming conventions, use appropriate HTTP semantics, return standardized response envelopes, and report errors using RFC 7807 Problem Details.
+This feature defines the RESTful API design conventions, request pipeline, error handling, and pagination strategy for the Blog platform. The API provides the programmatic HTTP surface behind the Razor Pages-based back-office administration UI and the rest of the platform where HTTP endpoints are required. All endpoints follow consistent naming conventions, use appropriate HTTP semantics, return standardized response envelopes, and report errors using RFC 7807 Problem Details.
 
 **Requirements Traceability:**
 
@@ -28,8 +28,8 @@ The system context shows the Blog API in relation to its consumers and backing s
 
 ![C4 Context Diagram](diagrams/c4_context.png)
 
-- **Back-Office Admin** manages content through the SPA, which calls the Blog API over HTTPS with JWT authentication.
-- **Anonymous Reader** consumes published articles through the public web app, which calls the Blog API over HTTPS.
+- **Back-Office Admin** manages content through the back-office Razor Pages application, which calls the Blog API over HTTPS with JWT authentication.
+- **Anonymous Reader** consumes published articles through the public Razor Pages web app, which uses the platform's published-content endpoints and services where needed.
 - **Blog API System** is the central service exposing all RESTful endpoints.
 - **Database** persists articles, users, digital assets, and supporting data.
 
@@ -39,8 +39,8 @@ The container diagram shows the deployable units and their interactions.
 
 ![C4 Container Diagram](diagrams/c4_container.png)
 
-- **SPA (Angular)** is the back-office client that makes authenticated API calls.
-- **SSR Web App (Next.js/Angular Universal)** renders the public site and fetches articles from the API at the server level.
+- **Back-Office Web App (ASP.NET Core Razor Pages)** is the administration UI that makes authenticated API calls.
+- **Public Web App (ASP.NET Core Razor Pages)** renders the public site and reuses published-content endpoints or shared application services as needed.
 - **API Server (.NET)** hosts all RESTful endpoints, middleware, and the MediatR pipeline.
 - **Database (SQL Server/PostgreSQL)** stores all persistent data accessed via Entity Framework Core.
 

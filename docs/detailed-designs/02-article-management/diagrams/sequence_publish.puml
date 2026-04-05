@@ -4,7 +4,7 @@
 title Publish / Unpublish Article - Sequence Diagram
 
 actor Admin
-participant "Back-Office SPA" as SPA
+participant "Back-Office Web App" as Web
 participant "ArticleController" as Controller
 participant "ArticleService" as Service
 participant "ArticleRepository" as Repo
@@ -12,8 +12,8 @@ database "Database" as DB
 
 == Publish Article ==
 
-Admin -> SPA : Click "Publish" button
-SPA -> Controller : PATCH /api/articles/{id}/publish\n{published: true}
+Admin -> Web : Click "Publish" button
+Web -> Controller : PATCH /api/articles/{id}/publish\n{published: true}
 
 Controller -> Service : PublishArticleCommand(id, published=true)
 
@@ -24,7 +24,7 @@ DB --> Repo : article row
 alt Article not found
     Repo --> Service : null
     Service --> Controller : NotFoundException
-    Controller --> SPA : 404 Not Found
+    Controller --> Web : 404 Not Found
 else Article found
 end
 
@@ -36,13 +36,13 @@ DB --> Repo : success
 Repo --> Service : updated article
 
 Service --> Controller : ArticleDto
-Controller --> SPA : 200 OK {ArticleDto}
-SPA --> Admin : Show success toast,\nupdate status badge to Published
+Controller --> Web : 200 OK {ArticleDto}
+Web --> Admin : Show success toast,\nupdate status badge to Published
 
 == Unpublish Article ==
 
-Admin -> SPA : Click "Unpublish" button
-SPA -> Controller : PATCH /api/articles/{id}/publish\n{published: false}
+Admin -> Web : Click "Unpublish" button
+Web -> Controller : PATCH /api/articles/{id}/publish\n{published: false}
 
 Controller -> Service : PublishArticleCommand(id, published=false)
 
@@ -59,7 +59,7 @@ DB --> Repo : success
 Repo --> Service : updated article
 
 Service --> Controller : ArticleDto
-Controller --> SPA : 200 OK {ArticleDto}
-SPA --> Admin : Show success toast,\nupdate status badge to Draft
+Controller --> Web : 200 OK {ArticleDto}
+Web --> Admin : Show success toast,\nupdate status badge to Draft
 
 @enduml

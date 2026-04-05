@@ -8,16 +8,16 @@ Person(admin, "Back-Office Admin", "Manages blog content")
 Person(reader, "Anonymous Reader", "Reads published articles")
 
 System_Boundary(blog, "Blog Platform") {
-    Container(spa, "SPA", "Angular", "Back-office single-page application.\nMakes authenticated API calls.")
-    Container(ssr, "SSR Web App", "Next.js / Angular Universal", "Public-facing server-rendered site.\nFetches articles from the API.")
+    Container(adminweb, "Back-Office Web App", "ASP.NET Core Razor Pages", "Back-office administration UI.\nMakes authenticated API calls.")
+    Container(publicweb, "Public Web App", "ASP.NET Core Razor Pages", "Public-facing server-rendered site.\nRenders published content and supporting pages.")
     Container(api, "API Server", ".NET 8, ASP.NET Core", "RESTful API with MediatR pipeline.\nHandles auth, validation, pagination,\nand RFC 7807 error responses.")
     ContainerDb(db, "Database", "SQL Server / PostgreSQL", "Stores articles, users, digital assets,\nand supporting data.")
 }
 
-Rel(admin, spa, "Uses", "HTTPS")
-Rel(reader, ssr, "Browses", "HTTPS")
-Rel(spa, api, "Calls API", "HTTPS/JSON + JWT")
-Rel(ssr, api, "Fetches articles", "HTTPS/JSON")
+Rel(admin, adminweb, "Uses", "HTTPS")
+Rel(reader, publicweb, "Browses", "HTTPS")
+Rel(adminweb, api, "Calls API", "HTTPS/JSON + JWT")
+Rel(publicweb, api, "Reads published content when HTTP endpoints are used", "In-process / HTTPS/JSON")
 Rel(api, db, "Reads/writes", "EF Core / SQL")
 
 @enduml

@@ -7,13 +7,13 @@ title Blog Platform - Container Diagram
 Person(admin, "Admin User", "Back-office administrator")
 
 System_Boundary(blog, "Blog Platform") {
-    Container(spa, "SPA", "Angular/React", "Back-office UI with login form, content management")
+    Container(web, "Back-Office Web App", "ASP.NET Core Razor Pages", "Back-office UI with login form and content management pages")
     Container(api, "API Server", ".NET 8, ASP.NET Core", "Handles authentication, serves REST API")
     ContainerDb(db, "Database", "PostgreSQL / SQL Server", "Stores users, content, digital assets")
 }
 
-Rel(admin, spa, "Uses", "HTTPS")
-Rel(spa, api, "Sends login credentials, API requests", "HTTPS/JSON + JWT")
+Rel(admin, web, "Uses", "HTTPS")
+Rel(web, api, "Submits login credentials and authenticated admin requests", "HTTPS/JSON + JWT")
 Rel(api, db, "Reads/writes", "EF Core / SQL")
 
 @enduml

@@ -8,14 +8,14 @@ Person(user, "User", "Admin or public reader")
 Person_Ext(attacker, "Attacker", "Malicious actor")
 
 System_Boundary(blogSystem, "Blog Platform") {
-    Container(browser, "Browser SPA", "Angular / React", "Back-office admin UI and public blog reader")
+    Container(browser, "Web Browser", "Razor Pages UI", "Back-office admin UI and public blog reader")
     Container(apiServer, "API Server", ".NET 8, ASP.NET Core", "Hosts security middleware pipeline, business logic, and API endpoints")
     ContainerDb(database, "Database", "SQL Server", "Stores articles, users, digital assets")
 }
 
 Rel(user, browser, "Uses", "HTTPS")
 Rel(attacker, apiServer, "Sends malicious requests", "HTTPS")
-Rel(browser, apiServer, "API calls", "HTTPS + JWT")
+Rel(browser, apiServer, "Page navigation, form posts, and API calls", "HTTPS + JWT")
 Rel(apiServer, database, "Reads/writes data", "Parameterized queries via EF Core")
 
 note right of apiServer

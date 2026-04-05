@@ -7,7 +7,7 @@
 
 ## Context
 
-The blog platform's API serves two consumers: the back-office SPA (authenticated, read/write) and the public-facing SSR site (unauthenticated, read-only). Both consumers need a predictable API surface with consistent URL conventions, HTTP semantics, response envelopes, and error formats. The API must handle validation errors, authentication failures, rate limiting, and business rule violations in a standardized way.
+The blog platform's API supports the Razor Pages-based back-office administration UI and the public-facing web experience wherever a programmatic HTTP surface is needed. These consumers need a predictable API surface with consistent URL conventions, HTTP semantics, response envelopes, and error formats. The API must handle validation errors, authentication failures, rate limiting, and business rule violations in a standardized way.
 
 Custom error formats create friction for API consumers who must learn bespoke schemas. Industry standards exist for API error reporting.
 

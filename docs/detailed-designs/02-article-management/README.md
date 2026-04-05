@@ -29,7 +29,7 @@ The blog platform sits between the admin user and the persistence layer.
 
 ### 2.2 C4 Container Diagram
 
-The system is composed of a back-office single-page application, an API server, and a relational database.
+The system is composed of a back-office Razor Pages web application, an API server, and a relational database.
 
 ![C4 Container Diagram](diagrams/c4_container.png)
 

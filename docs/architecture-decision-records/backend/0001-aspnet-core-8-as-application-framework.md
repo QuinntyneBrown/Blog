@@ -9,11 +9,11 @@
 
 The blog platform requires a server-side framework that can deliver server-rendered HTML pages with sub-200ms TTFB at P95, host a RESTful API for back-office operations, support middleware pipelines for security and caching, and provide a robust dependency injection system. The framework must support JWT authentication, Entity Framework Core for data access, and response compression out of the box.
 
-The platform has two distinct consumers: a public-facing site requiring server-side rendering with minimal JavaScript, and a back-office SPA requiring a secure API. Both are served from the same application.
+The platform has two distinct web experiences: a public-facing site and a back-office administration interface. Both are rendered with Razor Pages, and both rely on the same ASP.NET Core application boundary for security, routing, and API access.
 
 ## Decision
 
-We will use **ASP.NET Core 8 with C#** as the application framework, leveraging Razor Pages for server-side rendering of the public site and Web API controllers for the RESTful back-office API.
+We will use **ASP.NET Core 8 with C#** as the application framework, leveraging Razor Pages for both the public site and the back-office administration UI, plus Web API controllers for RESTful endpoints.
 
 ## Options Considered
 
@@ -45,7 +45,7 @@ We will use **ASP.NET Core 8 with C#** as the application framework, leveraging 
 ### Negative
 - The team must be proficient in C# and the .NET ecosystem.
 - Deployment requires the .NET runtime (mitigated by containerization).
-- The Angular back-office SPA introduces a second language (TypeScript) alongside C#.
+- Building both web experiences in Razor Pages keeps the platform in a single primary language and runtime, but it also means rich admin interactions must be implemented deliberately without relying on a JavaScript SPA framework.
 
 ### Risks
 - .NET 8 is an LTS release (supported until November 2026). Migration to .NET 9 or later will be required eventually, though ASP.NET Core has a strong track record of backward compatibility.
@@ -53,7 +53,7 @@ We will use **ASP.NET Core 8 with C#** as the application framework, leveraging 
 ## Implementation Notes
 
 - Target framework: `net8.0` in all `.csproj` files.
-- Use Razor Pages (`AddRazorPages()`) for the public site and API controllers (`AddControllers()`) for the REST API.
+- Use Razor Pages (`AddRazorPages()`) for both the public site and the back-office administration UI, and API controllers (`AddControllers()`) for the REST API.
 - Register services via the built-in DI container in `Program.cs`.
 - Middleware pipeline order is critical for correctness — see Feature 07 (Web Performance) and Feature 08 (Security Hardening) designs.
 

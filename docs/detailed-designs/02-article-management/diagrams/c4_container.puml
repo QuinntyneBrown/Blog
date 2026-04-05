@@ -7,13 +7,13 @@ title Container Diagram - Article Management
 Person(admin, "Admin User", "Authenticated administrator")
 
 System_Boundary(blogSystem, "Blog Platform") {
-    Container(spa, "Back-Office SPA", "Angular/React", "Admin interface for managing articles with list, editor, and metadata views")
+    Container(web, "Back-Office Web App", "ASP.NET Core Razor Pages", "Admin interface for managing articles with list, editor, and metadata views")
     Container(api, "API Server", ".NET 8, ASP.NET Core", "RESTful API handling article CRUD, validation, slug generation, and reading time calculation")
     ContainerDb(db, "Database", "SQL Server", "Stores articles, digital assets, and user accounts")
 }
 
-Rel(admin, spa, "Manages articles", "HTTPS")
-Rel(spa, api, "Sends API requests", "HTTPS/JSON, JWT Bearer")
+Rel(admin, web, "Manages articles", "HTTPS")
+Rel(web, api, "Submits authenticated article management requests", "HTTPS/JSON, JWT Bearer")
 Rel(api, db, "Reads and writes data", "EF Core / SQL")
 
 @enduml

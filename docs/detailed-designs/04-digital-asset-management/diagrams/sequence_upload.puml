@@ -4,7 +4,7 @@
 title Digital Asset Upload Flow
 
 actor "Admin User" as user
-participant "Back-Office SPA" as spa
+participant "Back-Office Web App" as web
 participant "DigitalAssetController" as ctrl
 participant "DigitalAssetService" as svc
 participant "FileValidator" as validator
@@ -13,11 +13,11 @@ participant "AssetStorage" as storage
 participant "AssetRepository" as repo
 database "Database" as db
 
-user -> spa : Drops image onto Dropzone
-spa -> ctrl : POST /api/digital-assets\n[multipart/form-data + JWT]
+user -> web : Drops image onto Dropzone
+web -> ctrl : POST /api/digital-assets\n[multipart/form-data + JWT]
 
 alt Unauthenticated
-    ctrl --> spa : 401 Unauthorized
+    ctrl --> web : 401 Unauthorized
 end
 
 ctrl -> svc : UploadAsync(file, userId)
@@ -26,14 +26,14 @@ svc -> validator : ValidateFileSize(file.Length)
 alt File > 10 MB
     validator --> svc : FileTooLargeException
     svc --> ctrl : 413 Content Too Large
-    ctrl --> spa : 413 response
+    ctrl --> web : 413 response
 end
 
 svc -> validator : ValidateContentType(file.Stream, file.ContentType)
 alt Invalid file type
     validator --> svc : InvalidContentTypeException
     svc --> ctrl : 400 Bad Request
-    ctrl --> spa : 400 response
+    ctrl --> web : 400 response
 end
 
 svc -> svc : Generate unique stored filename\n(GUID + original extension)
@@ -50,7 +50,7 @@ db --> repo : success
 repo --> svc : success
 
 svc --> ctrl : UploadResponse {id, url, metadata}
-ctrl --> spa : 201 Created + UploadResponse
-spa --> user : Display uploaded image preview
+ctrl --> web : 201 Created + UploadResponse
+web --> user : Display uploaded image preview
 
 @enduml

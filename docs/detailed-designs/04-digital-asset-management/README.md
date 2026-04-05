@@ -23,7 +23,7 @@ The system context shows the Blog Platform in relation to users and file storage
 
 ![C4 Context Diagram](diagrams/c4_context.png)
 
-- **Admin User** uploads digital assets via the back-office SPA.
+- **Admin User** uploads digital assets via the back-office Razor Pages application.
 - **Anonymous Reader** requests optimized images embedded in published articles.
 - **File Storage** persists the original and processed image files.
 
@@ -33,7 +33,7 @@ The container diagram shows the major deployable units involved in digital asset
 
 ![C4 Container Diagram](diagrams/c4_container.png)
 
-- **Back-Office SPA** provides the Dropzone UI for uploading and managing assets.
+- **Back-Office Web App (ASP.NET Core Razor Pages)** provides the Dropzone UI for uploading and managing assets.
 - **API Server (.NET)** handles upload validation, image processing, storage orchestration, and optimized serving.
 - **Database** stores asset metadata (filename, content type, dimensions, ownership).
 - **File Storage** holds the binary asset files (local filesystem or cloud blob storage).
@@ -152,8 +152,8 @@ The component diagram details the digital-asset-related components inside the AP
 
 ![Upload Sequence Diagram](diagrams/sequence_upload.png)
 
-1. Admin user drags an image onto the Dropzone component in the back-office SPA.
-2. SPA sends `POST /api/digital-assets` as `multipart/form-data` with the `Authorization: Bearer <token>` header.
+1. Admin user drags an image onto the Dropzone component in the back-office web app.
+2. The back-office web app sends `POST /api/digital-assets` as `multipart/form-data` with the `Authorization: Bearer <token>` header.
 3. `DigitalAssetController` checks authentication. If unauthenticated, returns 401.
 4. Controller extracts the file from the multipart request and delegates to `DigitalAssetService`.
 5. `DigitalAssetService` calls `FileValidator.ValidateFileSize()`. If >10 MB, returns 413.

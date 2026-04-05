@@ -4,8 +4,8 @@
 
 title Blog Platform - API System Context Diagram
 
-Person(admin, "Back-Office Admin", "Manages articles, digital assets, and settings via the SPA")
-Person(reader, "Anonymous Reader", "Reads published blog posts via the public web app")
+Person(admin, "Back-Office Admin", "Manages articles, digital assets, and settings through the back-office Razor Pages app")
+Person(reader, "Anonymous Reader", "Reads published blog posts through the public Razor Pages site")
 
 System(api, "Blog API System", "RESTful API serving both back-office and public site.\nEnforces conventions, auth, pagination, and error handling.")
 

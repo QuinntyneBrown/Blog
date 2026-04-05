@@ -7,7 +7,7 @@
 
 ## Context
 
-The blog API is consumed by a back-office SPA running on a potentially different origin (e.g., the SPA is served from `https://admin.blog.example.com` while the API is at `https://api.blog.example.com`). Browsers enforce the Same-Origin Policy, which blocks cross-origin requests unless the server explicitly permits them via CORS headers. A permissive CORS policy (`Access-Control-Allow-Origin: *`) would allow any website to make authenticated requests to the API on behalf of a logged-in user (L2-042).
+The blog API is primarily consumed by first-party Razor Pages experiences served from the same ASP.NET Core application boundary. Same-origin requests do not require CORS, but any separately hosted admin tools, staging frontends, or future integrations would. Browsers enforce the Same-Origin Policy, which blocks cross-origin requests unless the server explicitly permits them via CORS headers. A permissive CORS policy (`Access-Control-Allow-Origin: *`) would allow any website to call browser-accessible API endpoints from an arbitrary origin (L2-042).
 
 The public-facing SSR pages are same-origin with the API (served from the same ASP.NET Core process), so they do not trigger CORS.
 
@@ -27,29 +27,29 @@ We will enforce a **strict CORS policy** where only explicitly configured origin
 
 ### Option 3: No CORS (Same-Origin Only)
 - **Pros:** Most restrictive, eliminates cross-origin attack surface.
-- **Cons:** Prevents the SPA from being hosted on a different origin than the API, limits deployment flexibility.
+- **Cons:** Prevents any separately hosted admin tools or approved external browser clients from calling the API, limiting deployment flexibility.
 
 ## Consequences
 
 ### Positive
 - Cross-origin requests are only accepted from trusted, configured origins.
 - Browser-enforced policy — no server-side trust required.
-- Preflight caching (7200s) reduces roundtrips for SPA clients.
+- Preflight caching (7200s) reduces roundtrips for approved browser-based clients.
 - Configuration-driven — adding a new origin requires only an `appsettings.json` change.
 
 ### Negative
 - Origin list must be kept in sync with actual client deployment URLs.
-- Development environments need `https://localhost:*` entries for local SPA development.
+- Development environments need explicit `https://localhost:*` entries when testing approved cross-origin browser clients against the API.
 
 ### Risks
-- Misconfigured origins could block the SPA from functioning. Staging environment testing should verify CORS behavior before production deployment.
+- Misconfigured origins could block approved cross-origin clients. Staging environment testing should verify CORS behavior before production deployment.
 
 ## Implementation Notes
 
 - Configuration: `Cors:AllowedOrigins` array in `appsettings.json`.
 - Allowed methods: `GET, POST, PUT, PATCH, DELETE, OPTIONS`.
 - Allowed headers: `Authorization, Content-Type`.
-- `AllowCredentials = true` for configured origins (required for JWT in `Authorization` header).
+- `AllowCredentials` remains disabled unless a specific cross-origin cookie-based flow requires it; bearer tokens sent in the `Authorization` header do not require credentialed CORS.
 - Preflight max age: 7200 seconds (2 hours).
 - Middleware positioned after rate limiting, before authentication.
 

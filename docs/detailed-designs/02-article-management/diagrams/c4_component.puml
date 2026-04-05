@@ -4,7 +4,7 @@
 
 title Component Diagram - API Server (Article Management)
 
-Container(spa, "Back-Office SPA", "Angular/React", "Admin interface")
+Container(web, "Back-Office Web App", "ASP.NET Core Razor Pages", "Admin interface")
 ContainerDb(db, "Database", "SQL Server", "Article storage")
 
 Container_Boundary(api, "API Server") {
@@ -16,7 +16,7 @@ Container_Boundary(api, "API Server") {
     Component(repo, "ArticleRepository", "EF Core", "Data access for Article entity")
 }
 
-Rel(spa, controller, "Sends requests", "HTTPS/JSON")
+Rel(web, controller, "Sends requests", "HTTPS/JSON")
 Rel(controller, validation, "Dispatches commands/queries via MediatR")
 Rel(validation, service, "Forwards validated requests")
 Rel(service, slugGen, "Generates slug from title")

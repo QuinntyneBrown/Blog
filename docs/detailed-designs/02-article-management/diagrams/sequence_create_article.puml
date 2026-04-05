@@ -4,7 +4,7 @@
 title Create Article - Sequence Diagram
 
 actor Admin
-participant "Back-Office SPA" as SPA
+participant "Back-Office Web App" as Web
 participant "ArticleController" as Controller
 participant "ValidationBehavior" as Validation
 participant "ArticleService" as Service
@@ -13,8 +13,8 @@ participant "ReadingTimeCalculator" as Reading
 participant "ArticleRepository" as Repo
 database "Database" as DB
 
-Admin -> SPA : Fill in title, body, abstract,\noptional featured image
-SPA -> Controller : POST /api/articles\n{title, body, abstract, featuredImageId?}
+Admin -> Web : Fill in title, body, abstract,\noptional featured image
+Web -> Controller : POST /api/articles\n{title, body, abstract, featuredImageId?}
 
 Controller -> Validation : Dispatch CreateArticleCommand
 
@@ -22,7 +22,7 @@ Validation -> Validation : Validate required fields\n(title, body, abstract)
 
 alt Validation fails
     Validation --> Controller : ValidationException
-    Controller --> SPA : 400 Bad Request\n{field-level errors}
+    Controller --> Web : 400 Bad Request\n{field-level errors}
 else Validation passes
     Validation -> Service : Forward command
 end
@@ -37,7 +37,7 @@ Repo --> Service : exists (bool)
 
 alt Slug already exists
     Service --> Controller : ConflictException
-    Controller --> SPA : 409 Conflict
+    Controller --> Web : 409 Conflict
 else Slug is unique
 end
 
@@ -53,7 +53,7 @@ DB --> Repo : success
 Repo --> Service : persisted article
 
 Service --> Controller : ArticleDto
-Controller --> SPA : 201 Created\nLocation: /api/articles/{id}
-SPA --> Admin : Show success toast,\nnavigate to editor
+Controller --> Web : 201 Created\nLocation: /api/articles/{id}
+Web --> Admin : Show success toast,\nnavigate to editor
 
 @enduml

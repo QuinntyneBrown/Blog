@@ -22,9 +22,9 @@ The system context shows the Blog Platform in relation to its users and external
 
 ![C4 Context Diagram](diagrams/c4_context.png)
 
-- **Admin User** authenticates via the back-office SPA to manage blog content.
+- **Admin User** authenticates via the back-office Razor Pages application to manage blog content.
 - **Anonymous Reader** accesses the public site without authentication.
-- **Database** stores user credentials and session data.
+- **Database** stores user credentials and authentication metadata.
 - **External Identity Provider** is reserved for future OAuth/OIDC integration.
 
 ### 2.2 C4 Container Diagram
@@ -33,7 +33,7 @@ The container diagram shows the major deployable units involved in authenticatio
 
 ![C4 Container Diagram](diagrams/c4_container.png)
 
-- **SPA (Angular)** hosts the login form and stores the JWT in memory.
+- **Back-Office Web App (ASP.NET Core Razor Pages)** hosts the login form and manages the authenticated admin session used for protected API requests.
 - **API Server (.NET)** handles authentication endpoints and validates tokens on protected routes.
 - **Database (SQL Server/PostgreSQL)** persists user accounts and hashed credentials.
 
@@ -116,8 +116,8 @@ The component diagram details the authentication-related components inside the A
 
 ![Login Sequence Diagram](diagrams/sequence_login.png)
 
-1. User enters email and password in the SPA login form.
-2. SPA sends `POST /api/auth/login` with `LoginRequest` body.
+1. User enters email and password in the back-office login form.
+2. The back-office web app sends `POST /api/auth/login` with `LoginRequest` body.
 3. `AuthController` delegates to `AuthService.Login()`.
 4. `AuthService` calls `UserRepository.GetByEmail()` to fetch the user record.
 5. If the user is not found, return 401 Unauthorized.
@@ -126,7 +126,7 @@ The component diagram details the authentication-related components inside the A
 8. `AuthService` calls `TokenService.GenerateToken()` to create a JWT.
 9. `AuthService` updates `LastLoginAt` via `UserRepository`.
 10. `AuthController` returns 200 with `LoginResponse` (token + expiration).
-11. SPA stores the token in memory and includes it in subsequent API requests.
+11. The back-office web app retains the token within the authenticated admin session and uses it for subsequent protected API requests.
 
 ### 5.2 Token Validation Flow
 
