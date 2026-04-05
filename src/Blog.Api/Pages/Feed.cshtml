@@ -58,7 +58,11 @@
 </div>
 
 @section Head {
-<style>.footer { padding-top: 32px; padding-bottom: 32px; }</style>
+<style>
+.footer { padding-top: 32px; padding-bottom: 32px; }
+@@media (max-width: 767px) { .footer { padding-top: 28px; padding-bottom: 28px; } }
+@@media (max-width: 575px) { .footer { padding-top: 24px; padding-bottom: 24px; } }
+</style>
 }
 
 @section Scripts {
