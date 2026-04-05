@@ -6,11 +6,17 @@ test.describe('robots.txt', () => {
     expect(response.status()).toBe(200);
   });
 
-  test('disallows /admin/ and /api/', async ({ request }) => {
+  test('disallows /admin and /api/', async ({ request }) => {
     const response = await request.get('/robots.txt');
     const body = await response.text();
-    expect(body).toContain('Disallow: /admin/');
+    expect(body).toContain('Disallow: /admin');
     expect(body).toContain('Disallow: /api/');
+  });
+
+  test('disallows /search', async ({ request }) => {
+    const response = await request.get('/robots.txt');
+    const body = await response.text();
+    expect(body).toContain('Disallow: /search');
   });
 
   test('includes Sitemap directive', async ({ request }) => {

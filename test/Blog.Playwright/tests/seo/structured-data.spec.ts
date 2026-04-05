@@ -80,4 +80,20 @@ test.describe('L2-008: Structured Data (JSON-LD)', () => {
       expect(jsonLd['@context']).toMatch(/schema\.org/);
     });
   });
+
+  test.describe('Articles listing page', () => {
+    test('has JSON-LD with Schema.org Blog type', async ({ page }) => {
+      await page.goto('/articles');
+
+      const jsonLdScript = page.locator('script[type="application/ld+json"]');
+      await expect(jsonLdScript.first()).toBeAttached();
+
+      const jsonLdText = await jsonLdScript.first().textContent();
+      expect(jsonLdText).toBeTruthy();
+
+      const jsonLd = JSON.parse(jsonLdText!);
+      expect(jsonLd['@type']).toBe('Blog');
+      expect(jsonLd['@context']).toMatch(/schema\.org/);
+    });
+  });
 });
