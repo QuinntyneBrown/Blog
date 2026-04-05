@@ -538,3 +538,18 @@ The design specifies six Open Graph properties on every page (Section 3.1): `og:
 - Added `<meta property="og:url" content="@canonicalUrl" />` conditionally (when `canonicalUrl` is set), reusing the same canonical URL already computed per page.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — RSS feed items missing author; Atom feed entries missing published date and per-entry author
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.5 — FeedGenerator, Section 4.5 — FeedEntry
+
+**Description:**
+The design specifies that each RSS `<item>` must include `<title>`, `<link>`, `<pubDate>`, `<description>`, `<author>`, and `<guid>` (Section 3.5). Each Atom `<entry>` must include `<title>`, `<link>`, `<published>`, `<updated>`, `<summary>`, `<author>`, and `<id>`. The RSS items were missing `<author>` entirely — feed readers displayed articles with no attribution. The Atom entries were missing `<published>` (the publication timestamp required by the Atom spec) and per-entry `<author>` (only the feed-level `<author>` existed, but the design's FeedEntry model specifies `AuthorName` per entry). Additionally, the Atom `<updated>` field incorrectly used `DatePublished` instead of `UpdatedAt`.
+
+**Fix applied:**
+- RSS: Added `<dc:creator>Quinn Brown</dc:creator>` to each `<item>`, using the Dublin Core namespace already imported in the feed.
+- Atom: Added `<published>` element (using `DatePublished` or `CreatedAt` fallback), corrected `<updated>` to use `UpdatedAt`, and added per-entry `<author><name>Quinn Brown</name></author>`.
+
+**Status:** FIXED
