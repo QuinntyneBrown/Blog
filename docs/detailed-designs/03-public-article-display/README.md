@@ -272,9 +272,9 @@ The public site targets WCAG 2.1 Level AA compliance across all pages and breakp
 | # | Question | Impact | Status |
 |---|----------|--------|--------|
 | 1 | Should the Public Web App call the API Server over HTTP, or should it share the same process and call `PublicArticleService` directly (in-process)? | Architecture, performance, deployment | Resolved: in-process shared service |
-| 2 | What is the desired page size for the article listing? Common values are 9 (fills a 3-column grid evenly) or 12. | UX, pagination behavior | Open |
-| 3 | Should we implement output caching or response caching for the SSR-rendered pages? If so, what cache duration is acceptable for published content? | Performance, content freshness | Open |
-| 4 | Is a CDN required for the initial release, or is serving static assets directly from the application server acceptable? | Infrastructure, performance | Open |
-| 5 | Should the article body content be stored as raw HTML, Markdown (rendered at serve time), or a structured format? This affects the rendering pipeline in `ArticleDetailPage`. | Content authoring, rendering complexity | Open |
+| 2 | ~~What is the desired page size for the article listing?~~ **Resolved: 9.** Fills a 3-column XL grid evenly with no partial final row. Divisible by 3 (XL) and 1 (mobile). | UX, pagination behavior | Resolved |
+| 3 | ~~Should we implement response caching for SSR pages?~~ **Resolved: Yes.** In-memory response cache with `max-age=60, stale-while-revalidate=600` per Feature 07. Explicit purge via `ICacheInvalidator` on article publish/update. | Performance, content freshness | Resolved |
+| 4 | ~~Is a CDN required for the initial release?~~ **Resolved: Deferred.** Serving directly from the application server is sufficient for v1. CDN (Azure Front Door) can be added later without application changes. Cheapest option. | Infrastructure, performance | Resolved |
+| 5 | ~~Should the article body content be stored as raw HTML, Markdown, or structured format?~~ **Resolved: Both.** Markdown source stored as `Body`, pre-rendered HTML stored as `BodyHtml`. Public site renders `BodyHtml` directly. See Feature 02. | Content authoring, rendering complexity | Resolved |
 | 6 | Are category tags on ArticleCards part of the public article data model? | Scope, navigation | Resolved: no category taxonomy in v1 |
 | 7 | Should SkeletonCard loading states be implemented given that SSR delivers fully rendered HTML? | UX, implementation complexity | Resolved: not included in SSR v1 |

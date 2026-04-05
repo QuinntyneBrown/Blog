@@ -303,9 +303,9 @@ The SEO-related middleware must be registered in the correct order in `Program.c
 
 | # | Question | Impact | Status |
 |---|----------|--------|--------|
-| 1 | Should the sitemap be split into multiple files (sitemap index) if the number of articles exceeds 50,000? | Scalability of sitemap generation | Open |
-| 2 | Should we support a configurable llms.txt template, or is a static implementation sufficient for launch? | Flexibility vs. simplicity | Open |
-| 3 | Should feed entries include the full article HTML content or only the abstract/summary? | Feed reader experience, bandwidth | Open |
-| 4 | What is the desired cache TTL for the sitemap and feeds in production? | Freshness vs. performance | Open |
-| 5 | Should the sitemap include non-article pages (e.g., about, contact) or only published articles? | Sitemap completeness | Open |
-| 6 | Should we implement a WebSub/PubSubHubbub hub for real-time feed notifications, or is polling sufficient? | Feed update latency | Open |
+| 1 | ~~Should the sitemap be split into multiple files (sitemap index) if the number of articles exceeds 50,000?~~ **Resolved: No.** A personal blog will not approach 50,000 articles. Single sitemap is sufficient. If the limit is ever reached, splitting can be added as a straightforward refactor. | Scalability of sitemap generation | Resolved |
+| 2 | ~~Should we support a configurable llms.txt template?~~ **Resolved: Static implementation.** A static `llms.txt` file is sufficient for launch. The convention is still emerging; a static file is easy to update manually. | Flexibility vs. simplicity | Resolved |
+| 3 | ~~Should feed entries include full HTML content or abstract only?~~ **Resolved: Abstract only.** Reduces bandwidth, drives traffic to the site, and avoids exposing full article HTML in the feed. Cheaper and simpler. | Feed reader experience, bandwidth | Resolved |
+| 4 | ~~What is the desired cache TTL for the sitemap and feeds?~~ **Resolved: 60 minutes.** `Cache-Control: public, max-age=3600`. Balances freshness with performance. Matches the HTML page cache strategy from Feature 07. | Freshness vs. performance | Resolved |
+| 5 | ~~Should the sitemap include non-article pages?~~ **Resolved: Published articles only.** Non-article pages (about, contact) are few and static; search engines discover them via internal links. Keeping the sitemap article-only simplifies generation. | Sitemap completeness | Resolved |
+| 6 | ~~Should we implement WebSub/PubSubHubbub?~~ **Resolved: No, polling is sufficient.** WebSub adds infrastructure complexity for minimal benefit on a personal blog with infrequent publishing. Feed readers poll at their own intervals. | Feed update latency | Resolved |

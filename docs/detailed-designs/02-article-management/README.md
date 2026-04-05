@@ -142,7 +142,7 @@ Within the API server, article management is handled by a set of focused compone
 1. Admin submits updated fields for an existing article ID.
 2. `ValidationBehavior` validates that title is not empty (if provided).
 3. `ArticleService` retrieves the article -- returns 404 if not found.
-4. If title changed, `SlugGenerator` regenerates the slug; `SlugExists` checks for conflicts (409).
+4. If title changed and the article is **not published**, `SlugGenerator` regenerates the slug; `SlugExists` checks for conflicts (409). If the article **is published**, the slug is frozen and unchanged regardless of title changes.
 5. The service validates the incoming `If-Match` version token against the current article version and returns 412 if they do not match.
 6. If body changed, `MarkdownConverter` reconverts Markdown to sanitized HTML (`BodyHtml`), and `ReadingTimeCalculator` recomputes reading time.
 7. `ArticleService` updates fields, increments `Version`, and sets `UpdatedAt = UtcNow`.
@@ -205,7 +205,7 @@ GET /api/articles?page={page}&pageSize={pageSize}
     }
   ],
   "page": 1,
-  "pageSize": 20,
+  "pageSize": 9,
   "totalCount": 42
 }
 ```
@@ -347,8 +347,8 @@ Feedback is delivered via `Comp/Toast` components (success, error variants). Des
 
 ## 9. Open Questions
 
-1. **Slug collision strategy:** Should the system auto-append a numeric suffix (e.g., `my-post-2`) on slug collision, or strictly return 409 and require the user to change the title? Current design returns 409 per L2-001 acceptance criteria.
-2. **Soft delete:** Should articles support soft delete (a `DeletedAt` timestamp) for recovery, or is permanent deletion sufficient? Current design implements permanent deletion per L2-004.
+1. **Slug collision strategy:** ~~Should the system auto-append a numeric suffix or return 409?~~ **Resolved: Return 409.** Keeps slug generation deterministic and forces explicit title choice. Per L2-001 acceptance criteria.
+2. **Soft delete:** ~~Should articles support soft delete?~~ **Resolved: Permanent deletion.** Single-admin personal blog does not warrant the complexity of soft delete, retention policies, or scheduled hard-delete jobs. Per L2-004.
 3. **Body format:** ~~Should the system store HTML only, Markdown only, or both?~~ **Resolved:** The system stores both. `Body` holds the Markdown source of truth; `BodyHtml` holds sanitized HTML generated server-side at save time via Markdig. The public site renders `BodyHtml` directly with no runtime conversion.
-4. **Slug immutability after publish:** Should updating a published article's title regenerate the slug (potentially breaking existing public URLs), or should slug regeneration be restricted to draft articles only?
-5. **Concurrent editing:** Should the system implement optimistic concurrency (e.g., via an ETag or row version) to prevent lost updates when multiple admins edit the same article? Current design resolves this with a version token and `If-Match`.
+4. **Slug immutability after publish:** ~~Should slug regeneration be restricted to draft articles only?~~ **Resolved: Freeze slug on publish.** Once an article is published, the slug is immutable regardless of title changes. This prevents broken public URLs, social share links, and search engine indexes. Draft articles continue to regenerate slugs on title change.
+5. **Concurrent editing:** ~~Should the system implement optimistic concurrency?~~ **Resolved:** Yes, via a `Version` concurrency token and `If-Match` / 412 Conflict. Already implemented.

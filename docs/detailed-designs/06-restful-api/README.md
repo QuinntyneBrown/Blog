@@ -76,7 +76,7 @@ The component diagram details the internal structure of the API server relevant 
   - Accepts `PaginationParameters` (page number, page size) and a total count from the database query.
   - Computes `TotalPages`, `HasPreviousPage`, `HasNextPage`.
   - Generates `NextPageUrl` and `PreviousPageUrl` using ASP.NET Core link generation from route values and configured application URLs rather than blindly echoing raw host headers.
-  - Enforces constraints: page size minimum 1, maximum 100, default 20.
+  - Enforces constraints: page size minimum 1, maximum 100, default 9.
   - Calculates SQL OFFSET as `(Page - 1) * PageSize`.
 
 ### 3.4 ResponseEnvelopeMiddleware
@@ -132,7 +132,7 @@ The component diagram details the internal structure of the API server relevant 
 | Field | Type | Constraints |
 |-------|------|-------------|
 | Page | int | Minimum 1, default 1 |
-| PageSize | int | Minimum 1, maximum 100, default 20 |
+| PageSize | int | Minimum 1, maximum 100, default 9 |
 
 ### 4.5 ApiResponse\<T\> (Envelope)
 
@@ -162,7 +162,7 @@ The component diagram details the internal structure of the API server relevant 
 
 ![Pagination Sequence Diagram](diagrams/sequence_pagination.png)
 
-1. Client sends `GET /api/articles?page=2&pageSize=20`.
+1. Client sends `GET /api/articles?page=2&pageSize=9`.
 2. The controller binds query parameters to `PaginationParameters` and sends a MediatR query.
 3. The handler passes `PaginationParameters` to the repository.
 4. The repository executes two queries: a `COUNT(*)` for total count and a `SELECT` with `OFFSET 20 ROWS FETCH NEXT 20 ROWS ONLY` for the page data.
@@ -213,7 +213,7 @@ Content-Type: application/json
 **Request:**
 
 ```http
-GET /api/articles?page=1&pageSize=20
+GET /api/articles?page=1&pageSize=9
 Authorization: Bearer <token>
 ```
 
@@ -243,7 +243,7 @@ Authorization: Bearer <token>
     "hasPreviousPage": false,
     "hasNextPage": true,
     "previousPageUrl": null,
-    "nextPageUrl": "/api/articles?page=2&pageSize=20"
+    "nextPageUrl": "/api/articles?page=2&pageSize=9"
   },
   "timestamp": "2026-04-04T13:30:00Z"
 }
@@ -630,9 +630,9 @@ In production, 500 responses omit exception details and stack traces. In develop
 
 | # | Question | Impact | Status |
 |---|----------|--------|--------|
-| 1 | Should the response envelope middleware be opt-in (via attribute) or opt-out? Some endpoints like file downloads and health checks need raw responses. | API consistency vs. flexibility | Open |
-| 2 | Should pagination use cursor-based approach in addition to offset-based for specific high-volume endpoints? | Performance at scale, API complexity | Open |
-| 3 | Should the API support content negotiation (Accept header) or always return JSON? | API flexibility, implementation complexity | Open |
-| 4 | What is the appropriate maximum request body size for non-file-upload endpoints? | Security, server resource constraints | Open |
-| 5 | Should API versioning be introduced from the start (e.g., `/api/v1/articles`), or deferred until a breaking change is needed? | Long-term API evolution, URL design | Open |
+| 1 | ~~Should the response envelope middleware be opt-in or opt-out?~~ **Resolved: Opt-out via `[RawResponse]` attribute.** Envelope wrapping applies by default. Endpoints that need raw responses (file downloads, health checks, asset serving) annotate with `[RawResponse]` to skip wrapping. | API consistency vs. flexibility | Resolved |
+| 2 | ~~Should pagination use cursor-based approach?~~ **Resolved: Offset-based only.** A personal blog will not have high-volume datasets where cursor-based pagination provides meaningful benefit. Offset-based is simpler and sufficient. | Performance at scale, API complexity | Resolved |
+| 3 | ~~Should the API support content negotiation or always return JSON?~~ **Resolved: JSON only.** All API endpoints return `application/json`. Content negotiation for images is handled separately by the asset serving endpoint (Feature 04). Simplest approach. | API flexibility, implementation complexity | Resolved |
+| 4 | ~~What is the maximum request body size for non-file-upload endpoints?~~ **Resolved: 1 MB.** Enforced via Kestrel's `MaxRequestBodySize`. File upload endpoints override this to 10 MB. Prevents abuse without restricting normal article content. | Security, server resource constraints | Resolved |
+| 5 | ~~Should API versioning be introduced from the start?~~ **Resolved: Deferred.** No versioning prefix for v1. When a breaking change is needed, URL path versioning (`/api/v2/...`) will be adopted as the simplest and most explicit approach. Documented so consumers can prepare. | Long-term API evolution, URL design | Resolved |
 | 6 | Should ETag-based caching headers be generated for GET responses to support conditional requests (If-None-Match)? | Performance, caching strategy | Resolved: weak validators on cacheable GET responses |
