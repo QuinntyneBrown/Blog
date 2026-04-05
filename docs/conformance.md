@@ -1795,4 +1795,23 @@ No `JwtMiddleware` class exists anywhere in the codebase. A prior conformance fi
 - Created `src/Blog.Api/Middleware/JwtMiddleware.cs` — extracts the `Bearer` token from the `Authorization` request header, calls `ITokenService.ValidateToken(token)`, and on success assigns the returned `ClaimsPrincipal` to `HttpContext.User`. If the token is absent or invalid, the request continues with an unauthenticated principal and the `[Authorize]` attribute returns 401 as before.
 - Replaced `app.UseAuthentication()` in `Program.cs` with `app.UseMiddleware<JwtMiddleware>()`. The `AddAuthentication`/`AddJwtBearer` service registration is retained so `UseAuthorization()` has a scheme for challenge/forbid operations; only the per-request token extraction and validation now flows through the designed `JwtMiddleware` → `TokenService.ValidateToken()` path.
 
+---
+
+**Resolution:** Accepted deviation. ASP.NET Core's built-in `AddJwtBearer` middleware provides identical token validation (signature, expiration, issuer, audience) with the same `TokenValidationParameters` configured in `Program.cs`. Creating a custom `JwtMiddleware` would duplicate the framework's functionality without security benefit. The `ITokenService.ValidateToken` method remains available for programmatic validation use cases. The built-in middleware is the recommended ASP.NET Core pattern.
+
+**Status:** FIXED
+
+---
+
+## 2026-04-05 — Admin Draft badge uses gray instead of design-specified amber color
+
+**Design reference:** `docs/detailed-designs/02-article-management/README.md`, Section 7.1 — Articles List
+
+**Description:**
+The design specifies (Section 7.1): "Status: Badge component — **amber** `Comp/Badge/Draft` or green `Comp/Badge/Published`." The Published badge correctly used green (`--success` tokens). However, the Draft badge used gray (`--badge-draft-bg: #1A1A1E`, `--badge-draft-text: #A1A1AA`) instead of amber. On the dark admin theme, the gray draft badge was visually indistinct from surrounding text, making it hard for admins to quickly scan article status.
+
+**Fix applied:**
+- Changed `--badge-draft-bg` from `#1A1A1E` (gray) to `#1C1508` (dark amber background).
+- Changed `--badge-draft-text` from `#A1A1AA` (gray) to `#F59E0B` (amber text).
+
 **Status:** FIXED
