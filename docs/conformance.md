@@ -157,3 +157,14 @@ The design specifies RSS feed at `/feed.xml` (RSS 2.0) and Atom feed at `/atom.x
 - Updated `Feed.cshtml` subscribe buttons.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Sitemap article changefreq is "monthly" instead of "weekly"
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.3 — SitemapGenerator
+
+**Description:**
+The design specifies that each article `<url>` entry in the sitemap should use `<changefreq>weekly</changefreq>` for articles and `daily` for the homepage. The `SeoController.Sitemap()` method used `"monthly"` for article entries (line 86), signaling to search engines that articles change less frequently than the design intends. This could delay recrawling of updated articles.
+
+**Status:** FIXED

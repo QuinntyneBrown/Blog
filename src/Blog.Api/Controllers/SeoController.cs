@@ -10,16 +10,9 @@ namespace Blog.Api.Controllers;
 [Route("")]
 [ApiController]
 [RawResponse]
-public class SeoController(IMediator mediator, IHttpContextAccessor httpContextAccessor) : ControllerBase
+public class SeoController(IMediator mediator, IConfiguration configuration) : ControllerBase
 {
-    private string BaseUrl
-    {
-        get
-        {
-            var req = httpContextAccessor.HttpContext!.Request;
-            return $"{req.Scheme}://{req.Host}";
-        }
-    }
+    private string BaseUrl => configuration["Site:SiteUrl"]!.TrimEnd('/');
 
     [HttpGet("robots.txt")]
     [ResponseCache(Duration = 86400)]
@@ -28,7 +21,7 @@ public class SeoController(IMediator mediator, IHttpContextAccessor httpContextA
         var content = $"""
             User-agent: *
             Allow: /
-            Disallow: /admin/
+            Disallow: /admin
             Disallow: /api/
 
             Sitemap: {BaseUrl}/sitemap.xml
