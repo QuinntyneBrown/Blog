@@ -54,7 +54,6 @@ public class UpdateArticleCommandHandler(
         article.Abstract = request.Abstract;
         article.FeaturedImageId = request.FeaturedImageId;
         article.UpdatedAt = DateTime.UtcNow;
-        article.Version++;
 
         uow.Articles.Update(article);
         await uow.SaveChangesAsync(cancellationToken);

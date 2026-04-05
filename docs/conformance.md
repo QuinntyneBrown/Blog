@@ -371,3 +371,18 @@ None of these events were present anywhere in the codebase. The `PublishArticleC
 - `LoginCommandHandler`: Injected `ILogger`, added `UserAuthenticationFailed` event before each `throw UnauthorizedException` with only `Reason` and optionally `UserId` (no email/password — no PII). Added `UserAuthenticated` event after successful token generation with `UserId`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Article Version double-incremented: both command handlers and BlogDbContext.SaveChangesAsync increment Version
+
+**Design reference:** `docs/detailed-designs/10-data-persistence/README.md`, Section 3.1 — BlogDbContext; `docs/detailed-designs/02-article-management/README.md`, Sections 5.2–5.4
+
+**Description:**
+Design 10 (Section 3.1) specifies that `BlogDbContext.SaveChangesAsync` "increments the article `Version` concurrency token on successful article updates" — the DbContext handles Version increment automatically for any `Modified` entity. Design 02 (Sections 5.2–5.4) also says each operation "increments Version." A prior conformance fix interpreted design 02 literally and added explicit `article.Version++` calls in `UpdateArticleCommandHandler`, `PublishArticleCommandHandler`, and `DeleteArticleCommandHandler`. However, the DbContext's `SaveChangesAsync` override (line 34-35) already performs `article.Version++` when it detects `EntityState.Modified`. The result was that every save incremented Version by 2 instead of 1 — once in the handler and once in `SaveChangesAsync`. While optimistic concurrency still functioned (the ETags were consistent within each request), the double-increment violated the design's intent of a monotonic +1 increment per mutation.
+
+**Fix applied:**
+- Removed the explicit `article.Version++` from `UpdateArticleCommandHandler`, `PublishArticleCommandHandler`, and `DeleteArticleCommandHandler`.
+- The single authoritative increment now occurs in `BlogDbContext.SaveChangesAsync`, as specified by design 10 Section 3.1.
+
+**Status:** FIXED
