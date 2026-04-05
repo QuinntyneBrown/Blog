@@ -56,7 +56,7 @@
 
         @if (Model.Articles.TotalPages > 1)
         {
-            <nav class="pagination">
+            <nav class="pagination" aria-label="Pagination">
                 @if (Model.Articles.HasPreviousPage)
                 {
                     <a href="/articles?page=@(Model.CurrentPage - 1)" class="pagination-btn">

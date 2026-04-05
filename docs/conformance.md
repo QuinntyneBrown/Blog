@@ -560,3 +560,17 @@ The design specifies that each RSS `<item>` must include `<title>`, `<link>`, `<
 - Atom: Added `<published>` element (using `DatePublished` or `CreatedAt` fallback), corrected `<updated>` to use `UpdatedAt`, and added per-entry `<author><name>Quinn Brown</name></author>`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Pagination on Articles/Index page missing aria-label="Pagination"
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 3.6 — Pagination, Section 7.1 — Semantic Markup and ARIA Landmarks
+
+**Description:**
+The design specifies (Section 3.6): "Uses `<nav aria-label="Pagination">` for accessibility." The homepage (`Index.cshtml`) correctly renders `<nav class="pagination" aria-label="Pagination">`, but the Articles listing page (`Articles/Index.cshtml`) renders `<nav class="pagination">` without the `aria-label` attribute. Screen readers cannot distinguish this navigation region from the main navigation without the label, reducing accessibility for keyboard and assistive-technology users browsing the articles listing.
+
+**Fix applied:**
+- Added `aria-label="Pagination"` to the `<nav class="pagination">` element in `Articles/Index.cshtml`.
+
+**Status:** FIXED
