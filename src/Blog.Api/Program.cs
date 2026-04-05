@@ -156,6 +156,7 @@ using (var scope = app.Services.CreateScope())
 // Middleware Pipeline
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<ResponseEnvelopeMiddleware>();
 app.UseMiddleware<SecurityHeadersMiddleware>();
 
@@ -193,7 +194,5 @@ app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.Health
         await context.Response.WriteAsync(result);
     }
 });
-
-app.UseSerilogRequestLogging();
 
 await app.RunAsync();
