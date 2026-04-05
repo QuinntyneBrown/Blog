@@ -1,0 +1,48 @@
+@startuml class_diagram
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+
+title Search Results Page — Page Model & DTOs
+
+class SearchIndexModel {
+    +Query: string
+    +Results: PagedResponse<SearchResultDto>
+    +IsEmpty: bool
+    +CurrentPage: int
+    +OnGetAsync(q: string, page: int): Task<IActionResult>
+}
+
+class SearchResultDto {
+    +ArticleId: Guid
+    +Title: string
+    +Slug: string
+    +Abstract: string
+    +TitleHighlighted: string
+    +AbstractHighlighted: string
+    +FeaturedImageUrl: string?
+    +DatePublished: DateTime?
+    +ReadingTimeMinutes: int
+}
+
+class "PagedResponse<T>" as PR {
+    +Items: IReadOnlyList<T>
+    +Page: int
+    +PageSize: int
+    +TotalCount: int
+    +TotalPages: int
+    +HasPreviousPage: bool
+    +HasNextPage: bool
+}
+
+class SearchArticlesQuery {
+    +Query: string
+    +Page: int
+    +PageSize: int
+}
+
+SearchIndexModel --> PR : Results
+PR --> SearchResultDto : Items
+SearchIndexModel --> SearchArticlesQuery : dispatches
+
+@enduml

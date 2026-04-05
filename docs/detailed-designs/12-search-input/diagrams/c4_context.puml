@@ -1,0 +1,13 @@
+@startuml c4_context
+!theme plain
+!include <C4/C4_Context>
+
+title Search Input & Autocomplete — System Context
+
+Person(visitor, "Anonymous Visitor", "Interacts with the search input on any public page")
+System(blog, "Blog Platform", "ASP.NET Core 8 — serves HTML and suggestions JSON")
+
+Rel(visitor, blog, "Types query / presses / key", "HTTPS")
+Rel(blog, visitor, "Rendered HTML + suggestions JSON", "HTTPS")
+
+@enduml

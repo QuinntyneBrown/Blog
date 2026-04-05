@@ -1,0 +1,20 @@
+@startuml c4_component
+!theme plain
+!include <C4/C4_Component>
+
+title Search Results Page — Component Diagram
+
+Container_Boundary(web, "Razor Pages App") {
+    Component(model, "SearchIndexModel", "Razor Page Model\nPages/Search/Index.cshtml.cs", "Reads q + page params.\nSanitises and validates query.\nDispatches SearchArticlesQuery.\nExposes Results, IsEmpty, Pagination.")
+    Component(view, "Index.cshtml", "Razor View", "Renders result cards (<article>),\n<mark> highlighted titles + excerpts,\nempty state, pagination row,\nand SEO <title> + <meta description>.")
+    Component(handler, "SearchArticlesQuery\nHandler", "MediatR Handler", "Calls ArticleRepository.SearchAsync;\napplies SearchHighlighter.")
+    Component(repo, "ArticleRepository", "EF Core Repository", "CONTAINSTABLE ranked FTS query;\nreturns SearchResultDto list + count.")
+    Component(helper, "PaginationHelper", "Utility", "Computes TotalPages, HasPrev, HasNext\nfrom TotalCount + PageSize.")
+}
+
+Rel(model, handler, "mediator.Send(SearchArticlesQuery)")
+Rel(handler, repo, "SearchAsync(query, page, pageSize)")
+Rel(model, helper, "PaginationHelper.Compute()")
+Rel(model, view, "Page model binding")
+
+@enduml

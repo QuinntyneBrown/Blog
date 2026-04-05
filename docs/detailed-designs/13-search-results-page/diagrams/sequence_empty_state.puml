@@ -1,0 +1,33 @@
+@startuml sequence_empty_state
+!theme plain
+skinparam sequenceMessageAlign center
+
+title Search Empty State — Zero Results Flow
+
+actor Visitor
+participant "SearchIndexModel" as Model
+participant "SearchArticlesQuery\nHandler" as Handler
+participant "ArticleRepository" as Repo
+database "SQL Server FTS" as DB
+participant "Index.cshtml" as View
+
+Visitor -> Model: GET /search?q=xyzabc123
+Model -> Handler: Send(SearchArticlesQuery("xyzabc123", 1, 10))
+Handler -> Repo: SearchAsync("xyzabc123", 1, 10)
+Repo -> DB: CONTAINSTABLE — no matching rows
+DB --> Repo: Empty result set, count=0
+Repo --> Handler: ([], 0)
+Handler --> Model: PagedResponse (TotalCount=0)
+Model -> Model: IsEmpty = true
+Model -> View: Model binding (IsEmpty=true, Query="xyzabc123")
+View -> View: Render empty state block:\n  Icon\n  "No results found for 'xyzabc123'"\n  "Try different keywords"\n  Link → /articles
+View -> View: No pagination rendered
+View --> Visitor: 200 OK HTML
+
+note right of View
+  HTTP status is always 200.
+  The empty state is a UI concern,
+  not an HTTP error.
+end note
+
+@enduml

@@ -1,0 +1,30 @@
+@startuml sequence_keyboard_shortcut
+!theme plain
+skinparam sequenceMessageAlign center
+
+title / Key Shortcut — Focus Search Input
+
+actor Visitor
+participant "Browser" as Browser
+participant "search.js" as JS
+participant "Search Input\n#site-search" as Input
+
+Visitor -> Browser: keydown event (key='/')
+Browser -> JS: document keydown listener fires
+JS -> JS: Is document.activeElement an\n<input>, <textarea>, or [contenteditable]?
+
+alt Active element IS a text field
+    JS -> JS: Do nothing — let / type normally
+else Active element is NOT a text field
+    JS -> Browser: event.preventDefault()
+    JS -> Input: input.focus()
+    JS -> Input: input.select() (selects existing value)
+    Input --> Visitor: Input focused, caret visible
+    note right of Input
+      On LG+ viewports: input is already visible.
+      On <LG viewports: search.js first expands
+      the input before calling focus().
+    end note
+end
+
+@enduml

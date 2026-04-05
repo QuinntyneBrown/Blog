@@ -1,0 +1,40 @@
+@startuml sequence_autocomplete
+!theme plain
+skinparam sequenceMessageAlign center
+
+title Autocomplete — Type, Fetch, Keyboard Navigate
+
+actor Visitor
+participant "search.js" as JS
+participant "Dropdown\n(role=listbox)" as DD
+participant "Suggestions API" as API
+
+Visitor -> JS: keyup — value = "clean ar"
+JS -> JS: clearTimeout(debounceTimer)
+JS -> JS: value.length=8 >= 2 → setTimeout(200ms)
+
+JS -> JS: 200ms elapsed
+JS -> JS: abort previous fetch (AbortController)
+JS -> API: fetch('/api/public/articles/suggestions?q=clean+ar')
+API --> JS: [{title, slug, titleHighlighted}, ...] (≤8)
+
+JS -> DD: Clear and repopulate role=option items
+JS -> JS: input.setAttribute('aria-expanded','true')
+JS -> JS: input.setAttribute('aria-activedescendant','')
+
+Visitor -> JS: ArrowDown key
+JS -> DD: option[0].focus(); aria-activedescendant=option[0].id
+
+Visitor -> JS: ArrowDown key
+JS -> DD: option[1].focus()
+
+Visitor -> JS: Enter on option[1]
+JS -> Browser: location.href = '/articles/{slug}'
+
+note right of Visitor
+  Escape → dropdown closes,\n  focus returns to input, value preserved.
+  Click outside → dropdown closes.
+  ArrowUp on first item → focus back to input.
+end note
+
+@enduml

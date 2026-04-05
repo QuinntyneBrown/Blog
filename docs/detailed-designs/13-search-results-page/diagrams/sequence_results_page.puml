@@ -1,0 +1,33 @@
+@startuml sequence_results_page
+!theme plain
+skinparam sequenceMessageAlign center
+
+title Search Results Page — Render Flow
+
+actor Visitor
+participant "Razor Pages\nRouter" as Router
+participant "SearchIndexModel" as Model
+participant "SearchArticlesQuery\nHandler" as Handler
+participant "ArticleRepository" as Repo
+database "SQL Server FTS" as DB
+participant "Index.cshtml" as View
+
+Visitor -> Router: GET /search?q=clean+architecture&page=1
+Router -> Model: OnGetAsync("clean+architecture", 1)
+Model -> Model: HTML-encode query for display
+Model -> Model: Validate: length 2–200 chars
+Model -> Handler: Send(SearchArticlesQuery)
+Handler -> Repo: SearchAsync("clean+architecture", 1, 10)
+Repo -> DB: CONTAINSTABLE ranked query
+DB --> Repo: Ranked rows + total count = 42
+Repo --> Handler: (List<SearchResultDto>, 42)
+Handler --> Model: PagedResponse (Page=1, Total=42, TotalPages=5)
+Model -> Model: IsEmpty = false
+Model -> View: Model binding
+View -> View: Render 10 result <article> cards\nwith <mark> highlights, dates, thumbnails
+View -> View: Render pagination (5 pages, page 1 active)
+View -> View: Set <title>clean+architecture — Search | Blog</title>
+View -> View: Set Cache-Control: no-store
+View --> Visitor: 200 OK HTML
+
+@enduml

@@ -1,0 +1,13 @@
+@startuml c4_context
+!theme plain
+!include <C4/C4_Context>
+
+title Search Results Page — System Context
+
+Person(visitor, "Anonymous Visitor", "Navigates to /search?q= after submitting the search form")
+System(blog, "Blog Platform", "ASP.NET Core 8 Razor Pages")
+
+Rel(visitor, blog, "GET /search?q=clean+architecture&page=1", "HTTPS")
+Rel(blog, visitor, "Server-rendered HTML result cards / empty state", "HTTPS")
+
+@enduml

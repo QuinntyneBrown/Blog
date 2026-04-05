@@ -1,0 +1,19 @@
+@startuml c4_component
+!theme plain
+!include <C4/C4_Component>
+
+title Search Input & Autocomplete — Component Diagram
+
+Container_Boundary(browser, "Browser") {
+    Component(layout, "_Layout.cshtml", "Razor Layout", "Emits search <input> and icon button.\nLG+: inline expanded input.\n<LG: icon-only, expands on click.")
+    Component(js, "search.js", "Vanilla JS (~3 KB gzip)", "/ shortcut, viewport detection,\n200ms debounce, fetch suggestions,\nARIA combobox management,\narrow-key + Escape navigation.")
+    Component(dropdown, "Suggestion Dropdown", "Inline HTML (DOM-managed)", "role=listbox.\nUp to 8 role=option items.\n<mark> highlighted titles.")
+}
+
+Container(api, "Suggestions API", "PublicArticlesController", "GET /api/public/articles/suggestions?q=")
+
+Rel(layout, js, "Loaded via <script src defer>")
+Rel(js, dropdown, "Creates/updates/removes DOM nodes")
+Rel(js, api, "fetch() with AbortController", "HTTPS / JSON")
+
+@enduml
