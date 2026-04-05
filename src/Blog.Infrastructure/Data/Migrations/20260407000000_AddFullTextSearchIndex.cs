@@ -23,7 +23,7 @@ namespace Blog.Infrastructure.Data.Migrations
                 BEGIN
                     CREATE FULLTEXT CATALOG BlogSearchCatalog AS DEFAULT;
                 END
-            ");
+            ", suppressTransaction: true);
 
             migrationBuilder.Sql(@"
                 IF NOT EXISTS (
@@ -35,7 +35,7 @@ namespace Blog.Infrastructure.Data.Migrations
                         ON BlogSearchCatalog
                         WITH CHANGE_TRACKING AUTO;
                 END
-            ");
+            ", suppressTransaction: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
