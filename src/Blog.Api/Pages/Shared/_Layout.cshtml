@@ -50,6 +50,10 @@
     {
         <meta property="article:modified_time" content="@ViewBag.ArticleModifiedTime" />
     }
+    @if (ViewBag.ArticleAuthor != null)
+    {
+        <meta property="article:author" content="@ViewBag.ArticleAuthor" />
+    }
     <!-- Twitter Card -->
     <meta name="twitter:card" content="@(!string.IsNullOrEmpty(ogImage) ? "summary_large_image" : "summary")" />
     <meta name="twitter:title" content="@title" />

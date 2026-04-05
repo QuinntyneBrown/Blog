@@ -2054,6 +2054,21 @@ The design specifies (Section 3.2): "`Version`: required concurrency token, defa
 
 ---
 
+## 2026-04-04 — `article:author` Open Graph tag missing on article detail pages
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.1 — SeoMetaTagHelper, Section 4.2 — SeoMetadata, Section 6.1 — L2-009
+
+**Description:**
+The design's `SeoMetadata` record (Section 4.2) specifies `ArticleAuthor: string?` — "Author display name" — as a per-page SEO data field. The conformance log already shows that `article:published_time` and `article:modified_time` (also in `SeoMetadata`) were added as a gap fix. The `article:author` field is the remaining `SeoMetadata` member that was never rendered. Section 6.1 (L2-009) states: "All six OG properties and four Twitter Card properties are rendered." The Open Graph article namespace also specifies `article:author` as a supplementary article property that enables platforms like Facebook, LinkedIn, and search engines to attribute content to an author profile. `_Layout.cshtml` renders `article:published_time` and `article:modified_time` conditionally, but `article:author` is never emitted. `Slug.cshtml` sets `ViewBag.ArticlePublishedTime` and `ViewBag.ArticleModifiedTime` but never sets `ViewBag.ArticleAuthor`. As a result, social link previews and search result snippets for article pages have no author attribution signal, and the `SeoMetadata.ArticleAuthor` field defined in the design is entirely unused.
+
+**Fix applied:**
+- `Pages/Articles/Slug.cshtml`: Set `ViewBag.ArticleAuthor` to `Configuration["Site:AuthorName"]` (with `"Quinn Brown"` fallback) when the article is found, alongside the existing `ViewBag.ArticlePublishedTime` and `ViewBag.ArticleModifiedTime` assignments.
+- `Pages/Shared/_Layout.cshtml`: Added `<meta property="article:author" content="@ViewBag.ArticleAuthor" />` conditionally (rendered only when `ViewBag.ArticleAuthor` is non-null), immediately after the `article:modified_time` block in the Open Graph section.
+
+**Status:** FIXED
+
+---
+
 ## 2026-04-04 — `ICacheInvalidator.InvalidateArticle` does not invalidate sitemap and feed cache entries; sitemap and feeds serve stale data after article state changes
 
 **Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 6.3 — Caching Strategy

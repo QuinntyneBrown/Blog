@@ -15,6 +15,7 @@
             ViewBag.OgImage = $"{siteUrl}{Model.Article.FeaturedImageUrl}";
         ViewBag.ArticlePublishedTime = Model.Article.DatePublished?.ToString("O");
         ViewBag.ArticleModifiedTime = Model.Article.UpdatedAt.ToString("O");
+        ViewBag.ArticleAuthor = Configuration["Site:AuthorName"] ?? "Quinn Brown";
     }
 }
 @if (Model.Article == null)
