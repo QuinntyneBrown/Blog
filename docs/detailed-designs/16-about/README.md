@@ -46,7 +46,7 @@ The About Page feature provides a publicly visible biography for the site author
   - `PUT /api/about` — creates or updates about content (requires `[Authorize]`)
   - `GET /api/about/history` — paginated revision history (requires `[Authorize]`)
   - `PUT /api/about/restore/{historyId}` — restore a prior revision (requires `[Authorize]`)
-- **Caching**: The public GET response is served with `Cache-Control: public, max-age=60, stale-while-revalidate=600` (L2-071.3). The `ICacheInvalidator` is called on a successful PUT or restore to bust the cached response.
+- **Caching**: The public GET response is served with `Cache-Control: public, max-age=60, stale-while-revalidate=600` (L2-071.3). The `ICacheInvalidator` is called on a successful PUT or restore to bust the cached response. `GET /api/about` does not emit an ETag or Last-Modified header; clients cannot perform conditional requests (`If-None-Match` / `If-Modified-Since`). This is acceptable for a singleton endpoint with a 60-second TTL. If conditional GET support is added in future, `Last-Modified` should be derived from `AboutContent.UpdatedAt`.
 - **Empty state**: If no about content has been authored, `GET /api/about` returns `null` in the body with HTTP 200. The public Razor Page renders a default message (L2-071.2). `404` is intentionally avoided here — a 404 on a well-known singleton endpoint would look like a routing or server error rather than a legitimate empty-content state, and would require special-casing in the Razor Page and any API client that checks for 404 vs 200. Returning `200 + null` makes the absence of content a normal, handled state rather than an error. Clients should treat a null body as "no content yet authored" and render an empty state accordingly.
 
 ### 3.2 UpsertAboutContentHandler
@@ -64,6 +64,7 @@ The About Page feature provides a publicly visible biography for the site author
 - **Responsibility**: Reverts the live about content to a prior revision identified by `historyId`.
 - **Dependencies**: `AboutContentRepository`, `IMarkdownConverter`, `ICacheInvalidator`
 - **Steps**: (1) Load history record by `historyId`; return 404 if not found. (2) Verify `AboutContentId` matches the singleton — prevents cross-resource access. (3) Load the current live row; if the supplied `currentVersion` does not match the stored `Version`, return 409 (prevents a restore from silently overwriting concurrent edits). (4) Snapshot the current live row into `AboutContentHistory`. (5) Overwrite live row with the history snapshot fields; increment `Version`. (6) Call `ICacheInvalidator.InvalidateAsync("/about")`. Steps 4 and 5 must execute within a single DB transaction so that a failure between them cannot produce an orphaned history snapshot with no corresponding live-row update.
+- **Double-invoke behaviour**: If the same restore is called twice concurrently (e.g. a double-click from the browser), the first call will succeed. The second call will fail at step 3 with 409 because the live row's `Version` was incremented by the first call — the `currentVersion` in the second request no longer matches. This is the correct and safe outcome: the optimistic concurrency check prevents a spurious second history snapshot from being written. No additional guard is needed beyond the existing version check.
 
 ### 3.4 GetAboutHistoryHandler
 
