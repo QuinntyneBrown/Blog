@@ -36,6 +36,8 @@ public class SecurityHeadersMiddleware(RequestDelegate next, IHostEnvironment en
             // be applied (loaded via <link rel="preload" onload="this.rel='stylesheet'">).
             // fonts.gstatic.com is allowed in font-src so the actual .woff2 font binary files
             // (referenced by the Google Fonts stylesheet) can be downloaded.
+            // report-uri (legacy) and report-to (modern) directives send CSP violations
+            // to the /api/csp-report endpoint (Design 08, Section 3.3).
             headers["Content-Security-Policy"] =
                 $"default-src 'self'; " +
                 $"script-src 'self' 'nonce-{nonce}'; " +
@@ -45,7 +47,13 @@ public class SecurityHeadersMiddleware(RequestDelegate next, IHostEnvironment en
                 $"frame-ancestors 'none'; " +
                 $"object-src 'none'; " +
                 $"base-uri 'self'; " +
-                $"form-action 'self'";
+                $"form-action 'self'; " +
+                $"report-uri /api/csp-report; " +
+                $"report-to csp-endpoint";
+
+            // Reporting-Endpoints header (modern browsers) — maps the "csp-endpoint" group
+            // to the /api/csp-report URL (Design 08, Section 3.3).
+            headers["Reporting-Endpoints"] = "csp-endpoint=\"/api/csp-report\"";
 
             // Strict-Transport-Security — only sent over HTTPS / non-development.
             if (!env.IsDevelopment())
