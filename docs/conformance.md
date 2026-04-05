@@ -2308,3 +2308,21 @@ The `PageSize > 0` guard is entirely absent. When `PageSize` is zero — which o
 **Status:** FIXED
 
 ---
+
+## 2026-04-04 — AddFullTextSearchIndex migration missing Designer.cs snapshot file
+
+**Design reference:** `docs/detailed-designs/11-search-infrastructure/README.md`, Section 3.1 — SQL Server Full-Text Search Index; `docs/detailed-designs/10-data-persistence/README.md`, Section 3.5 — Migration Runner, Section 7.1 — Naming Convention
+
+**Description:**
+The design specifies an EF Core migration named `AddFullTextSearchIndex` (Design 11, Section 3.1) that creates the `BlogSearchCatalog` full-text catalog and the full-text index on `Articles(Title, Abstract, Body)`. The migration file `20260407000000_AddFullTextSearchIndex.cs` was created correctly. However, the corresponding `20260407000000_AddFullTextSearchIndex.Designer.cs` snapshot file — which every EF Core migration requires — is entirely absent from the `Migrations/` directory.
+
+EF Core's migration infrastructure requires each migration to have a `Designer.cs` file containing the `[DbContext]` and `[Migration]` attributes that allow the tooling to: (1) correctly identify and order the migration in the history chain, (2) record the `BuildTargetModel` snapshot so EF Core knows the exact model state after this migration when generating the next one. Without the Designer file, `dotnet ef migrations add` cannot determine what model state preceded the new migration, causing the tooling to potentially regenerate the entire schema from scratch rather than computing the delta. Both of the other custom migrations — `20260405013757_InitialCreate.Designer.cs` and `20260406000000_CorrectDigitalAssetSchema.Designer.cs` — have their corresponding snapshot files. The `AddFullTextSearchIndex` migration is the sole exception.
+
+The FTS migration itself makes no EF Core model changes (it only runs raw SQL DDL), so the `BuildTargetModel` snapshot it requires is identical to the one in `20260406000000_CorrectDigitalAssetSchema.Designer.cs`.
+
+**Fix applied:**
+- Created `src/Blog.Infrastructure/Data/Migrations/20260407000000_AddFullTextSearchIndex.Designer.cs` — carries the `[DbContext(typeof(BlogDbContext))]` and `[Migration("20260407000000_AddFullTextSearchIndex")]` attributes and a `BuildTargetModel` snapshot identical to the preceding `CorrectDigitalAssetSchema` Designer file (the FTS migration adds no EF Core model members, only raw SQL DDL). The `partial class AddFullTextSearchIndex` keyword was already present in the migration source file, so no change to the main migration file was required. EF Core's migration tooling can now correctly identify this migration in the chain and compute model deltas when the next migration is added.
+
+**Status:** FIXED
+
+---

@@ -74,7 +74,7 @@ Detailed C4 and sequence diagrams for each subsystem are in [`docs/detailed-desi
 |---|---|
 | Framework | ASP.NET Core 8, Razor Pages |
 | Application | MediatR, FluentValidation |
-| Data | Entity Framework Core, PostgreSQL 16+ |
+| Data | Entity Framework Core, SQL Server |
 | Auth | JWT bearer tokens, PBKDF2-SHA256 password hashing |
 | Frontend | Server-side rendered Razor Pages, < 50 KB JS (gzipped) |
 | Assets | Object storage (production), local filesystem (development) |
@@ -126,7 +126,7 @@ Detailed C4 and sequence diagrams for each subsystem are in [`docs/detailed-desi
 ### Prerequisites
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download)
-- [PostgreSQL 16+](https://www.postgresql.org/download/)
+- [SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) (or SQL Server Express / LocalDB for local development)
 
 ### Quick Start
 
@@ -139,7 +139,7 @@ cd Blog
 dotnet restore
 
 # 3. Apply database migrations
-dotnet ef database update --project src/Blog.Api
+dotnet ef database update --project src/Blog.Infrastructure --startup-project src/Blog.Api
 
 # 4. Run the application
 dotnet run --project src/Blog.Api
