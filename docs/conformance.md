@@ -1215,3 +1215,19 @@ The design defines a `SiteConfiguration` model (Section 4.6) with configurable f
 - Replaced all hardcoded string literals in the controller (llms.txt header/description, RSS channel title/description and `dc:creator`, Atom feed title/subtitle and author names, JSON Feed title/description) with the configuration-backed properties.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — SiteConfiguration values also hardcoded in layout og:site_name and JSON-LD blocks
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 4.6 — SiteConfiguration
+
+**Description:**
+The previous conformance fix replaced hardcoded values in `SeoController` but the same `"Quinn Brown"` strings remained hardcoded in three other locations: the `og:site_name` meta tag in `_Layout.cshtml`, the `Schema.org/Article` JSON-LD `author.name` and `publisher.name` in `Slug.cshtml`, and the `Schema.org/Blog` JSON-LD `name` and `description` in `Index.cshtml`. These values should read from the `Site:SiteName`, `Site:AuthorName`, and `Site:SiteDescription` configuration keys per the design's `SiteConfiguration` model.
+
+**Fix applied:**
+- `_Layout.cshtml`: Changed `og:site_name` from hardcoded `"Quinn Brown"` to `Configuration["Site:SiteName"]` with fallback.
+- `Slug.cshtml`: Changed JSON-LD `author.name` to `Configuration["Site:AuthorName"]` and `publisher.name` to `Configuration["Site:SiteName"]` with fallbacks.
+- `Index.cshtml`: Changed JSON-LD `name` to `Configuration["Site:SiteName"]` and `description` to `Configuration["Site:SiteDescription"]` with fallbacks.
+
+**Status:** FIXED
