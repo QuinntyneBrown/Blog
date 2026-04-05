@@ -523,3 +523,18 @@ The design requires (L2-010): "Canonical URLs — absolute, lowercase, no traili
 - All canonical URLs are built from the configured `Site:SiteUrl` (not the request Host header), absolute, lowercase, and without trailing slashes.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Missing og:url and og:site_name Open Graph meta tags
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.1 — SeoMetaTagHelper, L2-009 — Open Graph metadata
+
+**Description:**
+The design specifies six Open Graph properties on every page (Section 3.1): `og:title`, `og:description`, `og:image`, `og:url`, `og:type`, `og:site_name`. The layout rendered four of these (`og:type`, `og:title`, `og:description`, `og:image`) but was missing `og:url` and `og:site_name`. Without `og:url`, social platforms that scrape the page cannot determine the canonical sharing URL, leading to duplicate share counts across URL variants. Without `og:site_name`, link previews on Facebook, LinkedIn, and messaging apps omit the site attribution that helps users identify the source.
+
+**Fix applied:**
+- Added `<meta property="og:site_name" content="Quinn Brown" />` unconditionally to `_Layout.cshtml`.
+- Added `<meta property="og:url" content="@canonicalUrl" />` conditionally (when `canonicalUrl` is set), reusing the same canonical URL already computed per page.
+
+**Status:** FIXED
