@@ -9,6 +9,7 @@
     if (Model.Article != null)
     {
         ViewBag.CanonicalUrl = $"{siteUrl}/articles/{Model.Article.Slug}";
+        ViewBag.OgType = "article";
     }
 }
 @if (Model.Article == null)

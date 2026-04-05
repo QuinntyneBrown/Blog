@@ -638,3 +638,18 @@ The design specifies (Section 3.5, Table): below-fold images must have `loading=
 - Added `decoding="async"` to the article card `<img>` tags in both `Index.cshtml` and `Articles/Index.cshtml`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — og:type hardcoded to "website" on all pages including article detail
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.1 — SeoMetaTagHelper, Section 6.1 — L2-009
+
+**Description:**
+The design specifies (Section 6.1, L2-009): "`og:type` is 'article' for article pages and 'website' for other pages." The layout hardcoded `<meta property="og:type" content="website" />` on every page including article detail pages. Social platforms (Facebook, LinkedIn) use `og:type` to determine how to render link previews — an `article` type triggers richer previews with author/publication metadata, while `website` produces a generic card. Serving `og:type=website` for article pages means social shares lose the richer article preview format.
+
+**Fix applied:**
+- Added `var ogType = ViewBag.OgType ?? "website"` to `_Layout.cshtml` and changed the hardcoded tag to `<meta property="og:type" content="@ogType" />`.
+- Set `ViewBag.OgType = "article"` in `Slug.cshtml` when the article is found. All other pages default to `"website"`.
+
+**Status:** FIXED
