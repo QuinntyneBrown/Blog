@@ -1,7 +1,9 @@
 @page "/feed"
+@inject IConfiguration Configuration
 @{
-    ViewBag.Title = "Follow via Feed | Quinn Brown";
-    ViewBag.Description = "Subscribe to Quinn Brown's blog via RSS, Atom, or JSON Feed.";
+    var siteName = Configuration["Site:SiteName"] ?? "Quinn Brown";
+    ViewBag.Title = $"Follow via Feed | {siteName}";
+    ViewBag.Description = $"Subscribe to {siteName}'s blog via RSS, Atom, or JSON Feed.";
     ViewBag.ActiveNav = "feed";
     Layout = "_Layout";
 }

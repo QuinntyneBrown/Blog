@@ -2,7 +2,8 @@
 @model Blog.Api.Pages.Articles.ArticleDetailModel
 @inject IConfiguration Configuration
 @{
-    ViewBag.Title = $"{Model.Article?.Title} | Quinn Brown";
+    var siteName = Configuration["Site:SiteName"] ?? "Quinn Brown";
+    ViewBag.Title = $"{Model.Article?.Title} | {siteName}";
     ViewBag.Description = Model.Article?.Abstract;
     ViewBag.ActiveNav = "";
     var siteUrl = Configuration["Site:SiteUrl"]?.TrimEnd('/') ?? "";

@@ -1244,3 +1244,62 @@ The previous conformance fix replaced hardcoded values in `SeoController` but th
 - `Index.cshtml`: Changed JSON-LD `name` to `Configuration["Site:SiteName"]` and `description` to `Configuration["Site:SiteDescription"]` with fallbacks.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Rate limit policies use global counters instead of per-client partitions
+
+**Design reference:** `docs/detailed-designs/01-authentication/README.md`, Section 7.3 — Rate Limiting on Login; `docs/detailed-designs/08-security-hardening/README.md`, Section 3.3 — RateLimitingMiddleware
+
+**Description:**
+The design specifies (Section 7.3): "10 requests per minute **per client IP address**" for the login endpoint, and (Section 3.3): "60 requests per minute **per authenticated user**" for write endpoints. Both rate limit policies were registered via `AddSlidingWindowLimiter("name", ...)` which creates a single global counter shared by all clients. Under this configuration, 10 login attempts total (across all IPs worldwide) would trigger the rate limit, and 60 write operations total (across all authenticated users) would exhaust the write quota. A single legitimate user's activity could lock out all other users. The design requires per-client partitioning — each IP address gets its own 10-request window, and each authenticated user gets their own 60-request window.
+
+**Fix applied:**
+- Replaced `AddSlidingWindowLimiter("login-ip", ...)` with `AddPolicy("login-ip", ...)` using `RateLimitPartition.GetSlidingWindowLimiter` partitioned by `context.Connection.RemoteIpAddress`.
+- Replaced `AddSlidingWindowLimiter("write-endpoints", ...)` with `AddPolicy("write-endpoints", ...)` using `RateLimitPartition.GetSlidingWindowLimiter` partitioned by the authenticated user's `sub` claim, falling back to IP address for unauthenticated requests.
+
+**Status:** FIXED
+
+---
+
+## 2026-04-05 — Page title site name suffix hardcoded instead of reading from Site:SiteName configuration
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.1 — SeoMetaTagHelper, Section 4.6 — SiteConfiguration
+
+**Description:**
+The design specifies (Section 3.1): "Title pattern `{Article Title} | {Site Name}`" where `{Site Name}` comes from the `SiteConfiguration.SiteName` config value (Section 4.6). All six public Razor pages hardcoded `| Quinn Brown` in their `ViewBag.Title` strings instead of reading `Site:SiteName` from configuration. This meant changing the blog's display name required editing source code in six files and redeploying, rather than updating a single configuration value.
+
+**Fix applied:**
+- `Slug.cshtml`, `Articles/Index.cshtml`, `Index.cshtml`: Already injected `IConfiguration`, updated title to use `Configuration["Site:SiteName"]` with fallback.
+- `Feed.cshtml`, `Error.cshtml`, `NotFound.cshtml`: Added `@inject IConfiguration Configuration` and updated titles to use the config value with fallback.
+- `Feed.cshtml` description also updated to use the configured site name.
+
+**Status:** FIXED
+
+---
+
+## 2026-04-05 — llms.txt missing sitemap and structured data references
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.6 — LlmsTxtMiddleware
+
+**Description:**
+The design specifies (Section 3.6): "A plain text document describing the site's purpose, content structure, available endpoints, and how to consume the content programmatically. Includes references to the sitemap, feeds, and structured data." The `llms.txt` output included an Articles section and a Feeds section (RSS, Atom, JSON) but had no reference to the sitemap URL (`/sitemap.xml`) or to the structured data format (JSON-LD). AI agents parsing `llms.txt` to understand how to consume the site's content would miss two key discovery mechanisms — the sitemap for URL enumeration and JSON-LD for structured article metadata extraction.
+
+**Fix applied:**
+- Added a "Discovery" section to the `llms.txt` output with the sitemap URL and a note about JSON-LD structured data embedded in article pages.
+
+**Status:** FIXED
+
+---
+
+## 2026-04-05 — Article detail page returns 200 OK for non-existent or unpublished articles instead of 404
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 5.2 — Load Article Detail Page (step 8)
+
+**Description:**
+The design specifies (Section 5.2, step 8): "If no published article matches the slug (either the slug does not exist or the article is in draft status), the service returns `null`. The page model returns a 404 Not Found result." The `ArticleDetailModel.OnGetAsync` method set `Article = null` and returned `Page()` for both the not-found and not-published cases. `Page()` returns HTTP 200 OK by default. While the Razor template rendered a user-friendly "Article not found" UI, the HTTP status code was 200, not 404. Search engine crawlers indexing non-existent article URLs (e.g., from deleted or unpublished articles) would see a 200 response and keep the URL in their index indefinitely, treating the "not found" page as valid content — a significant SEO problem known as "soft 404."
+
+**Fix applied:**
+- Added `Response.StatusCode = 404` before `return Page()` in both the `!article.Published` branch and the `catch (NotFoundException)` branch of `Slug.cshtml.cs`. The page still renders the friendly 404 UI but now sends the correct HTTP status code.
+
+**Status:** FIXED
