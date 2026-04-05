@@ -1,5 +1,6 @@
 using Blog.Api.Common.Attributes;
 using Blog.Domain.Interfaces;
+using Blog.Infrastructure.Storage;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Blog.Api.Controllers;
@@ -8,13 +9,14 @@ namespace Blog.Api.Controllers;
 /// Serves uploaded digital assets with content negotiation (WebP/AVIF preferred based on
 /// Accept header) and optional width-based variant selection via the ?w= query parameter.
 /// Design reference: docs/detailed-designs/04-digital-asset-management/README.md,
+/// Section 3.5 — AssetStorage (GetAsync / GetFilePath),
 /// Section 3.6 — AssetRepository (GetByStoredFileNameAsync),
 /// Section 5.2 — Serve with Optimization Flow, Section 6.3 — GET /assets/{filename}.
 /// </summary>
 [Route("assets")]
 [ApiController]
 [RawResponse]
-public class AssetsController(IWebHostEnvironment env, IDigitalAssetRepository assetRepository) : ControllerBase
+public class AssetsController(IAssetStorage assetStorage, IDigitalAssetRepository assetRepository) : ControllerBase
 {
     // Responsive breakpoints in ascending order (matches ImageVariantGenerator breakpoints).
     private static readonly int[] Breakpoints = [320, 640, 960, 1280, 1920];
@@ -25,8 +27,6 @@ public class AssetsController(IWebHostEnvironment env, IDigitalAssetRepository a
     {
         if (string.IsNullOrEmpty(fileName) || fileName.Contains(".."))
             return BadRequest();
-
-        var assetsPath = Path.Combine(env.WebRootPath, "assets");
 
         // Validate that the requested filename corresponds to a registered DigitalAsset entity.
         // Design reference: Section 3.6 — GetByStoredFileNameAsync is "used during serve".
@@ -53,22 +53,21 @@ public class AssetsController(IWebHostEnvironment env, IDigitalAssetRepository a
             // Try AVIF first (highest compression), then WebP.
             if (preferAvif)
             {
-                var avifPath = Path.Combine(assetsPath, $"{assetId}-{nearestWidth}w.avif");
-                if (System.IO.File.Exists(avifPath))
-                    return ServeFile(avifPath, "image/avif");
+                var avifVariantName = $"{assetId}-{nearestWidth}w.avif";
+                if (assetStorage.Exists(avifVariantName))
+                    return ServeFile(assetStorage.GetFilePath(avifVariantName), "image/avif");
             }
 
             if (preferWebp)
             {
-                var webpPath = Path.Combine(assetsPath, $"{assetId}-{nearestWidth}w.webp");
-                if (System.IO.File.Exists(webpPath))
-                    return ServeFile(webpPath, "image/webp");
+                var webpVariantName = $"{assetId}-{nearestWidth}w.webp";
+                if (assetStorage.Exists(webpVariantName))
+                    return ServeFile(assetStorage.GetFilePath(webpVariantName), "image/webp");
             }
         }
 
         // Fall back to serving the exact filename requested.
-        var filePath = Path.Combine(assetsPath, fileName);
-        if (!System.IO.File.Exists(filePath))
+        if (!assetStorage.Exists(fileName))
             return NotFound();
 
         var extension = Path.GetExtension(fileName).ToLowerInvariant();
@@ -83,7 +82,7 @@ public class AssetsController(IWebHostEnvironment env, IDigitalAssetRepository a
             _                 => "application/octet-stream"
         };
 
-        return ServeFile(filePath, contentType);
+        return ServeFile(assetStorage.GetFilePath(fileName), contentType);
     }
 
     private IActionResult ServeFile(string filePath, string contentType)
