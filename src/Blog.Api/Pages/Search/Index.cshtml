@@ -10,9 +10,10 @@
     ViewBag.Description = Model.Query.Length > 0
         ? $"Search results for '{Html.Encode(Model.Query)}'"
         : "Search published articles";
+    var cspNonce = HttpContext.Items[Blog.Api.Middleware.SecurityHeadersMiddleware.CspNonceKey] as string ?? "";
 }
 
-<style>
+<style nonce="@cspNonce">
     .search-hero {
         background: var(--surface-secondary);
         padding: 64px 96px 48px;
@@ -188,29 +189,46 @@
         color: var(--foreground-secondary);
     }
     .search-empty-state svg { color: var(--border-strong); }
+    /* LG: 992–1199px */
     @@media (max-width: 1199px) {
-        .search-hero { padding: 48px 48px 40px; }
+        .search-hero { padding: 48px 48px 40px; gap: 20px; }
         .search-filters-bar { padding: 14px 48px; }
-        .search-content { padding: 40px 48px; }
+        .search-filter-label { display: none; }
+        .search-content { padding: 40px 48px; gap: 40px; }
+        .search-results-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    }
+    /* MD: 768–991px */
+    @@media (max-width: 991px) {
+        .search-hero { padding: 44px 40px 36px; }
+        .search-hero-label { font-size: 11px; }
+        .search-hero-count { font-size: 13px; }
+        .search-filters-bar { padding: 12px 40px; }
+        .search-content { padding: 36px 40px; }
         .search-results-grid { grid-template-columns: repeat(2, 1fr); }
     }
+    /* SM: 576–767px */
     @@media (max-width: 767px) {
         .search-hero { padding: 40px 32px 32px; gap: 16px; }
+        .search-hero-label { font-size: 11px; }
+        .search-hero-count { font-size: 12px; }
         .search-filters-bar { padding: 12px 32px; }
-        .search-content { padding: 32px 32px; gap: 24px; }
+        .search-content { padding: 32px 32px; gap: 20px; }
         .search-results-grid { grid-template-columns: 1fr; }
+        .search-sort-wrap { display: none; }
     }
+    /* XS: 375–575px */
     @@media (max-width: 575px) {
         .search-hero { padding: 32px 24px 24px; gap: 14px; }
         .search-filters-bar { padding: 10px 24px; gap: 8px; flex-wrap: wrap; }
-        .search-content { padding: 24px 24px; }
-        .search-sort-wrap { width: 100%; justify-content: flex-end; }
+        .search-content { padding: 24px 24px; gap: 16px; }
     }
+    /* XXS: ≤375px */
     @@media (max-width: 375px) {
-        .search-hero { padding: 24px 16px 20px; }
+        .search-hero { padding: 24px 16px 20px; gap: 12px; }
+        .search-hero-label { font-size: 10px; }
+        .search-hero-count { font-size: 12px; }
         .search-filters-bar { padding: 10px 16px; overflow-x: auto; flex-wrap: nowrap; }
         .search-content { padding: 20px 16px; }
-        .search-sort-wrap { display: none; }
     }
 </style>
 
@@ -248,7 +266,7 @@
     <div class="search-sort-wrap">
         <span class="search-sort-label">Sort:</span>
         <div class="search-sort-select-wrap">
-            <select name="sort" form="search-form" aria-label="Sort results" onchange="this.form.submit()">
+            <select id="sort-select" name="sort" form="search-form" aria-label="Sort results">
                 <option value="relevant" selected="@(Model.Sort == "relevant" || string.IsNullOrEmpty(Model.Sort) ? "selected" : null)">Most Relevant</option>
                 <option value="newest" selected="@(Model.Sort == "newest" ? "selected" : null)">Newest First</option>
                 <option value="oldest" selected="@(Model.Sort == "oldest" ? "selected" : null)">Oldest First</option>
@@ -363,3 +381,15 @@
         }
     }
 </section>
+
+<script nonce="@cspNonce">
+    (function () {
+        var sel = document.getElementById('sort-select');
+        if (sel) {
+            sel.addEventListener('change', function () {
+                var form = document.getElementById('search-form');
+                if (form) form.submit();
+            });
+        }
+    }());
+</script>
