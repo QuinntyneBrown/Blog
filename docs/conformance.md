@@ -1228,3 +1228,19 @@ The design specifies that after saving the original uploaded file, `DigitalAsset
 The `UploadDigitalAssetCommandHandler` saved the original file to disk and recorded dimensions but never called any variant generation logic — no WebP or AVIF variants were ever created. The `AssetsController.Serve` method performed no content negotiation and no variant resolution; it served only the exact filename given in the URL path, ignoring the `Accept` header and any `?w=` parameter entirely. As a result, every article image was served in its original format at full resolution regardless of the client's capabilities, violating the modern-format delivery and responsive image delivery requirements (L2-020, L2-029).
 
 **Status:** OPEN
+
+---
+
+## 2026-04-05 — SiteConfiguration values also hardcoded in layout og:site_name and JSON-LD blocks
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 4.6 — SiteConfiguration
+
+**Description:**
+The previous conformance fix replaced hardcoded values in `SeoController` but the same `"Quinn Brown"` strings remained hardcoded in three other locations: the `og:site_name` meta tag in `_Layout.cshtml`, the `Schema.org/Article` JSON-LD `author.name` and `publisher.name` in `Slug.cshtml`, and the `Schema.org/Blog` JSON-LD `name` and `description` in `Index.cshtml`. These values should read from the `Site:SiteName`, `Site:AuthorName`, and `Site:SiteDescription` configuration keys per the design's `SiteConfiguration` model.
+
+**Fix applied:**
+- `_Layout.cshtml`: Changed `og:site_name` from hardcoded `"Quinn Brown"` to `Configuration["Site:SiteName"]` with fallback.
+- `Slug.cshtml`: Changed JSON-LD `author.name` to `Configuration["Site:AuthorName"]` and `publisher.name` to `Configuration["Site:SiteName"]` with fallbacks.
+- `Index.cshtml`: Changed JSON-LD `name` to `Configuration["Site:SiteName"]` and `description` to `Configuration["Site:SiteDescription"]` with fallbacks.
+
+**Status:** FIXED
