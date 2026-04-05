@@ -1262,3 +1262,17 @@ The design specifies (Section 3.1): "Title pattern `{Article Title} | {Site Name
 - `Feed.cshtml` description also updated to use the configured site name.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — llms.txt missing sitemap and structured data references
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.6 — LlmsTxtMiddleware
+
+**Description:**
+The design specifies (Section 3.6): "A plain text document describing the site's purpose, content structure, available endpoints, and how to consume the content programmatically. Includes references to the sitemap, feeds, and structured data." The `llms.txt` output included an Articles section and a Feeds section (RSS, Atom, JSON) but had no reference to the sitemap URL (`/sitemap.xml`) or to the structured data format (JSON-LD). AI agents parsing `llms.txt` to understand how to consume the site's content would miss two key discovery mechanisms — the sitemap for URL enumeration and JSON-LD for structured article metadata extraction.
+
+**Fix applied:**
+- Added a "Discovery" section to the `llms.txt` output with the sitemap URL and a note about JSON-LD structured data embedded in article pages.
+
+**Status:** FIXED
