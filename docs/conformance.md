@@ -1935,3 +1935,24 @@ The design specifies (Section 5.2, step 8): "the framework renders the custom 40
 - Added `app.UseStatusCodePagesWithReExecute("/404")` to `Program.cs` before the static files middleware, so any 404 response triggers re-execution through the custom `/404` Razor page.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — CSP `style-src` and `font-src` directives block Google Fonts; fonts never load under enforced CSP
+
+**Design reference:** `docs/detailed-designs/08-security-hardening/README.md`, Section 3.2 — SecurityHeadersMiddleware, Section 7 — Security Headers Reference
+
+**Description:**
+The design specifies `font-src 'self'` and the nonce-based `style-src 'self' 'nonce-{nonce}'` in the CSP header (Section 3.2 and Section 7). The public layout (`_Layout.cshtml`) loads the Inter typeface from Google Fonts: the stylesheet is fetched from `https://fonts.googleapis.com/css2?family=Inter:...` (via `<link rel="preload" ... onload="this.rel='stylesheet'">`), and that stylesheet in turn loads the actual font binaries from `https://fonts.gstatic.com`. Neither origin appears in `style-src` or `font-src`:
+
+1. **`style-src 'self' 'nonce-{nonce}'`** — the Google Fonts CSS is an external stylesheet loaded without a nonce. When `onload` fires and the browser applies the stylesheet, the CSP `style-src` directive blocks it because `fonts.googleapis.com` is neither `'self'` nor the matching nonce host. In the `<noscript>` fallback the `<link rel="stylesheet">` is also blocked by the same rule.
+2. **`font-src 'self'`** — even if the stylesheet were somehow applied, the actual `.woff2` font files are served from `fonts.gstatic.com`. The `font-src 'self'` directive blocks all cross-origin font requests, so the Inter typeface is never downloaded.
+
+The result is that every visitor to the public site with a CSP-enforcing browser (all modern browsers) sees system fallback fonts instead of the designed Inter typeface. The `preconnect` and `dns-prefetch` hints for `fonts.googleapis.com` and `fonts.gstatic.com` are present in the layout but rendered useless because the fonts are blocked at the CSP level.
+
+**Fix applied:**
+- Added `https://fonts.googleapis.com` to the `style-src` directive in `SecurityHeadersMiddleware.cs` so the Google Fonts CSS stylesheet (loaded via the `<link rel="preload" onload="this.rel='stylesheet'">` tag) is permitted by the CSP.
+- Added `https://fonts.gstatic.com` to the `font-src` directive so the actual `.woff2` font binary files referenced by the Google Fonts stylesheet are permitted to download.
+- Removed the erroneous `img-src` placement (it was between `font-src` and `frame-ancestors`; corrected ordering to `style-src`, `font-src`, `img-src`).
+
+**Status:** FIXED

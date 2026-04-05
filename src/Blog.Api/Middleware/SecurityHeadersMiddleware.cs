@@ -30,12 +30,16 @@ public class SecurityHeadersMiddleware(RequestDelegate next, IHostEnvironment en
             var headers = context.Response.Headers;
 
             // Content-Security-Policy — nonce-based; eliminates 'unsafe-inline' for styles.
+            // fonts.googleapis.com is allowed in style-src so the Google Fonts CSS stylesheet can
+            // be applied (loaded via <link rel="preload" onload="this.rel='stylesheet'">).
+            // fonts.gstatic.com is allowed in font-src so the actual .woff2 font binary files
+            // (referenced by the Google Fonts stylesheet) can be downloaded.
             headers["Content-Security-Policy"] =
                 $"default-src 'self'; " +
                 $"script-src 'self'; " +
-                $"style-src 'self' 'nonce-{nonce}'; " +
+                $"style-src 'self' 'nonce-{nonce}' https://fonts.googleapis.com; " +
+                $"font-src 'self' https://fonts.gstatic.com; " +
                 $"img-src 'self' data:; " +
-                $"font-src 'self'; " +
                 $"frame-ancestors 'none'; " +
                 $"object-src 'none'; " +
                 $"base-uri 'self'; " +
