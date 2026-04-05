@@ -154,6 +154,19 @@ The Newsletter feature allows the blog author to compose and send email newslett
 | `CreatedAt` | `datetime2` | UTC, set on insert |
 | `UpdatedAt` | `datetime2` | UTC, updated whenever the row changes (confirm, unsubscribe, resubscribe). Provides a single "last modified" timestamp useful for change-feed auditing and as a cache-busting signal on the subscriber management UI. |
 
+#### NewsletterSendLog
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `NewsletterSendLogID` | `Guid` | PK |
+| `NewsletterID` | `Guid` | FK → `Newsletter.NewsletterID`; `ON DELETE CASCADE` (log rows are meaningless without the newsletter) |
+| `SubscriberID` | `Guid?` | FK → `NewsletterSubscriber.SubscriberID`; nullable; `ON DELETE SET NULL` (erasure must not block; see §3.7) |
+| `SentAt` | `datetime2` | UTC timestamp when the email was confirmed sent by the Service Bus consumer |
+
+**Unique constraint**: `UQ_NewsletterSendLog_Newsletter_Subscriber` on `(NewsletterID, SubscriberID)` — enforces idempotency; the consumer checks for an existing row before sending and inserts the row atomically with message completion.
+
+**Recommended index**: The unique constraint index on `(NewsletterID, SubscriberID)` also serves as the lookup index for the idempotency check. A separate index on `SentAt` is only needed if the retention purge job filters by `SentAt` alone rather than using a batch-delete approach; for a 90-day purge a table scan on a small log table is acceptable.
+
 ---
 
 ## 5. Key Workflows
@@ -168,7 +181,7 @@ Key points:
 - The confirmation token is valid for 48 hours (L2-055.2).
 - On confirmation, `ConfirmationToken` is set to `null` and `TokenExpiresAt` is cleared — tokens are single-use and cannot be replayed.
 - Emails include `List-Unsubscribe` and `List-Unsubscribe-Post` headers with the unsubscribe token URL (L2-056.3).
-- **Expired token cleanup**: Subscriber rows whose `Confirmed = false` and `TokenExpiresAt < UtcNow` are never automatically removed by any request handler. A scheduled background job (e.g. a nightly `IHostedService` or Hangfire job) must delete rows where `Confirmed = false AND TokenExpiresAt < UtcNow` to prevent indefinite accumulation of unconfirmed records. Until the cleanup job is implemented, operators should document this as a known operational gap.
+- **Expired token cleanup**: Subscriber rows whose `Confirmed = false` and `TokenExpiresAt < UtcNow` are never automatically removed by any request handler. A scheduled background job (e.g. a nightly `IHostedService` or Hangfire job) must delete rows where `Confirmed = false AND TokenExpiresAt < UtcNow` to prevent indefinite accumulation of unconfirmed records. Until the cleanup job is implemented, operators should document this as a known operational gap. **Index note**: The filtered index `IX_NewsletterSubscriber_ConfirmationToken` (covering `ConfirmationToken IS NOT NULL`) is optimised for token-lookup hot paths (confirm and unsubscribe flows); it is **not** usable by the cleanup job query, which filters on `Confirmed` and `TokenExpiresAt`. The cleanup job must either perform a small-table scan (acceptable at typical blog subscriber volumes) or rely on a separate composite index `IX_NewsletterSubscriber_Confirmed_TokenExpiresAt` on `(Confirmed, TokenExpiresAt)` added via a manual migration. Add this index if subscriber volume grows to the point where the nightly cleanup scan causes measurable I/O pressure.
 
 ### 5.2 Send Newsletter
 
@@ -176,7 +189,7 @@ Key points:
 
 Key points:
 - Guard conditions: must be Draft status, must have ≥1 confirmed active subscriber. Returns 422 otherwise.
-- Status transitions from `Draft` to `Sent` atomically with the `dateSent` timestamp and `Slug` generation before any messages are enqueued. If `ISlugGenerator` produces an empty or blank slug (e.g. the `Subject` contains only non-ASCII characters), `SendNewsletterHandler` must fall back to the newsletter's `NewsletterID` (formatted as a lowercase hex string without hyphens) as the slug, ensuring uniqueness without blocking the send.
+- Status transitions from `Draft` to `Sent` atomically with the `dateSent` timestamp and `Slug` generation before any messages are enqueued. If `ISlugGenerator` produces an empty or blank slug (e.g. the `Subject` contains only non-ASCII characters), `SendNewsletterHandler` must fall back to the newsletter's `NewsletterID` (formatted as a lowercase hex string without hyphens) as the slug, ensuring uniqueness without blocking the send. **Slug collision retry cap**: When the generated slug conflicts with an existing newsletter, the handler appends a numeric suffix (`-2`, `-3`, etc.) and retries. This retry loop must have a hard cap of **10 attempts**. If no unique slug is found within 10 attempts, the handler must fall back to the newsletter's `NewsletterID` hex string as the slug (guaranteed unique). Without a cap, an adversary who creates many newsletters with nearly identical subjects could force an unbounded loop.
 - Subscriber IDs are streamed via `IAsyncEnumerable` and enqueued to Azure Service Bus in batches of 100 to avoid memory pressure on large lists. **Zero-subscriber race**: the ≥1 subscriber guard runs before the DB transaction commits status to `Sent`. Between that check and the streaming enqueue, subscribers may unsubscribe, resulting in zero messages enqueued even though the newsletter transitions to `Sent`. This is accepted as an edge case: the newsletter is still correctly marked Sent (no emails were sent because no subscribers remained at send time), and the operator replay path can re-enqueue if needed. `SendNewsletterHandler` must log `newsletter.sent` with `recipientCount=0` at `Warning` level (rather than `Information`) when the streamed count is zero, so the anomalous outcome is visible in APM tooling without requiring a full replay.
 - Each outbound email includes the subscriber's personal `unsubscribeToken` in the footer URL.
 
