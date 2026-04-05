@@ -1310,3 +1310,18 @@ The design specifies (Section 5.2, step 8): "If no published article matches the
 - Added `Response.StatusCode = 404` before `return Page()` in both the `!article.Published` branch and the `catch (NotFoundException)` branch of `Slug.cshtml.cs`. The page still renders the friendly 404 UI but now sends the correct HTTP status code.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Layout feed alternate link titles and footer copyright hardcode site name
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 4.6 — SiteConfiguration
+
+**Description:**
+The design specifies `SiteName` as a configurable value in `SiteConfiguration` (Section 4.6). Prior conformance fixes made most site name references config-driven, but three instances in `_Layout.cshtml` were still hardcoded: the `<link rel="alternate">` title attributes for RSS (`"Quinn Brown RSS Feed"`) and Atom (`"Quinn Brown Atom Feed"`) feeds, and the footer copyright text (`"© 2026 Quinn Brown. All rights reserved."`). The layout already injects `IConfiguration`, so these were simple oversights from earlier fixes that addressed other parts of the layout.
+
+**Fix applied:**
+- Changed both feed `<link>` title attributes to use `Configuration["Site:SiteName"]` with fallback.
+- Changed the footer copyright text to use `Configuration["Site:SiteName"]` with fallback.
+
+**Status:** FIXED
