@@ -15,3 +15,4 @@
 | 11 | [Search Infrastructure](11-search-infrastructure/README.md) | Draft | SQL Server FTS index, SearchArticlesQuery, GetSearchSuggestionsQuery, and SearchHighlighter |
 | 12 | [Search Input & Autocomplete](12-search-input/README.md) | Draft | Global header search input, / shortcut, ARIA combobox dropdown, and search.js |
 | 13 | [Search Results Page](13-search-results-page/README.md) | Draft | /search Razor Page, result cards with mark highlighting, empty state, and pagination |
+| 14 | [About Page](14-about/README.md) | Draft | Public about page and back-office content authoring for site author biography |
