@@ -133,6 +133,8 @@ Key points:
 - New events are always created with `published=false` (draft state).
 - The slug is generated from the title and checked for uniqueness before insert.
 - Required fields: `Title`, `StartDate`, `Location` (L2-064.3).
+- Validation: if `EndDate` is provided it must be ≥ `StartDate`; returns 400 otherwise.
+- `ExternalUrl`, if provided, must be a well-formed absolute URL (`https://` or `http://`); returns 400 for malformed values.
 
 ### 5.2 Publish / Unpublish Event
 
@@ -180,7 +182,8 @@ PublicEventsDto  { upcoming: PagedResult<PublicEventDto>, past: PagedResult<Publ
 ## 7. Security Considerations
 
 - **Authorization**: All write endpoints (`POST`, `PUT`, `DELETE`, publish/unpublish) are protected by `[Authorize]` and the JWT middleware. The back-office list endpoint also requires auth (L2-067.3).
-- **Slug regeneration**: Event slugs are regenerated on every update from the current title (see OQ1). The external URL field (`ExternalUrl`) is the canonical reference for the event. Callers should use `ExternalUrl` for stable linking when available.
+- **Slug regeneration**: Event slugs are regenerated on every update from the current title (see OQ1). Because slugs can change on title update, consumers should avoid hardcoding slug-based URLs; use `ExternalUrl` (when available) as a stable external reference to the event site.
+- **Input validation**: `EndDate`, when provided, must be ≥ `StartDate` (validated in the command handler). `ExternalUrl`, when provided, must be a well-formed absolute URL; malformed values are rejected with 400 before any persistence occurs.
 - **Delete guard**: Deleting a published event returns 409. The author must unpublish first, making removal from the public site an explicit step.
 - **Unpublished event access**: `GetEventBySlugHandler` explicitly checks `Published == true` before returning the event, ensuring draft events are not accessible to public visitors (L2-070.2).
 - **HTTP caching**: The `GET /api/events/published` and `GET /api/events/by-slug/{slug}` endpoints are served with `Cache-Control: public, max-age=60, stale-while-revalidate=300`. Publish and unpublish operations must call `ICacheInvalidator` to bust the public events cache.

@@ -54,7 +54,7 @@ The About Page feature provides a publicly visible biography for the site author
 - **Responsibility**: Creates the about record if it does not exist; updates it if it does. This is the only mutation handler for about content.
 - **Dependencies**: `AboutContentRepository`, `IMarkdownConverter`, `DigitalAssetRepository` (to validate `profileImageId` and verify asset ownership matches the requesting user)
 - **Pre-render**: Markdown `Body` is converted to sanitized HTML at save time and stored in `BodyHtml`. Runtime rendering is not performed (same pattern as articles).
-- **Version increment**: On update, `Version` is incremented for optimistic concurrency.
+- **Optimistic concurrency**: On update, the command must include the current `version`. If the stored `Version` differs, the handler returns 409 (conflict). On success, `Version` is incremented before saving.
 
 ### 3.3 RestoreAboutContentHandler
 
@@ -120,6 +120,8 @@ The About Page feature provides a publicly visible biography for the site author
 | `Version` | `int` | Version number copied from parent at time of snapshot |
 | `ArchivedAt` | `datetime2` | UTC timestamp when snapshot was created |
 
+**Recommended index**: `IX_AboutContentHistory_AboutContentId_ArchivedAt` on `(AboutContentId, ArchivedAt DESC)` to support the paginated history query efficiently.
+
 ---
 
 ## 5. Key Workflows
@@ -131,6 +133,7 @@ The About Page feature provides a publicly visible biography for the site author
 Key points:
 - Validation rejects empty `Heading` or `Body` with 400 (L2-072.3).
 - Unauthenticated PUT returns 401 (L2-072.4).
+- On update (existing record), `version` in the request body must match the stored value; a mismatch returns 409.
 - Markdown is converted and sanitized at save time; the public page reads `BodyHtml` directly.
 - `profileImageId`, if provided, must reference an existing `DigitalAsset` owned by the requesting user — validated before save (L2-072.5). Returns 403 if the asset exists but belongs to a different user.
 - On restore (`PUT /api/about/restore/{historyId}`), the current live state is snapshotted into `AboutContentHistory` before overwriting, making the restore reversible. `ICacheInvalidator.InvalidateAsync("/about")` is called after restore.
@@ -152,10 +155,10 @@ Key points:
 
 ## 6. API Contracts
 
-| Method | Path | Auth | Body | Success | Errors |
-|--------|------|------|------|---------|--------|
+| Method | Path | Auth | Body / Params | Success | Errors |
+|--------|------|------|---------------|---------|--------|
 | `GET` | `/api/about` | None | — | 200 + `AboutContentDto?` | — |
-| `PUT` | `/api/about` | Bearer token | `{ heading, body, profileImageId? }` | 200 + `AboutContentDto` | 400, 401, 403 |
+| `PUT` | `/api/about` | Bearer token | `{ heading, body, profileImageId?, version }` | 200 + `AboutContentDto` | 400, 401, 403, 409 |
 | `GET` | `/api/about/history` | Bearer token | `?page&pageSize` (default pageSize=20, max 50) | 200 + `PagedResponse<AboutContentHistoryDto>` | 401 |
 | `PUT` | `/api/about/restore/{historyId}` | Bearer token | — | 200 + `AboutContentDto` | 401, 404 |
 
@@ -177,9 +180,10 @@ AboutContentDto  {
 AboutContentHistoryDto  {
     aboutContentHistoryId: Guid,
     heading:               string,
-    body:                  string,
+    body:                  string,       // Markdown source snapshot
+    bodyHtml:              string,       // Pre-rendered HTML snapshot (used for preview rendering in history list)
     profileImageId:        Guid?,
-    profileImageUrl:       string?,   // Resolved CDN/storage URL for display in history list
+    profileImageUrl:       string?,      // Resolved CDN/storage URL for display in history list
     version:               int,
     archivedAt:            DateTime
 }
@@ -193,7 +197,7 @@ AboutContentHistoryDto  {
 - **XSS**: `BodyHtml` is produced via `IMarkdownConverter`, which uses HtmlSanitizer to strip disallowed tags and attributes before storage.
 - **Image validation**: `profileImageId` is validated against the `DigitalAssets` table and must be owned by the requesting user. Returns 403 if the asset belongs to a different user. Prevents orphaned references and SSRF-style manipulation of the image URL.
 - **Cache invalidation**: `ICacheInvalidator.InvalidateAsync("/about")` is called after both a successful PUT and a successful restore, ensuring visitors see updated content promptly.
-- **Image ownership**: `profileImageId` is validated against the `DigitalAssets` table and the asset must be owned by the requesting user. Returns 403 if the asset exists but belongs to a different user.
+- **Optimistic concurrency**: `PUT /api/about` requires `version` in the request body. A mismatch returns 409 to prevent lost-update conflicts when the author has the page open in two tabs simultaneously.
 
 ---
 
