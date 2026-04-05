@@ -122,6 +122,8 @@ The About Page feature provides a publicly visible biography for the site author
 
 **Recommended index**: `IX_AboutContentHistory_AboutContentId_ArchivedAt` on `(AboutContentId, ArchivedAt DESC)` to support the paginated history query efficiently.
 
+**Cascade delete**: The FK from `AboutContentHistory.AboutContentId` → `AboutContent.AboutContentId` must be configured with `ON DELETE CASCADE`. Because `AboutContent` is a singleton its row is never expected to be deleted in normal operation, but without cascade the constraint would block any future hard-delete of the singleton and leave orphaned history rows.
+
 ---
 
 ## 5. Key Workflows
@@ -193,11 +195,13 @@ AboutContentHistoryDto  {
 
 ## 7. Security Considerations
 
-- **Authorization**: The `PUT /api/about` endpoint is protected by `[Authorize]` and the JWT middleware. Anonymous access returns 401 (L2-072.4).
+- **Authorization**: The `PUT /api/about`, `GET /api/about/history`, and `PUT /api/about/restore/{historyId}` endpoints are all protected by `[Authorize]` and the JWT middleware. Anonymous access to any of these returns 401 (L2-072.4). `GET /api/about` is public and unauthenticated.
 - **XSS**: `BodyHtml` is produced via `IMarkdownConverter`, which uses HtmlSanitizer to strip disallowed tags and attributes before storage.
 - **Image validation**: `profileImageId` is validated against the `DigitalAssets` table and must be owned by the requesting user. Returns 403 if the asset belongs to a different user. Prevents orphaned references and SSRF-style manipulation of the image URL.
 - **Cache invalidation**: `ICacheInvalidator.InvalidateAsync("/about")` is called after both a successful PUT and a successful restore, ensuring visitors see updated content promptly.
 - **Optimistic concurrency**: `PUT /api/about` requires `version` in the request body. A mismatch returns 409 to prevent lost-update conflicts when the author has the page open in two tabs simultaneously. `PUT /api/about/restore/{historyId}` likewise requires `currentVersion` in the request body and returns 409 on mismatch, preventing a restore from silently overwriting a concurrent edit.
+- **Input length validation**: `UpsertAboutContentHandler` enforces DB column limits server-side: `Heading` ≤ 256 chars. Requests exceeding this limit are rejected with 400 before any persistence occurs. `Body` is `nvarchar(max)` and is bounded instead by the Kestrel 1 MB request body limit (see §6-restful-api global config).
+- **Observability**: Key operations must emit structured log events at `Information` level: `about.upserted` (version), `about.restored` (historyId, restoredVersion). Cache invalidation failures are logged at `Warning` level with the cache key so operators can manually evict stale entries.
 
 ---
 

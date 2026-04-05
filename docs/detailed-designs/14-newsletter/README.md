@@ -104,6 +104,7 @@ The Newsletter feature allows the blog author to compose and send email newslett
 - **Responsibility**: Abstraction over the transactional email provider. Implementations may use SMTP, SendGrid, or similar.
 - **Key methods**: `SendConfirmationEmailAsync(email, confirmUrl)`, `SendNewsletterEmailAsync(email, subject, bodyHtml, unsubscribeUrl)`
 - **Notes**: `SendNewsletterHandler` enqueues one Azure Service Bus message per confirmed subscriber and returns HTTP 202 immediately. A background `IHostedService` dequeues and calls `IEmailSender` per message with dead-letter retry.
+- **Service Bus consumer idempotency**: Azure Service Bus delivers messages at-least-once; a transient failure after `IEmailSender` succeeds but before the lock is released causes the same message to be redelivered. To prevent duplicate emails, each Service Bus message payload includes both `newsletterID` and `subscriberID`. The consumer checks a `NewsletterSendLog` table (columns: `NewsletterID`, `SubscriberID`, unique composite index `UQ_NewsletterSendLog_Newsletter_Subscriber`) before sending; if a row already exists, the message is completed without re-sending. The log row is inserted atomically with message completion via `ServiceBusReceiver.CompleteMessageAsync`.
 - **Recommended DB indexes**: `IX_NewsletterSubscriber_ConfirmationToken` on `ConfirmationToken` (filtered index, non-NULL rows only) and `IX_NewsletterSubscriber_UnsubscribeToken` on `UnsubscribeToken` — both are lookup keys in hot paths. `IX_Newsletter_Status` on `Newsletter.Status` to support the `?status` filter on the back-office list endpoint efficiently.
 
 ---
@@ -137,11 +138,11 @@ The Newsletter feature allows the blog author to compose and send email newslett
 |-------|------|-------|
 | `SubscriberID` | `Guid` | PK |
 | `Email` | `nvarchar(256)` | Unique index |
-| `ConfirmationToken` | `nvarchar(128)?` | Random opaque token; null once confirmed |
+| `ConfirmationToken` | `nvarchar(128)?` | 64-char hex string from CSPRNG (`RandomNumberGenerator.GetBytes(32)`); null once confirmed |
 | `TokenExpiresAt` | `datetime2?` | 48 hours from sign-up |
 | `Confirmed` | `bit` | False until opt-in confirmed |
 | `ConfirmedAt` | `datetime2?` | UTC timestamp of confirmation |
-| `UnsubscribeToken` | `nvarchar(128)` | Random, generated at sign-up; permanent |
+| `UnsubscribeToken` | `nvarchar(128)` | 64-char hex string from CSPRNG (`RandomNumberGenerator.GetBytes(32)`); generated at sign-up; permanent |
 | `IsActive` | `bit` | False after unsubscribe |
 | `ResubscribedAt` | `datetime2?` | UTC timestamp of most recent reactivation; null on first sign-up |
 | `CreatedAt` | `datetime2` | UTC, set on insert |
@@ -211,8 +212,8 @@ Key points:
 ```
 NewsletterDto              { newsletterID, subject, slug, body, bodyHtml, status, dateSent, createdAt, updatedAt, version }
 NewsletterListDto          { newsletterID, subject, slug?, status, dateSent, createdAt }  // slug is null while status=Draft
-NewsletterArchiveDto       { newsletterID, subject, slug, dateSent }
-NewsletterArchiveDetailDto { newsletterID, subject, slug, bodyHtml, dateSent }   // body (Markdown) omitted — public consumers need only rendered HTML
+NewsletterArchiveDto       { subject, slug, dateSent }                           // newsletterID omitted — public consumers navigate by slug; exposing PK enables GUID enumeration
+NewsletterArchiveDetailDto { subject, slug, bodyHtml, dateSent }                 // newsletterID omitted; body (Markdown) omitted — public consumers need only rendered HTML
 SubscriberDto              { subscriberID, email, confirmed, isActive, confirmedAt, resubscribedAt, createdAt }
 ```
 
@@ -220,12 +221,15 @@ SubscriberDto              { subscriberID, email, confirmed, isActive, confirmed
 
 ## 7. Security Considerations
 
-- **Token guessing**: Confirmation and unsubscribe tokens are `Guid.NewGuid().ToString("N")` — 122 bits of entropy. They are never exposed in logs.
+- **Token guessing**: Confirmation and unsubscribe tokens are generated with `RandomNumberGenerator.GetBytes(32)` (256 bits from a CSPRNG), hex-encoded to a 64-character string. `Guid.NewGuid()` must NOT be used — version-4 GUIDs use a non-cryptographic pseudo-random number generator on some runtimes, making the token space predictable. Tokens are stored as-is in the database and are never exposed in logs.
 - **Email enumeration**: The subscribe endpoint always returns 202 regardless of whether the email already exists (L2-054.2).
 - **Sent newsletter protection**: Update and delete operations are rejected with 409 once `status=Sent`. This prevents accidental data mutation of historical records.
 - **Rate limiting**: The `POST /api/newsletter-subscriptions` and `POST /api/newsletter-subscriptions/confirm` endpoints are covered by an IP-based rate limit to prevent abuse (same `write-endpoints` sliding-window policy used elsewhere). Rate limiting the confirm endpoint prevents brute-force token enumeration.
+- **Input length validation**: Command handlers enforce the DB column limits as server-side validation rules: `Subject` ≤ 512 chars, `Email` ≤ 256 chars (per RFC 5321 §4.5.3). Requests that exceed these limits are rejected with 400 before any persistence occurs.
 - **HTML sanitisation**: `BodyHtml` is produced by `IMarkdownConverter` which wraps Markdig + HtmlSanitizer — XSS-safe.
 - **Token URL security**: Confirmation and unsubscribe links are only ever sent over HTTPS. The `confirmUrl` and `unsubscribeUrl` passed to `IEmailSender` are always constructed with `https://` scheme. Tokens are invalidated immediately on first use.
+- **GDPR — right to erasure**: Unsubscribing sets `IsActive = false` and clears `ConfirmationToken` but retains the subscriber row and email address. If a subscriber invokes the right to erasure, `SubscribeHandler`'s upsert logic must detect a hard-deleted row cannot be re-used. The system must support a hard-delete path: a back-office action that physically removes the `NewsletterSubscriber` row, nulls any `NewsletterSendLog` references, and removes the email address. This path is not exposed publicly — it is an admin operation. Until implemented, operators must document the erasure procedure in a Data Protection Impact Assessment.
+- **Observability**: Key lifecycle operations must emit structured log events at `Information` level: `subscriber.subscribed` (email hash only, never plaintext), `subscriber.confirmed`, `subscriber.unsubscribed`, `newsletter.sent` (newsletterID, recipientCount), `newsletter.send_failed` (newsletterID, subscriberID, error). Tokens and plaintext emails must never appear in log output.
 
 ---
 

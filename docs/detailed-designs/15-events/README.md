@@ -52,6 +52,7 @@ The Events feature allows the blog author to manage a list of speaking engagemen
   - `POST /api/events/{id}/publish` — publish
   - `POST /api/events/{id}/unpublish` — unpublish
   - `GET /api/events` — paginated list for back office
+  - `GET /api/events/{id}` — back-office detail by PK; used by the edit form to pre-populate fields (auth-guarded)
   - `GET /api/events/published` — public: returns paginated upcoming + past published events (no auth)
   - `GET /api/events/by-slug/{slug}` — public event detail by slug (no auth); uses explicit prefix to avoid routing conflict with `/{id}`
 
@@ -62,8 +63,8 @@ The Events feature allows the blog author to manage a list of speaking engagemen
 | `CreateEventHandler` | `CreateEventCommand` | Generates slug, persists with `published=false` |
 | `UpdateEventHandler` | `UpdateEventCommand` | Updates all mutable fields; regenerates slug from new title; calls `ICacheInvalidator` if the event is currently `Published = true` |
 | `DeleteEventHandler` | `DeleteEventCommand` | Removes event; returns 409 if `Published = true` (must unpublish first) |
-| `PublishEventHandler` | `PublishEventCommand` | Sets `published=true` |
-| `UnpublishEventHandler` | `UnpublishEventCommand` | Sets `published=false` |
+| `PublishEventHandler` | `PublishEventCommand` | Sets `published=true`; calls `ICacheInvalidator` to bust the public events cache |
+| `UnpublishEventHandler` | `UnpublishEventCommand` | Sets `published=false`; calls `ICacheInvalidator` to bust the public events cache |
 
 ### 3.3 Query Handlers
 
@@ -159,6 +160,7 @@ Key points:
 | `DELETE` | `/api/events/{id}` | — | 204 | 401, 404, 409 |
 | `POST` | `/api/events/{id}/publish` | — | 200 + `EventDto` | 401, 404 |
 | `POST` | `/api/events/{id}/unpublish` | — | 200 + `EventDto` | 401, 404 |
+| `GET` | `/api/events/{id}` | — | 200 + `EventDto` | 401, 404 |
 | `GET` | `/api/events?page&pageSize` (default pageSize=20, max 50) | — | 200 + `PagedResponse<EventListDto>` | 401 |
 
 ### Public endpoints (no auth)
@@ -173,7 +175,7 @@ Key points:
 ```
 EventDto         { eventId, title, slug, description, startDate, endDate?, location, externalUrl?, published, createdAt, updatedAt, version }
 EventListDto     { eventId, title, slug, startDate, location, published }
-PublicEventDto   { eventId, title, slug, description, startDate, endDate?, location, externalUrl? }  // strips internal fields (published, version, updatedAt)
+PublicEventDto   { title, slug, description, startDate, endDate?, location, externalUrl? }  // eventId omitted — public consumers navigate by slug; exposing PK enables GUID enumeration. Strips internal fields (published, version, updatedAt)
 PublicEventsDto  { upcoming: PagedResult<PublicEventDto>, past: PagedResult<PublicEventDto> }
 ```
 
@@ -188,6 +190,8 @@ PublicEventsDto  { upcoming: PagedResult<PublicEventDto>, past: PagedResult<Publ
 - **Unpublished event access**: `GetEventBySlugHandler` explicitly checks `Published == true` before returning the event, ensuring draft events are not accessible to public visitors (L2-070.2).
 - **HTTP caching**: The `GET /api/events/published` and `GET /api/events/by-slug/{slug}` endpoints are served with `Cache-Control: public, max-age=60, stale-while-revalidate=300`. Publish and unpublish operations must call `ICacheInvalidator` to bust the public events cache. `UpdateEventHandler` must also call `ICacheInvalidator` when the event being updated is currently published, so that title, date, or location changes are reflected immediately.
 - **Optimistic concurrency**: `PUT /api/events/{id}` requires `version` in the request body. A mismatch returns 409 to prevent lost-update conflicts.
+- **Input length validation**: Command handlers enforce DB column limits as server-side validation: `Title` ≤ 256 chars, `Location` ≤ 512 chars, `ExternalUrl` ≤ 2048 chars. Requests exceeding these limits are rejected with 400 before any persistence occurs.
+- **Observability**: Key operations must emit structured log events at `Information` level: `event.created` (eventId, title), `event.published` (eventId), `event.unpublished` (eventId), `event.deleted` (eventId). Errors (slug conflict, optimistic concurrency failure) are logged at `Warning` level.
 
 ---
 
