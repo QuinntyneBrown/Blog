@@ -1493,3 +1493,19 @@ The design specifies (Section 4.2) that the public `/health` response is `{"stat
 - Added a custom `ResponseWriter` to the `MapHealthChecks("/health")` call in `Program.cs`. The writer sets `Content-Type: application/json` and serializes `{ "status": "healthy" }` or `{ "status": "unhealthy" }` (lowercase, no `checks` detail — the public endpoint remains minimal per the design). This matches the format used by the existing `/health/ready` writer and satisfies the design's `HealthCheckResponse` schema.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Article body table elements have no CSS styling on dark theme
+
+**Design reference:** `docs/detailed-designs/02-article-management/README.md`, Section 3.4 — MarkdownConverter (table extensions enabled)
+
+**Description:**
+Design 02 Section 3.4 enables Markdig "advanced extensions: tables, autolinks, task lists, pipe tables." A prior conformance fix added `<table>`, `<thead>`, `<tbody>`, `<tr>`, `<th>`, `<td>` to the HtmlSanitizer allow-list so table HTML survives sanitization. However, no CSS rules existed for tables in the article body. On the blog's dark theme (`#050505` background with `#FFFFFF` text), browser-default table rendering produces invisible borders and no cell padding — tables appear as unstructured text runs with no visual separation between cells, making tabular data unreadable.
+
+**Fix applied:**
+- Added `.article-body table { width: 100%; border-collapse: collapse; margin: 24px 0; }` for full-width tables with vertical spacing.
+- Added `.article-body th, .article-body td { padding: 10px 14px; border: 1px solid var(--border-subtle); text-align: left; }` for visible cell borders and padding.
+- Added `.article-body th { background: var(--surface-elevated); font-weight: 600; }` for header cell visual distinction.
+
+**Status:** FIXED
