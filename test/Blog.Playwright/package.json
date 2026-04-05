@@ -1,0 +1,21 @@
+{
+  "name": "blog-playwright",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright E2E tests for the Blog platform",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:ui": "npx playwright test --ui",
+    "test:headed": "npx playwright test --headed",
+    "test:api": "npx playwright test --project=api",
+    "test:public": "npx playwright test --project=public-desktop",
+    "test:backoffice": "npx playwright test --project=back-office-desktop",
+    "test:responsive": "npx playwright test --project=public-mobile --project=public-tablet",
+    "report": "npx playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0",
+    "@axe-core/playwright": "^4.8.0",
+    "typescript": "^5.4.0"
+  }
+}
