@@ -919,7 +919,11 @@ The design specifies a `PublicArticleController` (Section 3.7) that exposes two 
 
 Neither endpoint exists anywhere in the codebase. The only `ArticlesController` is guarded by `[Authorize]` and routes to `/api/articles` — meaning external consumers (feed readers, headless clients, or integrations) that follow the documented public API contract receive 401 instead of article data. Additionally, the existing `GetArticleBySlugQuery` does not filter for `Published == true`, so even if wired to a public endpoint it would incorrectly return draft articles to unauthenticated callers. The `GetPublishedArticlesQuery` and handler already exist but have no HTTP surface.
 
-**Status:** OPEN
+**Fix applied:**
+- Created `src/Blog.Api/Features/Articles/Queries/GetPublishedArticleBySlug.cs` — `GetPublishedArticleBySlugQuery` and its handler, which calls `GetBySlugAsync` and then checks `article.Published`; returns 404 (via `NotFoundException`) if the article does not exist or is in draft status.
+- Created `src/Blog.Api/Controllers/PublicArticlesController.cs` — `[ApiController]` at `[Route("api/public/articles")]`, no `[Authorize]`. `GET /` dispatches to `GetPublishedArticlesQuery` and returns a `PagedResult`. `GET /{slug}` dispatches to `GetPublishedArticleBySlugQuery` and returns `Ok`.
+
+**Status:** FIXED
 
 ---
 
