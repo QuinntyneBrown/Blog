@@ -33,24 +33,14 @@
                     <div class="article-card-image">
                         @if (!string.IsNullOrEmpty(article.FeaturedImageUrl))
                         {
-                            var cardFileName = article.FeaturedImageUrl.StartsWith("/assets/")
-                                ? article.FeaturedImageUrl.Substring("/assets/".Length)
-                                : System.IO.Path.GetFileName(article.FeaturedImageUrl);
-                            var cardAssetId = System.IO.Path.GetFileNameWithoutExtension(cardFileName);
-                            var cardBreakpoints = new[] { 320, 640, 960 };
-                            var cardAvifSrcset = string.Join(", ", cardBreakpoints.Select(w => $"/assets/{cardAssetId}-{w}w.avif {w}w"));
-                            var cardWebpSrcset = string.Join(", ", cardBreakpoints.Select(w => $"/assets/{cardAssetId}-{w}w.webp {w}w"));
-                            <picture>
-                                <source type="image/avif"
-                                        srcset="@cardAvifSrcset"
-                                        sizes="(max-width: 576px) 100vw, (max-width: 1200px) 50vw, 33vw" />
-                                <source type="image/webp"
-                                        srcset="@cardWebpSrcset"
-                                        sizes="(max-width: 576px) 100vw, (max-width: 1200px) 50vw, 33vw" />
-                                <img src="@article.FeaturedImageUrl" alt="@article.Title"
-                                     @(article.FeaturedImageWidth.HasValue ? $"width=\"{article.FeaturedImageWidth}\" height=\"{article.FeaturedImageHeight}\"" : "")
-                                     loading="lazy" decoding="async" />
-                            </picture>
+                            <img responsive
+                                 src="@article.FeaturedImageUrl"
+                                 alt="@article.Title"
+                                 img-width="@article.FeaturedImageWidth"
+                                 img-height="@article.FeaturedImageHeight"
+                                 breakpoints="320,640,960"
+                                 sizes="(max-width: 576px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                 priority="false" />
                         }
                         else
                         {
