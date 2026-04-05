@@ -1,38 +1,30 @@
 import { test, expect } from '@playwright/test';
 import { randomBytes } from 'crypto';
+import { testUser } from '../../fixtures/test-data';
 
 // L2-028: Digital Assets API contract tests
-// These tests verify the /api/digital-assets endpoints conform to the expected contract.
-// They are expected to FAIL until the API is implemented.
 
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:5001';
+const API_BASE_URL = process.env.API_URL || 'http://localhost:5001';
 
-const validCredentials = {
-  email: 'admin@blog.local',
-  password: 'Admin123!',
-};
+async function getAuthToken(request: import('@playwright/test').APIRequestContext): Promise<string> {
+  const loginResponse = await request.post(`${API_BASE_URL}/api/auth/login`, {
+    data: { email: testUser.email, password: testUser.password },
+  });
+  const body = await loginResponse.json();
+  return body.data.token;
+}
 
 test.describe('Digital Assets API - L2-028', () => {
 
   test('POST /api/digital-assets/upload with valid image returns 201', async ({ request }) => {
-    // Authenticate
-    const loginResponse = await request.post('/api/auth/login', {
-      data: validCredentials,
-    });
-    const { token } = await loginResponse.json();
-
-    const authContext = await request.newContext({
-      baseURL: API_BASE_URL,
-      extraHTTPHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const token = await getAuthToken(request);
 
     // Create a minimal valid JPEG (starts with FFD8FF magic bytes)
     const jpegHeader = Buffer.from([0xFF, 0xD8, 0xFF, 0xE0]);
     const fakeImageContent = Buffer.concat([jpegHeader, randomBytes(1024)]);
 
-    const response = await authContext.post('/api/digital-assets/upload', {
+    const response = await request.post(`${API_BASE_URL}/api/digital-assets/upload`, {
+      headers: { Authorization: `Bearer ${token}` },
       multipart: {
         file: {
           name: 'test-image.jpg',
@@ -45,30 +37,19 @@ test.describe('Digital Assets API - L2-028', () => {
     expect(response.status()).toBe(201);
 
     const body = await response.json();
-    expect(body.digitalAssetId).toBeTruthy();
-    expect(body.url).toBeTruthy();
-
-    await authContext.dispose();
+    const data = body.data || body;
+    expect(data.digitalAssetId).toBeTruthy();
+    expect(data.url).toBeTruthy();
   });
 
   test('POST /api/digital-assets/upload with non-image returns 400', async ({ request }) => {
-    // Authenticate
-    const loginResponse = await request.post('/api/auth/login', {
-      data: validCredentials,
-    });
-    const { token } = await loginResponse.json();
-
-    const authContext = await request.newContext({
-      baseURL: API_BASE_URL,
-      extraHTTPHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const token = await getAuthToken(request);
 
     // Upload a non-image file (plain text pretending to be an executable)
     const nonImageContent = Buffer.from('This is not an image file. Just plain text.');
 
-    const response = await authContext.post('/api/digital-assets/upload', {
+    const response = await request.post(`${API_BASE_URL}/api/digital-assets/upload`, {
+      headers: { Authorization: `Bearer ${token}` },
       multipart: {
         file: {
           name: 'malicious.exe',
@@ -79,30 +60,18 @@ test.describe('Digital Assets API - L2-028', () => {
     });
 
     expect(response.status()).toBe(400);
-
-    await authContext.dispose();
   });
 
   test('POST /api/digital-assets/upload with file > 10MB returns 413', async ({ request }) => {
-    // Authenticate
-    const loginResponse = await request.post('/api/auth/login', {
-      data: validCredentials,
-    });
-    const { token } = await loginResponse.json();
-
-    const authContext = await request.newContext({
-      baseURL: API_BASE_URL,
-      extraHTTPHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const token = await getAuthToken(request);
 
     // Create a buffer slightly over 10MB
     const tenMBPlusOne = 10 * 1024 * 1024 + 1;
     const jpegHeader = Buffer.from([0xFF, 0xD8, 0xFF, 0xE0]);
     const oversizedContent = Buffer.concat([jpegHeader, Buffer.alloc(tenMBPlusOne)]);
 
-    const response = await authContext.post('/api/digital-assets/upload', {
+    const response = await request.post(`${API_BASE_URL}/api/digital-assets/upload`, {
+      headers: { Authorization: `Bearer ${token}` },
       multipart: {
         file: {
           name: 'oversized-image.jpg',
@@ -113,15 +82,13 @@ test.describe('Digital Assets API - L2-028', () => {
     });
 
     expect(response.status()).toBe(413);
-
-    await authContext.dispose();
   });
 
   test('POST /api/digital-assets/upload without auth returns 401', async ({ request }) => {
     const jpegHeader = Buffer.from([0xFF, 0xD8, 0xFF, 0xE0]);
     const fakeImageContent = Buffer.concat([jpegHeader, randomBytes(512)]);
 
-    const response = await request.post('/api/digital-assets/upload', {
+    const response = await request.post(`${API_BASE_URL}/api/digital-assets/upload`, {
       multipart: {
         file: {
           name: 'test-image.jpg',
@@ -135,26 +102,18 @@ test.describe('Digital Assets API - L2-028', () => {
   });
 
   test('GET /api/digital-assets returns list of uploaded assets', async ({ request }) => {
-    // Authenticate
-    const loginResponse = await request.post('/api/auth/login', {
-      data: validCredentials,
-    });
-    const { token } = await loginResponse.json();
+    const token = await getAuthToken(request);
 
-    const authContext = await request.newContext({
-      baseURL: API_BASE_URL,
-      extraHTTPHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
+    const response = await request.get(`${API_BASE_URL}/api/digital-assets`, {
+      headers: { Authorization: `Bearer ${token}` },
     });
-
-    const response = await authContext.get('/api/digital-assets');
 
     expect(response.status()).toBe(200);
     expect(response.headers()['content-type']).toContain('application/json');
 
     const body = await response.json();
-    const items = Array.isArray(body) ? body : body.items;
+    const data = body.data || body;
+    const items = Array.isArray(data) ? data : data.items;
     expect(Array.isArray(items)).toBe(true);
 
     // If there are items, verify their structure
@@ -163,7 +122,5 @@ test.describe('Digital Assets API - L2-028', () => {
       expect(asset.digitalAssetId).toBeTruthy();
       expect(asset.url).toBeTruthy();
     }
-
-    await authContext.dispose();
   });
 });

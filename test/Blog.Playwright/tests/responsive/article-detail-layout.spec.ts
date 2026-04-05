@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { VIEWPORTS } from '../../helpers/viewport';
 import { PublicArticleDetailPage } from '../../page-objects/public/article-detail.page';
 
-const SAMPLE_SLUG = 'sample-article';
+const SAMPLE_SLUG = 'hello-world';
 
 test.describe('L2-036: Article Detail – Responsive Layout', () => {
   let detailPage: PublicArticleDetailPage;

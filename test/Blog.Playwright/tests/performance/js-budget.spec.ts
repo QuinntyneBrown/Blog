@@ -26,14 +26,17 @@ test.describe('JavaScript Budget - L2-017', () => {
     expect(totalJsBytes).toBeLessThanOrEqual(fiftyKB);
   });
 
-  test('full article content is visible in initial HTML (SSR, not JS-rendered)', async ({ page }) => {
-    await page.setJavaScriptEnabled(false);
-    await page.goto('/articles/test-article');
+  test('full article content is visible in initial HTML (SSR, not JS-rendered)', async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto('/articles/getting-started-with-aspnet-core');
 
-    const articleBody = page.locator('article .article-body');
+    const articleBody = page.locator('article .article-body, .article-body');
     await expect(articleBody).toBeVisible();
 
     const textContent = await articleBody.textContent();
     expect(textContent!.length).toBeGreaterThan(100);
+
+    await context.close();
   });
 });
