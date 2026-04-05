@@ -2101,3 +2101,14 @@ This defeats the abstraction boundary the design establishes. The `BlobAssetStor
 - Updated `AssetsController.Serve`: replaced `assetStorage.Exists(variantName)` + `assetStorage.GetFilePath(variantName)` calls with `await assetStorage.GetAsync(variantName, ct)`. When a non-null stream is returned the controller sets cache/ETag/Vary headers and returns a `FileStreamResult` with the correct `Content-Type`. Replaced the final `assetStorage.Exists(fileName)` + `assetStorage.GetFilePath(fileName)` fallback with the same `GetAsync`-based pattern.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — GetAllAsync and GetPublishedAsync load Body and BodyHtml in list queries; large columns fetched unnecessarily
+
+**Design reference:** `docs/detailed-designs/02-article-management/README.md`, Section 4.2 — Entity Configuration
+
+**Description:**
+The design specifies (Section 4.2): "`Body` (Markdown source) and `BodyHtml` (pre-rendered HTML) are stored as `nvarchar(max)` / `TEXT` and **excluded from list projections**." `ArticleRepository.GetAllAsync` and `GetPublishedAsync` both use `.ToListAsync()` which materialises full `Article` entities — including the `Body` and `BodyHtml` columns, which can be many kilobytes or megabytes of Markdown source and rendered HTML per article. These fields are then silently discarded by `GetArticlesHandler` (which constructs `ArticleListDto` without `Body`/`BodyHtml`) and by `GetPublishedArticlesHandler` (which constructs `PublicArticleListDto` without them). For a page of nine articles, this needlessly transfers the full content of nine articles across the database connection on every listing request, wasting I/O bandwidth and increasing TTFB — contrary to both the design's explicit statement and the performance goal of sub-200ms TTFB at P95.
+
+**Status:** OPEN

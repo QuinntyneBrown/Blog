@@ -18,6 +18,25 @@ public class ArticleRepository(BlogDbContext context) : IArticleRepository
             .OrderByDescending(a => a.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            // Body and BodyHtml are nvarchar(max) columns excluded from list projections per design 02, Section 4.2.
+            // Project to Article without loading those columns to avoid unnecessary large-column I/O on every listing request.
+            .Select(a => new Article
+            {
+                ArticleId = a.ArticleId,
+                Title = a.Title,
+                Slug = a.Slug,
+                Abstract = a.Abstract,
+                Body = string.Empty,
+                BodyHtml = string.Empty,
+                FeaturedImageId = a.FeaturedImageId,
+                FeaturedImage = a.FeaturedImage,
+                Published = a.Published,
+                DatePublished = a.DatePublished,
+                ReadingTimeMinutes = a.ReadingTimeMinutes,
+                Version = a.Version,
+                CreatedAt = a.CreatedAt,
+                UpdatedAt = a.UpdatedAt
+            })
             .ToListAsync(cancellationToken);
 
     public async Task<int> GetAllCountAsync(CancellationToken cancellationToken = default)
@@ -30,6 +49,24 @@ public class ArticleRepository(BlogDbContext context) : IArticleRepository
             .OrderByDescending(a => a.DatePublished)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            // Body and BodyHtml are nvarchar(max) columns excluded from list projections per design 02, Section 4.2.
+            .Select(a => new Article
+            {
+                ArticleId = a.ArticleId,
+                Title = a.Title,
+                Slug = a.Slug,
+                Abstract = a.Abstract,
+                Body = string.Empty,
+                BodyHtml = string.Empty,
+                FeaturedImageId = a.FeaturedImageId,
+                FeaturedImage = a.FeaturedImage,
+                Published = a.Published,
+                DatePublished = a.DatePublished,
+                ReadingTimeMinutes = a.ReadingTimeMinutes,
+                Version = a.Version,
+                CreatedAt = a.CreatedAt,
+                UpdatedAt = a.UpdatedAt
+            })
             .ToListAsync(cancellationToken);
 
     public async Task<int> GetPublishedCountAsync(CancellationToken cancellationToken = default)
