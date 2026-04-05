@@ -24,9 +24,9 @@ export class ArticleEditorPage {
     this.statusBadge = page.locator('[data-testid="toolbar-badge"]');
     this.slugText = page.locator('[data-testid="article-slug"]');
     this.deleteButton = page.locator('[data-testid="delete-btn"]');
-    this.featuredImageButton = page.locator('[data-testid="featured-image-btn"]');
+    this.featuredImageButton = page.locator('[data-testid="featured-image-button"]');
     this.featuredImagePreview = page.locator('[data-testid="featured-image-preview"]');
-    this.removeFeaturedImageButton = page.locator('[data-testid="remove-image-btn"]');
+    this.removeFeaturedImageButton = page.locator('[data-testid="remove-featured-image"]');
   }
 
   async goto(id?: string) {

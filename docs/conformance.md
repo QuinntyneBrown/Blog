@@ -2244,6 +2244,85 @@ Design 12 specifies a global search input component embedded in the public site'
 
 Without the search input, the global search feature added by design 11 (the server-side endpoints, `SearchArticlesHandler`, and `GetSearchSuggestionsHandler`) is entirely unreachable from the public UI. Visitors cannot search for articles from any page, and the designed `/` keyboard shortcut does not exist.
 
-**Status:** OPEN
+**Fix applied:**
+- Created `src/Blog.Api/wwwroot/js/search.js` — vanilla JavaScript (~160 lines) implementing the `/` keyboard shortcut (focus input from any page, skips when an input/textarea is active), small-screen expand/collapse via `header.search-expanded` CSS class, debounced autocomplete fetch (200 ms) to `/api/public/articles/suggestions` with `AbortController` to cancel in-flight requests, ARIA combobox keyboard navigation (ArrowDown/Up between options, Enter to navigate, Escape to dismiss, Tab to close), clear button toggling, and outside-click dismissal.
+- Added search CSS to `_Layout.cshtml` `<style>` block: `.search-wrapper`, `.search-form`, `.search-icon`, `.search-input`, `.search-shortcut`, `.search-clear`, `.search-toggle`, `#search-suggestions` (dropdown), and `#search-suggestions mark` (highlight colour). Responsive rules added to the `max-width: 991px` media query: hides the form and shows the toggle button on small screens; when `header.search-expanded` is set, shows the full-width form and hides the toggle button.
+- Added `.sr-only` utility class to the base CSS (used by the search label).
+- Added the search form HTML inside the `<nav>` right-hand side: `<div class="search-wrapper" role="search">` containing the `<form action="/search" method="get">` with accessible label, magnifying-glass icon, `<input type="search" id="site-search">`, keyboard shortcut hint `<kbd>/</kbd>`, and clear button; a separate `<button class="search-toggle">` icon for SM/XS viewports; and the `<ul id="search-suggestions" role="listbox">` dropdown.
+- Added `<script src="/js/search.js" defer></script>` to `_Layout.cshtml` before `@RenderSection("Scripts")`.
+
+**Status:** FIXED
+
+---
+
+## 2026-04-04 — Search results page (`/search`) entirely absent; `robots.txt` missing `Disallow: /search`
+
+**Design reference:** `docs/detailed-designs/13-search-results-page/README.md`, Sections 3.1–3.4
+
+**Description:**
+Design 13 specifies a dedicated server-rendered Razor Page at `/search` (`Pages/Search/Index.cshtml` and `Pages/Search/Index.cshtml.cs`) that accepts `?q=` and `?page=` query parameters, dispatches to `SearchArticlesQuery` via MediatR, and renders up to 10 `<article>` result cards per page with highlighted titles and excerpts, pagination, and an empty state. Neither `Pages/Search/Index.cshtml` nor `Pages/Search/Index.cshtml.cs` exists anywhere in the codebase. The search form added by design 12 (`<form action="/search" method="get">`) submits to `/search`, but because the page does not exist, every search form submission results in a 404. The entire public search feature — despite having a fully-implemented backend (`SearchArticlesQuery`, `SearchArticlesHandler`, `SearchHighlighter`, `GET /api/public/articles/search`) — is unreachable from the public UI via the designed SSR path. Additionally, design 13 Section 3.4 specifies that `robots.txt` must include `Disallow: /search` to prevent search engines from indexing result pages (duplicate content risk), but `SeoController.Robots()` only disallows `/admin` and `/api/`.
+
+**Fix applied:**
+- Created `src/Blog.Api/Pages/Search/Index.cshtml.cs` — `SearchIndexModel` Razor Page model that accepts `?q=` (max 200 chars, truncated if longer) and `?page=` parameters, dispatches to `SearchArticlesQuery` via MediatR, sets `Response.Headers.CacheControl = "no-store"` on all search results, and exposes `Query`, `Results`, `IsEmpty`, and `CurrentPage` properties. Empty or whitespace queries render the neutral search state with no database call.
+- Created `src/Blog.Api/Pages/Search/Index.cshtml` — server-rendered Razor view at route `/search` with: a `<section class="search-results-header">` showing the query heading and result count; an empty-state section with a search icon and "Browse all articles" link when `IsEmpty` is true; an `<ol class="search-results" aria-label="Search results">` list of `<article class="result-card">` elements when results are present (each showing highlighted title, highlighted excerpt, article metadata, and an optional thumbnail); and a `<nav aria-label="Search results pages">` pagination control using the existing `pagination-btn`/`pagination-page` CSS classes with disabled spans on boundary pages. Page title uses `HtmlEncoder.Default.Encode(Query)` to prevent reflected XSS; highlighted content is rendered via `Html.Raw` (safe because `SearchHighlighter` pre-encodes). Inline `<style>` block provides result card, empty-state, and responsive layout CSS.
+- Added `Disallow: /search` to the `robots.txt` output in `SeoController.Robots()` to prevent search engines from indexing query-specific result pages, avoiding duplicate content penalties.
+
+**Status:** FIXED
+
+---
+
+## 2026-04-04 — SearchArticlesHandler uses relative asset URL instead of design-specified absolute URL from configuration
+
+**Design reference:** `docs/detailed-designs/11-search-infrastructure/README.md`, Section 3.6 — `SearchArticlesQuery` and Handler
+
+**Description:**
+The design specifies that `SearchArticlesHandler` should inject `IConfiguration` and build an absolute `featuredImageUrl` for each search result using the configured base URL: `a.FeaturedImage != null ? $"{baseUrl}/assets/{a.FeaturedImage.StoredFileName}" : null` where `baseUrl` is read from `config["Site:BaseUrl"]` (the rest of the codebase uses the equivalent `Site:SiteUrl` key throughout). The implementation omits `IConfiguration` from the handler's constructor entirely and uses a bare relative path `$"/assets/{a.FeaturedImage.StoredFileName}"`. The `SearchResultDto.FeaturedImageUrl` is consumed by `search.js` in autocomplete suggestion cards and by the search results page for article thumbnails. A relative URL works when the page and the API share the same origin, but external API consumers — headless clients, feed readers, or crawlers calling `GET /api/public/articles/search` directly — receive a relative path they cannot resolve without knowing the site's base URL. The design uniquely specifies absolute URLs for the search result DTO by showing explicit `IConfiguration` injection and base-URL construction in the handler pseudocode, a requirement absent from the other article DTO handlers.
+
+**Fix applied:**
+- Injected `IConfiguration` into `SearchArticlesHandler` as a primary constructor parameter.
+- Added `var baseUrl = (config["Site:SiteUrl"] ?? "").TrimEnd('/')` to read the configured base URL (using the `Site:SiteUrl` key that the rest of the codebase uses consistently, matching the design's `Site:BaseUrl` intent).
+- Changed `FeaturedImageUrl` construction from `$"/assets/{a.FeaturedImage.StoredFileName}"` to `$"{baseUrl}/assets/{a.FeaturedImage.StoredFileName}"`, producing an absolute URL in all search result DTOs.
+
+**Status:** FIXED
+
+---
+
+## 2026-04-04 — `PagedResponse<T>.TotalPages` missing `PageSize > 0` guard; division produces incorrect result when `PageSize` is zero
+
+**Design reference:** `docs/detailed-designs/13-search-results-page/README.md`, Section 3.5 — `PagedResponse<T>` Extension; `docs/detailed-designs/06-restful-api/README.md`, Section 4.3 — PagedResponse\<T\>
+
+**Description:**
+The design specifies (Section 3.5 of design 13) that `TotalPages` must be computed as:
+```csharp
+public int TotalPages => PageSize > 0 ? (int)Math.Ceiling((double)TotalCount / PageSize) : 0;
+```
+The implementation in `src/Blog.Api/Common/Models/PagedResponse.cs` uses:
+```csharp
+public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
+```
+The `PageSize > 0` guard is entirely absent. When `PageSize` is zero — which occurs for any default-initialized `new PagedResponse<T>()` (e.g., `SearchIndexModel` initializes `Results` as `new()` before the query executes) — the expression evaluates `(double)TotalCount / 0`. In C#'s floating-point arithmetic, `0.0 / 0 = NaN` and `(int)Math.Ceiling(NaN) = 0` (safe by accident when `TotalCount` is also 0), but when `TotalCount > 0` and `PageSize = 0`, the division yields `+Infinity` and `(int)Math.Ceiling(double.PositiveInfinity)` is `int.MinValue` in an unchecked context — an incorrect, potentially negative page count. Downstream, `HasNextPage => Page < TotalPages` would evaluate `1 < int.MinValue = false`, silently hiding all subsequent pages when results exist. The design's explicit conditional was added precisely to prevent this class of arithmetic anomaly; its absence violates the documented contract.
+
+**Fix applied:**
+- Changed `TotalPages` in `src/Blog.Api/Common/Models/PagedResponse.cs` from `(int)Math.Ceiling((double)TotalCount / PageSize)` to `PageSize > 0 ? (int)Math.Ceiling((double)TotalCount / PageSize) : 0`, exactly matching the design's specification.
+
+**Status:** FIXED
+
+---
+
+## 2026-04-04 — AddFullTextSearchIndex migration missing Designer.cs snapshot file
+
+**Design reference:** `docs/detailed-designs/11-search-infrastructure/README.md`, Section 3.1 — SQL Server Full-Text Search Index; `docs/detailed-designs/10-data-persistence/README.md`, Section 3.5 — Migration Runner, Section 7.1 — Naming Convention
+
+**Description:**
+The design specifies an EF Core migration named `AddFullTextSearchIndex` (Design 11, Section 3.1) that creates the `BlogSearchCatalog` full-text catalog and the full-text index on `Articles(Title, Abstract, Body)`. The migration file `20260407000000_AddFullTextSearchIndex.cs` was created correctly. However, the corresponding `20260407000000_AddFullTextSearchIndex.Designer.cs` snapshot file — which every EF Core migration requires — is entirely absent from the `Migrations/` directory.
+
+EF Core's migration infrastructure requires each migration to have a `Designer.cs` file containing the `[DbContext]` and `[Migration]` attributes that allow the tooling to: (1) correctly identify and order the migration in the history chain, (2) record the `BuildTargetModel` snapshot so EF Core knows the exact model state after this migration when generating the next one. Without the Designer file, `dotnet ef migrations add` cannot determine what model state preceded the new migration, causing the tooling to potentially regenerate the entire schema from scratch rather than computing the delta. Both of the other custom migrations — `20260405013757_InitialCreate.Designer.cs` and `20260406000000_CorrectDigitalAssetSchema.Designer.cs` — have their corresponding snapshot files. The `AddFullTextSearchIndex` migration is the sole exception.
+
+The FTS migration itself makes no EF Core model changes (it only runs raw SQL DDL), so the `BuildTargetModel` snapshot it requires is identical to the one in `20260406000000_CorrectDigitalAssetSchema.Designer.cs`.
+
+**Fix applied:**
+- Created `src/Blog.Infrastructure/Data/Migrations/20260407000000_AddFullTextSearchIndex.Designer.cs` — carries the `[DbContext(typeof(BlogDbContext))]` and `[Migration("20260407000000_AddFullTextSearchIndex")]` attributes and a `BuildTargetModel` snapshot identical to the preceding `CorrectDigitalAssetSchema` Designer file (the FTS migration adds no EF Core model members, only raw SQL DDL). The `partial class AddFullTextSearchIndex` keyword was already present in the migration source file, so no change to the main migration file was required. EF Core's migration tooling can now correctly identify this migration in the chain and compute model deltas when the next migration is added.
+
+**Status:** FIXED
 
 ---
