@@ -19,5 +19,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Blog.Domain\Blog.Domain.csproj" />
     <ProjectReference Include="..\..\src\Blog.Infrastructure\Blog.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Blog.Api\Blog.Api.csproj" />
   </ItemGroup>
 </Project>
