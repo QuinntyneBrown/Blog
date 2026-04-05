@@ -1910,7 +1910,17 @@ The design specifies an `AssetStorage` component (Section 3.5) that "abstracts f
 
 Additionally, `LocalFileAssetStorage.SaveAsync` generates its own GUID-based filename internally, but the upload handler must control the filename (using the `assetGuid` that also becomes the `DigitalAssetId`) so that variant filenames (`{assetId}-{width}w.webp`) can be derived from the entity ID alone. The `IAssetStorage.SaveAsync` signature must accept a caller-supplied `storedFileName` rather than generating one internally.
 
-**Status:** OPEN
+**Fix applied:**
+- Updated `IAssetStorage.SaveAsync` signature from `Task<string> SaveAsync(Stream, string fileName, string contentType, ...)` to `Task SaveAsync(string storedFileName, Stream, ...)` — the caller now supplies the stored filename; the method just persists the stream.
+- Added `string GetFilePath(string storedFileName)` to `IAssetStorage` so consumers (image-processing, serving) can obtain the physical path without knowing about the backing store's directory layout.
+- Updated `LocalFileAssetStorage` to implement the new signature: writes the stream to `{StoragePath}/{storedFileName}`, derives the path via `GetFilePath`.
+- Updated `BlobAssetStorage` (placeholder) to implement the new members (both throw `NotImplementedException` as before).
+- Registered `IAssetStorage` → `LocalFileAssetStorage` as a singleton in `Program.cs`, immediately before the other service registrations.
+- Updated `UploadDigitalAssetCommandHandler`: replaced `IWebHostEnvironment env` with `IAssetStorage assetStorage`; calls `assetStorage.SaveAsync(storedFileName, stream)` to persist the original file and `assetStorage.GetFilePath(storedFileName)` to obtain the path for `Image.LoadAsync`; uses `assetStorage.GetUrl(storedFileName)` for the DTO's `Url` field.
+- Updated `DeleteDigitalAssetCommandHandler`: replaced `IWebHostEnvironment env` with `IAssetStorage assetStorage`; calls `assetStorage.DeleteAsync(storedFileName)` instead of direct `File.Delete`.
+- Updated `AssetsController`: replaced `IWebHostEnvironment env` with `IAssetStorage assetStorage`; all file existence checks (`assetStorage.Exists`) and path resolutions (`assetStorage.GetFilePath`) now go through the abstraction.
+
+**Status:** FIXED
 
 ---
 

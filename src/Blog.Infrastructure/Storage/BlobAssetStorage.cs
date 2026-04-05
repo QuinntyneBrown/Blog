@@ -10,8 +10,11 @@ public class BlobAssetStorage(IConfiguration configuration) : IAssetStorage
 {
     private readonly string _containerUrl = configuration["AssetStorage:BlobContainerUrl"] ?? string.Empty;
 
-    public Task<string> SaveAsync(Stream stream, string fileName, string contentType, CancellationToken cancellationToken = default)
+    public Task SaveAsync(string storedFileName, Stream stream, CancellationToken cancellationToken = default)
         => throw new NotImplementedException("Azure Blob Storage not yet configured. Set AssetStorage:Provider = 'Local' or configure blob connection string.");
+
+    public string GetFilePath(string storedFileName)
+        => throw new NotImplementedException("Azure Blob Storage does not support local file paths. Use GetUrl for cloud storage.");
 
     public Task DeleteAsync(string storedFileName, CancellationToken cancellationToken = default)
         => throw new NotImplementedException("Azure Blob Storage not yet configured.");
