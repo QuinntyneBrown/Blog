@@ -1417,3 +1417,17 @@ The design's `SiteConfiguration` model (Section 4.6) defines `TwitterHandle: str
 `Site:TwitterHandle` is entirely absent from `appsettings.json` — the key is not present under the `Site` section. `_Layout.cshtml` renders four Twitter Card tags (`twitter:card`, `twitter:title`, `twitter:description`, `twitter:image`) but never renders `twitter:site`. As a result, Twitter/X link previews for every page on the site omit the site attribution tag, and any future operator who sets `Site:TwitterHandle` in configuration will see no effect because no code reads or renders it.
 
 **Status:** OPEN
+
+---
+
+## 2026-04-05 — Article body typography uses 17px/1.8 instead of design-specified 18px/1.6
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 6.3 — Article Detail Body Width (L2-036)
+
+**Description:**
+The design specifies (Section 6.3): LG/XL body typography is "18px font, 1.6 line-height." The CSS rule for `.article-body` used `font-size: 17px` and `line-height: 1.8` — both values differ from the design specification. The 1px font size difference and altered line-height ratio produce a subtly different reading experience than the design intended.
+
+**Fix applied:**
+- Changed `.article-body` from `font-size: 17px; line-height: 1.8` to `font-size: 18px; line-height: 1.6` per the design.
+
+**Status:** FIXED
