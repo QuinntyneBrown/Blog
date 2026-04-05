@@ -1631,3 +1631,18 @@ The design specifies (Section 3.1): "Issues a **301 Permanent Redirect** from `h
 - Added `builder.Services.AddHttpsRedirection(options => options.RedirectStatusCode = StatusCodes.Status301MovedPermanently)` to `Program.cs`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Remaining decorative SVGs on NotFound and Articles/Index empty-state missing aria-hidden
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 7.2 — Image Accessibility
+
+**Description:**
+A prior conformance fix (gap #78) added `aria-hidden="true"` to 11 decorative SVGs across public pages, but missed two: the back-arrow SVG on `NotFound.cshtml` and the empty-state document icon SVG on `Articles/Index.cshtml` (which had a different `<svg>` pattern with `class="empty-state-icon"` that wasn't matched by the earlier replace-all operations).
+
+**Fix applied:**
+- Added `aria-hidden="true"` to the SVG in `NotFound.cshtml`.
+- Added `aria-hidden="true"` to the empty-state icon SVG in `Articles/Index.cshtml`.
+
+**Status:** FIXED
