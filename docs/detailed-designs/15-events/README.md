@@ -61,7 +61,7 @@ The Events feature allows the blog author to manage a list of speaking engagemen
 |---------|---------|--------|
 | `CreateEventHandler` | `CreateEventCommand` | Generates slug, persists with `published=false` |
 | `UpdateEventHandler` | `UpdateEventCommand` | Updates all mutable fields; regenerates slug from new title |
-| `DeleteEventHandler` | `DeleteEventCommand` | Removes event regardless of published state |
+| `DeleteEventHandler` | `DeleteEventCommand` | Removes event; returns 409 if `Published = true` (must unpublish first) |
 | `PublishEventHandler` | `PublishEventCommand` | Sets `published=true` |
 | `UnpublishEventHandler` | `UnpublishEventCommand` | Sets `published=false` |
 
@@ -114,8 +114,10 @@ The Events feature allows the blog author to manage a list of speaking engagemen
 | `ExternalUrl` | `nvarchar(2048)?` | Optional link to event site |
 | `Published` | `bit` | `false` by default; toggle for visibility |
 | `CreatedAt` | `datetime2` | UTC, set on insert |
-| `UpdatedAt` | `datetime2` | UTC, updated on save |
+| `UpdatedAt` | `datetime2` | UTC, updated on save including publish/unpublish state changes |
 | `Version` | `int` | Optimistic concurrency |
+
+**Recommended indexes**: `IX_Events_Published_StartDate` on `(Published, StartDate)` to support efficient upcoming/past queries. `IX_Events_Slug` unique on `Slug`.
 
 ---
 
@@ -149,24 +151,25 @@ Key points:
 |--------|------|---------------|---------|--------|
 | `POST` | `/api/events` | `{ title, description, startDate, location, endDate?, externalUrl? }` | 201 + `EventDto` | 400, 401, 409 |
 | `PUT` | `/api/events/{id}` | `{ title, description, startDate, location, endDate?, externalUrl?, version }` | 200 + `EventDto` | 400, 401, 404, 409 |
-| `DELETE` | `/api/events/{id}` | — | 204 | 401, 404 |
+| `DELETE` | `/api/events/{id}` | — | 204 | 401, 404, 409 |
 | `POST` | `/api/events/{id}/publish` | — | 200 | 401, 404 |
 | `POST` | `/api/events/{id}/unpublish` | — | 200 | 401, 404 |
-| `GET` | `/api/events?page&pageSize` | — | 200 + `PagedResponse<EventListDto>` | 401 |
+| `GET` | `/api/events?page&pageSize` (default pageSize=20, max 50) | — | 200 + `PagedResponse<EventListDto>` | 401 |
 
 ### Public endpoints (no auth)
 
 | Method | Path | Params | Success | Errors |
 |--------|------|--------|---------|--------|
-| `GET` | `/api/events/published` | `?upcomingPage&pastPage&pageSize` | 200 + `PublicEventsDto` | — |
-| `GET` | `/api/events/by-slug/{slug}` | — | 200 + `EventDto` | 404 |
+| `GET` | `/api/events/published` | `?upcomingPage&pastPage&pageSize` (default pageSize=20, max 50) | 200 + `PublicEventsDto` | — |
+| `GET` | `/api/events/by-slug/{slug}` | — | 200 + `PublicEventDto` | 404 |
 
 ### DTOs
 
 ```
 EventDto         { eventId, title, slug, description, startDate, endDate?, location, externalUrl?, published, createdAt, updatedAt, version }
 EventListDto     { eventId, title, slug, startDate, location, published }
-PublicEventsDto  { upcoming: PagedResult<EventDto>, past: PagedResult<EventDto> }
+PublicEventDto   { eventId, title, slug, description, startDate, endDate?, location, externalUrl? }  // strips internal fields (published, version, updatedAt)
+PublicEventsDto  { upcoming: PagedResult<PublicEventDto>, past: PagedResult<PublicEventDto> }
 ```
 
 ---
@@ -175,7 +178,10 @@ PublicEventsDto  { upcoming: PagedResult<EventDto>, past: PagedResult<EventDto> 
 
 - **Authorization**: All write endpoints (`POST`, `PUT`, `DELETE`, publish/unpublish) are protected by `[Authorize]` and the JWT middleware. The back-office list endpoint also requires auth (L2-067.3).
 - **Slug regeneration**: Event slugs are regenerated on every update from the current title (see OQ1). The external URL field (`ExternalUrl`) is the canonical reference for the event. Callers should use `ExternalUrl` for stable linking when available.
+- **Delete guard**: Deleting a published event returns 409. The author must unpublish first, making removal from the public site an explicit step.
 - **Unpublished event access**: `GetEventBySlugHandler` explicitly checks `Published == true` before returning the event, ensuring draft events are not accessible to public visitors (L2-070.2).
+- **HTTP caching**: The `GET /api/events/published` and `GET /api/events/by-slug/{slug}` endpoints are served with `Cache-Control: public, max-age=60, stale-while-revalidate=300`. Publish and unpublish operations must call `ICacheInvalidator` to bust the public events cache.
+- **Optimistic concurrency**: `PUT /api/events/{id}` requires `version` in the request body. A mismatch returns 409 to prevent lost-update conflicts.
 
 ---
 

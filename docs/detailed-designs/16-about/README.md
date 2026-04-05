@@ -67,6 +67,7 @@ The About Page feature provides a publicly visible biography for the site author
   - `AddAsync(entity)` — insert
   - `UpdateAsync(entity)` — update (caller increments version)
 - **Notes**: No ID-based lookup needed — there is always at most one row. No `GetAllAsync` or pagination.
+- **History methods**: `AddHistoryAsync(entity)` — inserts snapshot into `AboutContentHistory`. `GetHistoryAsync(page, pageSize)` — paginated history ordered by `ArchivedAt DESC`. `GetHistoryByIdAsync(historyId)` — single snapshot by PK for restore operations.
 
 ---
 
@@ -119,6 +120,7 @@ Key points:
 - Unauthenticated PUT returns 401 (L2-072.4).
 - Markdown is converted and sanitized at save time; the public page reads `BodyHtml` directly.
 - `profileImageId`, if provided, must reference an existing `DigitalAsset` owned by the requesting user — validated before save (L2-072.5). Returns 403 if the asset exists but belongs to a different user.
+- On restore (`PUT /api/about/restore/{historyId}`), the current live state is snapshotted into `AboutContentHistory` before overwriting, making the restore reversible. `ICacheInvalidator.InvalidateAsync("/about")` is called after restore.
 
 ### 5.2 Public About Page Render
 
@@ -163,6 +165,7 @@ AboutContentHistoryDto  {
     heading:               string,
     body:                  string,
     profileImageId:        Guid?,
+    profileImageUrl:       string?,   // Resolved CDN/storage URL for display in history list
     version:               int,
     archivedAt:            DateTime
 }
@@ -174,13 +177,14 @@ AboutContentHistoryDto  {
 
 - **Authorization**: The `PUT /api/about` endpoint is protected by `[Authorize]` and the JWT middleware. Anonymous access returns 401 (L2-072.4).
 - **XSS**: `BodyHtml` is produced via `IMarkdownConverter`, which uses HtmlSanitizer to strip disallowed tags and attributes before storage.
-- **Image validation**: `profileImageId` is validated against the `DigitalAssets` table to prevent orphaned references or SSRF-style manipulation of the image URL.
-- **Cache invalidation**: The `ICacheInvalidator` is called after a successful PUT to flush the cached public response, ensuring visitors see updated content within `stale-while-revalidate` window.
+- **Image validation**: `profileImageId` is validated against the `DigitalAssets` table and must be owned by the requesting user. Returns 403 if the asset belongs to a different user. Prevents orphaned references and SSRF-style manipulation of the image URL.
+- **Cache invalidation**: `ICacheInvalidator.InvalidateAsync("/about")` is called after both a successful PUT and a successful restore, ensuring visitors see updated content promptly.
+- **Image ownership**: `profileImageId` is validated against the `DigitalAssets` table and the asset must be owned by the requesting user. Returns 403 if the asset exists but belongs to a different user.
 
 ---
 
 ## 8. Open Questions
 
 1. **Profile image ownership**: ~~Should the about profile image be restricted to assets uploaded by the authenticated user, or any asset in the library?~~ **Resolved**: Restricted to assets uploaded by the authenticated user. `UpsertAboutContentHandler` must verify that the referenced `DigitalAsset` is owned by the requesting user before accepting the `profileImageId`.
-2. **History / versioning**: ~~The design stores only the current version.~~ **Resolved**: Revision history is supported via a separate `AboutContentHistory` table. On every successful upsert, `UpsertAboutContentHandler` copies the current row into `AboutContentHistory` before applying the update. A back-office endpoint (`GET /api/about/history`) lists past revisions and a `PUT /api/about/restore/{version}` allows the author to revert to a previous version.
+2. **History / versioning**: ~~The design stores only the current version.~~ **Resolved**: Revision history is supported via a separate `AboutContentHistory` table. On every successful upsert, `UpsertAboutContentHandler` copies the current row into `AboutContentHistory` before applying the update. A back-office endpoint (`GET /api/about/history`) lists past revisions and a `PUT /api/about/restore/{historyId}` allows the author to revert to a previous version. Restoring also snapshots the current state into history first, making the restore itself reversible.
 3. **Cache key**: ~~The `/about` route needs to be added to the invalidation set.~~ **Resolved**: The `/about` route is added to the `ICacheInvalidator` invalidation set. `UpsertAboutContentHandler` calls `ICacheInvalidator.InvalidateAsync("/about")` after a successful upsert.

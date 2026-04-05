@@ -81,8 +81,16 @@ The Newsletter feature allows the blog author to compose and send email newslett
 ### 3.4 NewsletterRepository
 
 - **Responsibility**: Data access for `Newsletter` and `NewsletterSubscriber` entities.
-- **Key methods**: `GetByIdAsync`, `GetAllAsync(page, pageSize, status?)`, `GetConfirmedSubscribersAsync`, `GetSubscribersAsync(page, pageSize)`
-- **Notes**: List queries project only `Subject`, `Status`, `DateSent`, `CreatedAt` — `Body`/`BodyHtml` excluded for performance (same pattern as `ArticleRepository`).
+- **Key methods**: `GetByIdAsync`, `GetAllAsync(page, pageSize, status?)`, `GetBySlugAsync(slug)`, `SlugExistsAsync(slug)`, `StreamConfirmedSubscriberIdsAsync()`, `GetSubscribersAsync(page, pageSize)`
+- **Notes**: List queries project only `Subject`, `Slug`, `Status`, `DateSent`, `CreatedAt` — `Body`/`BodyHtml` excluded for performance (same pattern as `ArticleRepository`). `StreamConfirmedSubscriberIdsAsync()` uses `IAsyncEnumerable<Guid>` to avoid loading all subscriber IDs into memory before enqueuing to Service Bus.
+
+### 3.5 Query Handlers
+
+| Handler | Query | Returns |
+|---------|-------|---------|
+| `GetNewslettersHandler` | `GetNewslettersQuery(page, pageSize, status?)` | Paginated list for back office |
+| `GetNewsletterArchiveHandler` | `GetNewsletterArchiveQuery(page, pageSize)` | Paginated list of sent newsletters for public archive |
+| `GetNewsletterBySlugHandler` | `GetNewsletterBySlugQuery(slug)` | Single sent newsletter by slug; 404 if not found or not Sent |
 
 ### 3.5 IEmailSender
 
@@ -106,7 +114,7 @@ The Newsletter feature allows the blog author to compose and send email newslett
 |-------|------|-------|
 | `NewsletterID` | `Guid` | PK |
 | `Subject` | `nvarchar(512)` | Required |
-| `Slug` | `nvarchar(512)` | Unique index; auto-generated from `Subject` at send time; null while Draft |
+| `Slug` | `nvarchar(512)` | Filtered unique index on non-NULL values; auto-generated from `Subject` at send time; NULL while Draft (SQL Server allows multiple NULLs in a unique index) |
 | `Body` | `nvarchar(max)` | Raw Markdown source |
 | `BodyHtml` | `nvarchar(max)` | Pre-rendered, sanitized HTML |
 | `Status` | `tinyint` | Enum: `Draft=0`, `Sent=1` |
@@ -141,6 +149,7 @@ The Newsletter feature allows the blog author to compose and send email newslett
 Key points:
 - If the email is already confirmed and active, the endpoint returns success without sending another email (prevents enumeration per L2-054.2).
 - The confirmation link is valid for 48 hours (L2-055.2).
+- On confirmation, `ConfirmationToken` is set to `null` and `TokenExpiresAt` is cleared — tokens are single-use and cannot be replayed.
 - Emails include `List-Unsubscribe` and `List-Unsubscribe-Post` headers with the unsubscribe token URL (L2-056.3).
 
 ### 5.2 Send Newsletter
@@ -148,8 +157,9 @@ Key points:
 ![Send Newsletter Sequence](diagrams/sequence_send_newsletter.png)
 
 Key points:
-- Guard conditions: must be Draft status, must have ≥1 confirmed subscriber.
-- Status transitions from `Draft` to `Sent` atomically with the `dateSent` timestamp.
+- Guard conditions: must be Draft status, must have ≥1 confirmed active subscriber. Returns 422 otherwise.
+- Status transitions from `Draft` to `Sent` atomically with the `dateSent` timestamp and `Slug` generation before any messages are enqueued.
+- Subscriber IDs are streamed via `IAsyncEnumerable` and enqueued to Azure Service Bus in batches of 100 to avoid memory pressure on large lists.
 - Each outbound email includes the subscriber's personal `unsubscribeToken` in the footer URL.
 
 ---
@@ -179,7 +189,7 @@ Key points:
 | Method | Path | Params | Success | Errors |
 |--------|------|--------|---------|--------|
 | `GET` | `/api/newsletters/archive` | `?page&pageSize` | 200 + `PagedResponse<NewsletterArchiveDto>` | — |
-| `GET` | `/api/newsletters/archive/{slug}` | — | 200 + `NewsletterDto` | 404 |
+| `GET` | `/api/newsletters/archive/{slug}` | — | 200 + `NewsletterArchiveDetailDto` | 404 |
 
 ### Subscriber management (requires `Authorization`)
 
@@ -190,10 +200,11 @@ Key points:
 ### DTOs
 
 ```
-NewsletterDto         { newsletterID, subject, slug, body, bodyHtml, status, dateSent, createdAt, updatedAt, version }
-NewsletterListDto     { newsletterID, subject, slug, status, dateSent, createdAt }
-NewsletterArchiveDto  { newsletterID, subject, slug, dateSent }
-SubscriberDto         { subscriberID, email, confirmed, isActive, confirmedAt, resubscribedAt, createdAt }
+NewsletterDto              { newsletterID, subject, slug, body, bodyHtml, status, dateSent, createdAt, updatedAt, version }
+NewsletterListDto          { newsletterID, subject, slug, status, dateSent, createdAt }
+NewsletterArchiveDto       { newsletterID, subject, slug, dateSent }
+NewsletterArchiveDetailDto { newsletterID, subject, slug, bodyHtml, dateSent }   // body (Markdown) omitted — public consumers need only rendered HTML
+SubscriberDto              { subscriberID, email, confirmed, isActive, confirmedAt, resubscribedAt, createdAt }
 ```
 
 ---
@@ -213,4 +224,4 @@ SubscriberDto         { subscriberID, email, confirmed, isActive, confirmedAt, r
 1. **Email sending at scale**: ~~Calling `IEmailSender` in a tight loop holds the HTTP request open.~~ **Resolved**: Bulk sends use Azure Service Bus. `SendNewsletterHandler` enqueues one message per subscriber onto an Azure Service Bus queue and returns immediately (HTTP 202). A background `IHostedService` dequeues messages and calls `IEmailSender` per subscriber with built-in retry via Service Bus dead-letter handling.
 2. **Newsletter slug for archive**: ~~Should the slug be auto-generated or a separate editable field?~~ **Resolved**: The slug is auto-generated from `Subject` at send time using `ISlugGenerator`, matching the Article pattern. If the generated slug conflicts, a numeric suffix is appended (e.g. `-2`). The slug is frozen after send and cannot be changed.
 3. **Email provider**: ~~No concrete `IEmailSender` implementation specified.~~ **Resolved**: SendGrid. A `SendGridEmailSender` class implements `IEmailSender` using the `SendGrid` NuGet package. The API key is stored in `appsettings` under `SendGrid:ApiKey` and injected via `IOptions<SendGridOptions>`.
-4. **Re-subscribe flow**: ~~New record or reactivate existing?~~ **Resolved**: The existing record is reactivated. `SubscribeHandler` checks for an existing row with the same email; if found and unsubscribed, it sets `Unsubscribed = false` and updates `ResubscribedAt`. No duplicate records are created.
+4. **Re-subscribe flow**: ~~New record or reactivate existing?~~ **Resolved**: The existing record is reactivated. `SubscribeHandler` checks for an existing row with the same email; if found with `IsActive = false`, it sets `IsActive = true`, clears `ConfirmationToken`, resets `TokenExpiresAt`, and updates `ResubscribedAt`. A new confirmation email is sent. No duplicate records are created.
