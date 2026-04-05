@@ -85,7 +85,14 @@
                 }
                 @for (int i = 1; i <= Model.Articles.TotalPages; i++)
                 {
-                    <a href="/?page=@i" class="pagination-page @(i == Model.CurrentPage ? "active" : "")">@i</a>
+                    @if (i == Model.CurrentPage)
+                    {
+                        <a href="/?page=@i" class="pagination-page active" aria-current="page">@i</a>
+                    }
+                    else
+                    {
+                        <a href="/?page=@i" class="pagination-page">@i</a>
+                    }
                 }
                 @if (Model.Articles.HasNextPage)
                 {
