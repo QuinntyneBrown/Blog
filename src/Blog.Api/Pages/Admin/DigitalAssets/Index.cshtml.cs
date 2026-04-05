@@ -14,7 +14,8 @@ public class AdminDigitalAssetsIndexModel(IMediator mediator) : PageModel
     public async Task<IActionResult> OnGetAsync()
     {
         if (!IsAuthenticated()) return RedirectToPage("/Admin/Login");
-        Assets = await mediator.Send(new GetDigitalAssetsQuery());
+        var userId = GetCurrentUserId();
+        Assets = await mediator.Send(new GetDigitalAssetsQuery(userId));
         return Page();
     }
 

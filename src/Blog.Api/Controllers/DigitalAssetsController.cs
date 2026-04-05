@@ -15,7 +15,10 @@ public class DigitalAssetsController(IMediator mediator) : ApiControllerBase(med
     [Authorize]
     public async Task<IActionResult> GetAll(CancellationToken ct)
     {
-        var result = await Mediator.Send(new GetDigitalAssetsQuery(), ct);
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue("sub")
+            ?? throw new UnauthorizedAccessException());
+        var result = await Mediator.Send(new GetDigitalAssetsQuery(userId), ct);
         return Ok(result);
     }
 
