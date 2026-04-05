@@ -26,6 +26,7 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
             Allow: /
             Disallow: /admin
             Disallow: /api/
+            Disallow: /search
 
             Sitemap: {BaseUrl}/sitemap.xml
             """;

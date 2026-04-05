@@ -1,0 +1,132 @@
+@page "/search"
+@model Blog.Api.Pages.Search.SearchIndexModel
+@inject IConfiguration Configuration
+@{
+    ViewBag.Title = Model.Query.Length > 0
+        ? $"{Html.Encode(Model.Query)} — Search | {Configuration["Site:SiteName"] ?? "Quinn Brown"}"
+        : $"Search | {Configuration["Site:SiteName"] ?? "Quinn Brown"}";
+    ViewBag.Description = Model.Query.Length > 0
+        ? $"Search results for '{Html.Encode(Model.Query)}'"
+        : "Search published articles";
+}
+
+<section class="search-results-header">
+    <h1>
+        @if (Model.Query.Length > 0)
+        {
+            <span>Results for</span>
+            <q>@Model.Query</q>
+        }
+        else
+        {
+            <span>Search</span>
+        }
+    </h1>
+    @if (!Model.IsEmpty && Model.Query.Length > 0)
+    {
+        <p aria-live="polite" class="result-count">
+            @Model.Results.TotalCount result@(Model.Results.TotalCount == 1 ? "" : "s")
+        </p>
+    }
+</section>
+
+@if (Model.IsEmpty)
+{
+    <section class="search-empty" aria-label="No results">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <p class="empty-heading">No results found for <q>@Model.Query</q></p>
+        <p class="empty-hint">Try different keywords or fewer terms.</p>
+        <a href="/articles" class="btn-secondary">Browse all articles</a>
+    </section>
+}
+else if (!string.IsNullOrWhiteSpace(Model.Query))
+{
+    <ol class="search-results" aria-label="Search results">
+        @foreach (var result in Model.Results.Items)
+        {
+            <li>
+                <article class="result-card" data-testid="search-result">
+                    <div class="result-card-body">
+                        <h2 class="result-title">
+                            <a href="/articles/@result.Slug">
+                                @Html.Raw(result.TitleHighlighted)
+                            </a>
+                        </h2>
+                        <p class="result-excerpt">@Html.Raw(result.AbstractHighlighted)</p>
+                        <footer class="result-meta">
+                            <span class="result-type">Article</span>
+                            <time datetime="@result.DatePublished?.ToString("yyyy-MM-dd")">
+                                @result.DatePublished?.ToString("MMMM d, yyyy")
+                            </time>
+                            <span class="result-reading-time">
+                                @result.ReadingTimeMinutes min read
+                            </span>
+                        </footer>
+                    </div>
+                    @if (result.FeaturedImageUrl != null)
+                    {
+                        <div class="result-card-thumb">
+                            <img src="@result.FeaturedImageUrl"
+                                 alt=""
+                                 loading="lazy"
+                                 decoding="async"
+                                 width="180" height="101" />
+                        </div>
+                    }
+                </article>
+            </li>
+        }
+    </ol>
+
+    @if (Model.Results.TotalPages > 1)
+    {
+        <nav aria-label="Search results pages" class="pagination">
+            @if (Model.Results.HasPreviousPage)
+            {
+                <a href="/search?q=@Uri.EscapeDataString(Model.Query)&page=@(Model.CurrentPage - 1)"
+                   rel="prev" class="pagination-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                    Previous
+                </a>
+            }
+            else
+            {
+                <span class="pagination-btn disabled" aria-disabled="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                    Previous
+                </span>
+            }
+
+            @for (int p = 1; p <= Model.Results.TotalPages; p++)
+            {
+                @if (p == Model.CurrentPage)
+                {
+                    <span class="pagination-page active" aria-current="page">@p</span>
+                }
+                else
+                {
+                    <a href="/search?q=@Uri.EscapeDataString(Model.Query)&page=@p"
+                       class="pagination-page">@p</a>
+                }
+            }
+
+            @if (Model.Results.HasNextPage)
+            {
+                <a href="/search?q=@Uri.EscapeDataString(Model.Query)&page=@(Model.CurrentPage + 1)"
+                   rel="next" class="pagination-btn">
+                    Next
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
+            }
+            else
+            {
+                <span class="pagination-btn disabled" aria-disabled="true">
+                    Next
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+                </span>
+            }
+        </nav>
+    }
+}
