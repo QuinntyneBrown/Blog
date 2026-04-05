@@ -273,9 +273,16 @@ The design specifies Brotli at `CompressionLevel.Optimal` (level 4) for dynamic 
 **Design reference:** `docs/detailed-designs/10-data-persistence/README.md`, Section 3.3 — Repository Pattern (IDigitalAssetRepository)
 
 **Description:**
-The design specifies `IDigitalAssetRepository` should expose `Task<IReadOnlyList<DigitalAsset>> GetByCreatedByAsync(Guid userId)` — a method that returns only the assets belonging to a specific creator. The implementation instead declares `Task<List<DigitalAsset>> GetAllAsync(CancellationToken cancellationToken = default)`, which fetches every digital asset in the database with no creator filter. `DigitalAssetRepository` implements this with a plain `ToListAsync()` with no `Where` clause, and `GetDigitalAssetsHandler` calls `GetAllAsync` directly. As a result, every call to list digital assets performs a full table scan and returns all assets regardless of who created them, violating the design's per-creator scoping contract and the interface contract documented in the spec.
+The design specifies `IDigitalAssetRepository` should expose `Task<IReadOnlyList<DigitalAsset>> GetByCreatedByAsync(Guid userId)` — a method that returns only the assets belonging to a specific creator. The implementation instead declared `Task<List<DigitalAsset>> GetAllAsync(CancellationToken cancellationToken = default)`, which fetched every digital asset in the database with no creator filter. `DigitalAssetRepository` implemented this with a plain `ToListAsync()` with no `Where` clause, and `GetDigitalAssetsHandler` called `GetAllAsync` directly. As a result, every call to list digital assets performed a full table scan and returned all assets regardless of who created them, violating the design's per-creator scoping contract and the interface contract documented in the spec.
 
-**Status:** OPEN
+**Fix applied:**
+- Replaced `GetAllAsync` with `GetByCreatedByAsync(Guid userId, CancellationToken cancellationToken = default)` in `IDigitalAssetRepository` (return type `Task<IReadOnlyList<DigitalAsset>>`).
+- Updated `DigitalAssetRepository` to implement the new method with a `Where(d => d.CreatedBy == userId)` filter and `OrderByDescending(d => d.CreatedAt)`.
+- Updated `GetDigitalAssetsQuery` to accept a `UserId` parameter and `GetDigitalAssetsHandler` to pass it to `GetByCreatedByAsync`.
+- Updated `DigitalAssetsController.GetAll` to extract the authenticated user's `Guid` from claims and pass it to the query.
+- Updated `AdminDigitalAssetsIndexModel.OnGetAsync` (Razor Page) to pass the current userId to the query.
+
+**Status:** FIXED
 
 ---
 
