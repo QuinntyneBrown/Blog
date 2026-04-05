@@ -60,6 +60,7 @@ Within the API server, article management is handled by a set of focused compone
   - On update: regenerates slug if title changed, recomputes reading time if body changed.
   - On publish: sets `Published = true` and `DatePublished = DateTime.UtcNow`.
   - On unpublish: sets `Published = false`, preserves `DatePublished`.
+  - On update, publish, and delete: enforces optimistic concurrency using the current article version carried through `ETag` / `If-Match`.
   - On delete: removes article and disassociates linked digital assets.
 
 ### 3.3 SlugGenerator
@@ -102,6 +103,7 @@ Within the API server, article management is handled by a set of focused compone
 | Published | `bool` | Default `false` |
 | DatePublished | `DateTime?` | UTC, set on first publish |
 | ReadingTimeMinutes | `int` | Computed at save time, minimum 1 |
+| Version | `int` | Required concurrency token, default 1 |
 | CreatedAt | `DateTime` | UTC, set on creation |
 | UpdatedAt | `DateTime` | UTC, updated on every save |
 
@@ -134,10 +136,11 @@ Within the API server, article management is handled by a set of focused compone
 2. `ValidationBehavior` validates that title is not empty (if provided).
 3. `ArticleService` retrieves the article -- returns 404 if not found.
 4. If title changed, `SlugGenerator` regenerates the slug; `SlugExists` checks for conflicts (409).
-5. If body changed, `ReadingTimeCalculator` recomputes reading time.
-6. `ArticleService` updates fields and sets `UpdatedAt = UtcNow`.
-7. `ArticleRepository` persists changes.
-8. API returns 200 with the updated `ArticleDto`.
+5. The service validates the incoming `If-Match` version token against the current article version and returns 412 if they do not match.
+6. If body changed, `ReadingTimeCalculator` recomputes reading time.
+7. `ArticleService` updates fields, increments `Version`, and sets `UpdatedAt = UtcNow`.
+8. `ArticleRepository` persists changes.
+9. API returns 200 with the updated `ArticleDto` and a fresh `ETag`.
 
 ### 5.3 Publish / Unpublish
 
@@ -148,26 +151,29 @@ Within the API server, article management is handled by a set of focused compone
 **Publish:**
 1. Admin sends PATCH to `/api/articles/{id}/publish` with `{ "published": true }`.
 2. `ArticleService` retrieves article -- 404 if not found.
-3. Sets `Published = true` and `DatePublished = DateTime.UtcNow`.
-4. Persists and returns 200.
+3. The service validates the incoming `If-Match` version token against the current article version and returns 412 if they do not match.
+4. Sets `Published = true` and `DatePublished = DateTime.UtcNow`.
+5. Increments `Version`, persists, and returns 200 with a fresh `ETag`.
 
 **Unpublish:**
 1. Admin sends PATCH to `/api/articles/{id}/publish` with `{ "published": false }`.
 2. `ArticleService` retrieves article -- 404 if not found.
-3. Sets `Published = false`. `DatePublished` is **not** cleared.
-4. Persists and returns 200.
+3. The service validates the incoming `If-Match` version token against the current article version and returns 412 if they do not match.
+4. Sets `Published = false`. `DatePublished` is **not** cleared.
+5. Increments `Version`, persists, and returns 200 with a fresh `ETag`.
 
 ### 5.4 Delete Article
 
 1. Admin sends DELETE to `/api/articles/{id}`.
 2. `ArticleService` retrieves article -- 404 if not found.
-3. Disassociates any linked digital assets (nullifies `FeaturedImageId`).
-4. `ArticleRepository` removes the entity.
-5. API returns 204 No Content.
+3. The service validates the incoming `If-Match` version token against the current article version and returns 412 if they do not match.
+4. Disassociates any linked digital assets (nullifies `FeaturedImageId`).
+5. `ArticleRepository` removes the entity.
+6. API returns 204 No Content.
 
 ## 6. API Contracts
 
-All endpoints are under `/api/articles` and require a valid JWT bearer token.
+All endpoints are under `/api/articles` and require a valid JWT bearer token. Per Feature 06, successful JSON responses are wrapped in the standard `{ data, timestamp }` envelope, while the examples below focus on the inner DTO shape plus any required concurrency headers.
 
 ### 6.1 List Articles
 
@@ -260,12 +266,14 @@ Content-Type: application/json
 **Response 401:** Unauthenticated.
 **Response 404:** Article not found.
 **Response 409:** Duplicate slug conflict (if title changed).
+**Response 412:** `If-Match` version mismatch.
 
 ### 6.5 Publish / Unpublish Article
 
 ```
 PATCH /api/articles/{id}/publish
 Content-Type: application/json
+If-Match: W/"article-{id}-v{version}"
 
 {
   "published": true
@@ -275,6 +283,7 @@ Content-Type: application/json
 **Response 200:** Updated `ArticleDto`.
 **Response 401:** Unauthenticated.
 **Response 404:** Article not found.
+**Response 412:** `If-Match` version mismatch.
 
 ### 6.6 Delete Article
 
@@ -285,6 +294,7 @@ DELETE /api/articles/{id}
 **Response 204:** No content.
 **Response 401:** Unauthenticated.
 **Response 404:** Article not found.
+**Response 412:** `If-Match` version mismatch.
 
 ## 7. UI Design Reference
 
@@ -333,4 +343,4 @@ Feedback is delivered via `Comp/Toast` components (success, error variants). Des
 2. **Soft delete:** Should articles support soft delete (a `DeletedAt` timestamp) for recovery, or is permanent deletion sufficient? Current design implements permanent deletion per L2-004.
 3. **Body format:** Should the system store HTML only, Markdown only, or both? If Markdown, where does the HTML conversion occur (server-side at save time, or client-side at render time)?
 4. **Slug immutability after publish:** Should updating a published article's title regenerate the slug (potentially breaking existing public URLs), or should slug regeneration be restricted to draft articles only?
-5. **Concurrent editing:** Should the system implement optimistic concurrency (e.g., via an ETag or row version) to prevent lost updates when multiple admins edit the same article?
+5. **Concurrent editing:** Should the system implement optimistic concurrency (e.g., via an ETag or row version) to prevent lost updates when multiple admins edit the same article? Current design resolves this with a version token and `If-Match`.

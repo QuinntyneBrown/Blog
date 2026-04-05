@@ -8,7 +8,7 @@ The design addresses requirements **L1-010** (structured logging, health checks,
 
 ### Goals
 
-- Expose a `/health` endpoint that reports application and dependency health without authentication.
+- Expose a minimal public `/health` endpoint without authentication and a more detailed `/health/ready` readiness endpoint for internal operators and deployment infrastructure.
 - Emit all logs in structured JSON format with correlation IDs for request tracing.
 - Log every API request with method, path, status code, and duration.
 - Log errors with full stack traces and business events with contextual detail.
@@ -52,7 +52,7 @@ Inside the API Server, the observability components form a pipeline: incoming re
 
 **Behavior:**
 - On each incoming request, check for an `X-Correlation-Id` header.
-- If present, use the provided value. If absent, generate a new `Guid`.
+- If present, accept it only when it matches a safe character set (`A-Z`, `a-z`, `0-9`, `-`, `_`) and length limit (64 chars). Otherwise, discard it and generate a new value.
 - Store the correlation ID in `HttpContext.Items` and push it onto the Serilog `LogContext` as an enricher.
 - Add the correlation ID to the response headers so callers can reference it.
 
@@ -100,6 +100,7 @@ Inside the API Server, the observability components form a pipeline: incoming re
 
 **Behavior:**
 - Implemented as a Serilog `IDestructuringPolicy` and a custom enricher.
+- Request and response bodies are not logged by default, and authorization headers are never logged verbatim.
 - Maintains a deny-list of property names: `Password`, `Token`, `Secret`, `Authorization`, `Cookie`, `CreditCard`, `SSN`, `Email` (configurable).
 - Any property matching the deny-list is replaced with `"[REDACTED]"`.
 - Applied globally via Serilog configuration so no log sink ever receives raw sensitive data.
@@ -138,7 +139,7 @@ Inside the API Server, the observability components form a pipeline: incoming re
 }
 ```
 
-Note: The `Checks` dictionary is only included in the response body when the overall status is `"unhealthy"`, keeping the healthy response minimal.
+Note: The public `/health` response remains minimal (`{"status":"healthy"}` or `{"status":"unhealthy"}`). Detailed dependency results belong to `/health/ready`, keeping the public endpoint low-information.
 
 ### 4.3 RequestLogEntry
 
@@ -168,7 +169,7 @@ Note: The `Checks` dictionary is only included in the response body when the ove
 
 ![Health Check Sequence](diagrams/sequence_health_check.png)
 
-1. A client (load balancer, Kubernetes liveness/readiness probe, or operator) sends `GET /health`.
+1. A client (load balancer, Kubernetes liveness probe, or operator) sends `GET /health` for a minimal status check, or an internal readiness probe sends `GET /health/ready` for detailed dependency results.
 2. The `HealthController` invokes `HealthCheckService.CheckHealthAsync()`.
 3. `HealthCheckService` iterates registered checks. For each check (currently `DbHealthCheck`):
    - `DbHealthCheck` attempts to open a database connection and execute `SELECT 1`.
@@ -176,8 +177,9 @@ Note: The `Checks` dictionary is only included in the response body when the ove
 4. `HealthCheckService` aggregates results into a `HealthCheckResponse`.
 5. The controller returns:
    - **200 OK** with `{"status":"healthy"}` if all checks pass.
-   - **503 Service Unavailable** with `{"status":"unhealthy","checks":{"database":"unhealthy"}}` if any check fails.
-6. No authentication is required for this endpoint.
+   - **503 Service Unavailable** with `{"status":"unhealthy"}` on the public `/health` endpoint if any check fails.
+   - **200/503** with the `checks` dictionary on `/health/ready` for internal diagnostics.
+6. `/health` requires no authentication. `/health/ready` should be restricted to internal infrastructure or authenticated operators.
 
 ### 5.2 Request Logging Pipeline
 
@@ -210,7 +212,7 @@ Example log entry:
   "@l": "Information",
   "@mt": "HTTP {Method} {Path} responded {StatusCode} in {DurationMs}ms",
   "Method": "GET",
-  "Path": "/api/posts",
+  "Path": "/api/articles",
   "StatusCode": 200,
   "DurationMs": 42,
   "CorrelationId": "abc-123-def-456"
@@ -263,7 +265,7 @@ The following must **never** appear in logs:
 | PII | `Email`, `SSN`, `CreditCard`, `PhoneNumber` |
 | Secrets | `Secret`, `ApiKey`, `ConnectionString` |
 
-The `LogSanitizer` enforces this by replacing any matching property value with `"[REDACTED]"`.
+The `LogSanitizer` enforces this by replacing any matching property value with `"[REDACTED]"`, but the primary control is to avoid capturing sensitive request payloads in the first place.
 
 ---
 
@@ -338,7 +340,8 @@ app.UseSerilogRequestLogging();  // 2. Start request timing
 app.UseAuthentication();         // 3. Standard pipeline continues
 app.UseAuthorization();
 app.MapControllers();
-app.MapHealthChecks("/health");  // 4. Health endpoint (no auth)
+app.MapHealthChecks("/health");        // 4. Public minimal health endpoint (no auth)
+app.MapHealthChecks("/health/ready");  // 5. Detailed readiness endpoint (internal only)
 ```
 
 ---
@@ -349,6 +352,6 @@ app.MapHealthChecks("/health");  // 4. Health endpoint (no auth)
 |---|----------|--------|--------|
 | 1 | Which log aggregation platform should be adopted (Seq, ELK, Datadog, Azure Monitor)? | Determines sink configuration and operational tooling. | Open |
 | 2 | What alerting strategy should be used for unhealthy status or error rate spikes? | Determines integration with PagerDuty, Opsgenie, or similar. | Open |
-| 3 | Should the health endpoint include a detailed mode (e.g., `GET /health?detail=true`) for operator diagnostics vs. a simple mode for load balancers? | Affects response schema and potential information exposure. | Open |
+| 3 | Should the health endpoint include a detailed mode for operator diagnostics vs. a simple mode for load balancers? | Affects response schema and potential information exposure. | Resolved: separate `/health` and `/health/ready` endpoints |
 | 4 | What is the log retention policy for production? | Affects storage costs and compliance. | Open |
 | 5 | Should OpenTelemetry be adopted from the start for future distributed tracing readiness? | Affects library choices and instrumentation approach. | Open |

@@ -65,6 +65,7 @@ The component diagram details the digital-asset-related components inside the AP
 - **Behavior:**
   - `ValidateContentType(Stream fileStream, string declaredContentType)` -- reads the first bytes of the stream to determine the actual file type, compares against the allowed list, and returns a validated `ContentType` or throws a validation exception.
   - `ValidateFileSize(long sizeBytes)` -- returns `true` if the file is under 10 MB (10,485,760 bytes); throws a `FileTooLargeException` otherwise.
+  - `ValidateDimensions(int width, int height)` -- rejects images whose dimensions exceed 8192x8192 or whose total pixel count exceeds 40 megapixels, preventing decompression-bomb style abuse.
 
 ### 3.4 ImageProcessor
 
@@ -105,7 +106,7 @@ The component diagram details the digital-asset-related components inside the AP
 | DigitalAssetId | Guid | PK, auto-generated |
 | OriginalFileName | string | Required, max 256 chars |
 | StoredFileName | string | Required, unique, max 256 chars |
-| ContentType | string | Required, max 64 chars (e.g., "image/png") |
+| ContentType | string | Required, max 128 chars (e.g., "image/png") |
 | FileSizeBytes | long | Required |
 | Width | int | Required, set after image processing |
 | Height | int | Required, set after image processing |
@@ -205,13 +206,16 @@ Content-Type: image/jpeg
 
 ```json
 {
-  "digitalAssetId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "url": "/assets/a1b2c3d4-e5f6-7890-abcd-ef1234567890.jpg",
-  "originalFileName": "hero-image.jpg",
-  "contentType": "image/jpeg",
-  "fileSizeBytes": 245760,
-  "width": 1920,
-  "height": 1080
+  "data": {
+    "digitalAssetId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "url": "/assets/a1b2c3d4-e5f6-7890-abcd-ef1234567890.jpg",
+    "originalFileName": "hero-image.jpg",
+    "contentType": "image/jpeg",
+    "fileSizeBytes": 245760,
+    "width": 1920,
+    "height": 1080
+  },
+  "timestamp": "2026-04-04T10:00:00Z"
 }
 ```
 
@@ -263,14 +267,17 @@ Authorization: Bearer <token>
 
 ```json
 {
-  "digitalAssetId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "originalFileName": "hero-image.jpg",
-  "url": "/assets/a1b2c3d4-e5f6-7890-abcd-ef1234567890.jpg",
-  "contentType": "image/jpeg",
-  "fileSizeBytes": 245760,
-  "width": 1920,
-  "height": 1080,
-  "createdAt": "2026-04-04T10:00:00Z"
+  "data": {
+    "digitalAssetId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "originalFileName": "hero-image.jpg",
+    "url": "/assets/a1b2c3d4-e5f6-7890-abcd-ef1234567890.jpg",
+    "contentType": "image/jpeg",
+    "fileSizeBytes": 245760,
+    "width": 1920,
+    "height": 1080,
+    "createdAt": "2026-04-04T10:00:00Z"
+  },
+  "timestamp": "2026-04-04T10:01:00Z"
 }
 ```
 
@@ -323,6 +330,7 @@ Content-Length: 52480
 - File types are validated by reading magic bytes from the file content, not by trusting the file extension or the `Content-Type` header declared by the client.
 - Only JPEG, PNG, WebP, GIF, and AVIF are accepted.
 - Files exceeding 10 MB are rejected before any processing occurs.
+- Images whose dimensions exceed 8192x8192 or whose total pixel count exceeds 40 megapixels are rejected before transformation.
 - Uploaded filenames are never used directly in storage; a generated GUID-based filename prevents path traversal and collision attacks.
 
 ### 7.3 Public Serving
@@ -344,5 +352,5 @@ Content-Length: 52480
 | 2 | Which image processing library should be used: SixLabors.ImageSharp (pure managed, Apache 2.0 for open source), SkiaSharp (Skia wrapper, good performance), or System.Drawing (Windows-only, not recommended for server)? | Performance, cross-platform support, licensing | Open |
 | 3 | Should processed/transformed images (resized, format-converted) be cached on disk or generated on-the-fly per request? Caching avoids repeated processing but increases storage requirements. | Performance vs. storage cost tradeoff | Open |
 | 4 | Should we generate responsive image variants (srcset widths) at upload time or on-demand? Pre-generation simplifies serving but increases upload latency and storage. | Upload UX, storage cost, serving performance | Open |
-| 5 | What is the maximum allowed image dimension (width/height) to prevent processing abuse? Should we enforce a pixel-count limit in addition to the 10 MB file size limit? | Security, resource consumption | Open |
+| 5 | What is the maximum allowed image dimension (width/height) to prevent processing abuse? Should we enforce a pixel-count limit in addition to the 10 MB file size limit? | Security, resource consumption | Resolved: 8192x8192 max, 40 megapixels max |
 | 6 | Should asset deletion be supported, and if so, should it be a soft delete with a retention period or a hard delete? Articles referencing deleted assets would show broken images. | Data integrity, storage management | Open |

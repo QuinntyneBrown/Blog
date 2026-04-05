@@ -64,9 +64,11 @@ Each entity has a dedicated configuration class implementing `IEntityTypeConfigu
 - Configures `ArticleId` as PK with `ValueGeneratedOnAdd`.
 - `Title`: required, max length 256.
 - `Slug`: required, max length 256, unique index.
-- `Abstract`: required, max length 1024.
+- `Abstract`: required, max length 512.
 - `Body`: required, no max length (nvarchar(max) / text).
 - `FeaturedImageId`: optional FK to `DigitalAssets`.
+- `ReadingTimeMinutes`: required, default 1, minimum 1.
+- `Version`: required concurrency token, default 1.
 - Composite index on `(Published, DatePublished)` for listing queries.
 - Index on `CreatedAt` for chronological ordering.
 
@@ -81,8 +83,8 @@ Each entity has a dedicated configuration class implementing `IEntityTypeConfigu
 **DigitalAssetConfiguration:**
 - Maps to `DigitalAssets` table.
 - Configures `DigitalAssetId` as PK with `ValueGeneratedOnAdd`.
-- `OriginalFileName`: required, max length 512.
-- `StoredFileName`: required, max length 512.
+- `OriginalFileName`: required, max length 256.
+- `StoredFileName`: required, max length 256.
 - `ContentType`: required, max length 128.
 - `CreatedBy`: required FK to `Users`, with `DeleteBehavior.Restrict`.
 - Index on `ContentType` for filtered queries.
@@ -159,12 +161,13 @@ Repositories provide a domain-oriented abstraction over EF Core DbSets. Each rep
 | ArticleId | Guid | PK, auto-generated |
 | Title | string | Required, max 256 chars |
 | Slug | string | Required, unique, max 256 chars |
-| Abstract | string | Required, max 1024 chars |
+| Abstract | string | Required, max 512 chars |
 | Body | string | Required, max length unlimited |
 | FeaturedImageId | Guid? | FK to DigitalAssets (nullable) |
 | Published | bool | Required, default false |
 | DatePublished | DateTime? | UTC, set when published |
-| ReadingTimeMinutes | int | Required, default 0 |
+| ReadingTimeMinutes | int | Required, default 1 |
+| Version | int | Required concurrency token, default 1 |
 | CreatedAt | DateTime | UTC, set on creation |
 | UpdatedAt | DateTime | UTC, updated on each save |
 
@@ -173,8 +176,8 @@ Repositories provide a domain-oriented abstraction over EF Core DbSets. Each rep
 | Field | Type | Constraints |
 |-------|------|-------------|
 | DigitalAssetId | Guid | PK, auto-generated |
-| OriginalFileName | string | Required, max 512 chars |
-| StoredFileName | string | Required, max 512 chars |
+| OriginalFileName | string | Required, max 256 chars |
+| StoredFileName | string | Required, max 256 chars |
 | ContentType | string | Required, max 128 chars |
 | FileSizeBytes | long | Required |
 | Width | int? | Nullable (non-image assets) |
@@ -253,12 +256,13 @@ CREATE TABLE Articles (
     ArticleId           UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
     Title               VARCHAR(256)    NOT NULL,
     Slug                VARCHAR(256)    NOT NULL,
-    Abstract            VARCHAR(1024)   NOT NULL,
+    Abstract            VARCHAR(512)    NOT NULL,
     Body                TEXT            NOT NULL,
     FeaturedImageId     UUID            NULL,
     Published           BOOLEAN         NOT NULL DEFAULT FALSE,
     DatePublished       TIMESTAMPTZ     NULL,
-    ReadingTimeMinutes  INT             NOT NULL DEFAULT 0,
+    ReadingTimeMinutes  INT             NOT NULL DEFAULT 1,
+    Version             INT             NOT NULL DEFAULT 1,
     CreatedAt           TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
     UpdatedAt           TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
     CONSTRAINT UQ_Articles_Slug UNIQUE (Slug),
@@ -278,8 +282,8 @@ CREATE INDEX IX_Articles_CreatedAt
 ```sql
 CREATE TABLE DigitalAssets (
     DigitalAssetId  UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
-    OriginalFileName VARCHAR(512)   NOT NULL,
-    StoredFileName  VARCHAR(512)    NOT NULL,
+    OriginalFileName VARCHAR(256)   NOT NULL,
+    StoredFileName  VARCHAR(256)    NOT NULL,
     ContentType     VARCHAR(128)    NOT NULL,
     FileSizeBytes   BIGINT          NOT NULL,
     Width           INT             NULL,
@@ -309,8 +313,9 @@ CREATE INDEX IX_DigitalAssets_ContentType ON DigitalAssets (ContentType);
 
 ### 6.3 Seed Data Strategy
 
-- Seed data is applied via EF Core's `HasData()` in entity configurations for essential records only.
-- A default admin user is seeded with a pre-hashed password (configurable via environment variables in production).
+- Seed data is applied via EF Core's `HasData()` only for non-privileged reference data if such data is later introduced.
+- No privileged accounts are seeded through migrations.
+- The first admin user is provisioned via a deployment-time bootstrap command or one-time administrative setup workflow that reads secrets from the deployment environment.
 - No sample articles or digital assets are seeded in production migrations.
 - A separate `SeedDevelopmentData` method (called only in Development environment) populates sample articles and assets for local development.
 
