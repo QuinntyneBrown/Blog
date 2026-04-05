@@ -283,6 +283,23 @@
             .editor-sidebar { width: 100%; border-left: none; border-top: 1px solid var(--border); }
             .asset-grid { grid-template-columns: repeat(2, 1fr); }
         }
+        /* Article mobile card list */
+        .article-mobile-cards { display: none; flex-direction: column; gap: 10px; }
+        .article-mobile-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .article-mobile-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+        .article-mobile-card-title { font-size: 14px; font-weight: 600; color: var(--fg-primary); line-height: 1.3; }
+        .article-mobile-card-slug { font-family: var(--font-mono); font-size: 11px; color: var(--fg-tertiary); }
+        .article-mobile-card-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .article-mobile-card-date { font-family: var(--font-mono); font-size: 11px; color: var(--fg-secondary); }
+
         @@media (max-width: 575px) {
             .mobile-top-bar { height: 56px; padding: 0 16px; }
             .mobile-top-bar-title { font-size: 16px; }
@@ -290,6 +307,11 @@
             .toolbar-title { font-size: 16px; }
             .btn span { display: none; }
             .asset-grid { grid-template-columns: 1fr; }
+            .table-container { display: none; }
+            .article-mobile-cards { display: flex; }
+        }
+        @@media (max-width: 375px) {
+            .article-mobile-card { padding: 10px 12px; }
         }
     </style>
     @RenderSection("AdminHead", required: false)
