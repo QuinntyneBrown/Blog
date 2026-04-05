@@ -125,7 +125,18 @@ builder.Services.AddControllers().AddJsonOptions(o =>
 {
     o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
 });
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages(options => { })
+    .AddMvcOptions(options =>
+    {
+        // Cache profile for public HTML pages: max-age=60, stale-while-revalidate=600
+        // Design reference: docs/detailed-designs/07-web-performance/README.md, Section 3.1
+        options.CacheProfiles.Add("HtmlPage", new Microsoft.AspNetCore.Mvc.CacheProfile
+        {
+            Duration = 60,
+            Location = Microsoft.AspNetCore.Mvc.ResponseCacheLocation.Any,
+            VaryByHeader = "Accept-Encoding",
+        });
+    });
 
 // Health Checks
 builder.Services.AddHealthChecks()

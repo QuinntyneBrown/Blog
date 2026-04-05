@@ -638,3 +638,14 @@ The design specifies (Section 3.5, Table): below-fold images must have `loading=
 - Added `decoding="async"` to the article card `<img>` tags in both `Index.cshtml` and `Articles/Index.cshtml`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Public pages missing Cache-Control headers; ResponseCachingMiddleware never activates for HTML pages
+
+**Design reference:** `docs/detailed-designs/07-web-performance/README.md`, Section 3.1 — ResponseCachingMiddleware, Section 7.2 — Caching Strategy
+
+**Description:**
+The design specifies that all public HTML pages (article detail, articles listing, homepage) must be served with `Cache-Control: max-age=60, stale-while-revalidate=600` (Section 3.1: "Cache profiles are applied per-route — Article pages: `max-age=60, stale-while-revalidate=600`; Home / listing pages: `max-age=60, stale-while-revalidate=600`"). `Program.cs` correctly registers `app.UseResponseCaching()`, but ASP.NET Core's `ResponseCachingMiddleware` will only cache and serve a response from cache if the response carries a `Cache-Control: public, max-age=N` header. Without a `[ResponseCache]` attribute or equivalent header on the page model, no cache headers are set and the middleware is inert for every public page request. The three public Razor Page models — `IndexModel` (homepage), `ArticlesIndexModel` (listing), and `ArticleDetailModel` (detail) — had no `[ResponseCache]` attribute and set no `Cache-Control` headers. Every request therefore triggered a full database query and Razor re-render, negating the performance benefit the design requires.
+
+**Status:** OPEN
