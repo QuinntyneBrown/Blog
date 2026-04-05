@@ -2156,6 +2156,25 @@ The design specifies (Section 7.3): "At 576px and below, the table is replaced w
 
 ---
 
+## 2026-04-04 — `<picture>` elements missing `<source type="image/avif">` as the preferred first format source
+
+**Design reference:** `docs/detailed-designs/07-web-performance/README.md`, Section 3.5 — ImageTagHelper; Section 7.4 — Image Pipeline
+
+**Description:**
+The design specifies (Section 3.5) that each `<picture>` element must contain two `<source>` elements in order of client preference: `<source type="image/avif">` first (highest compression, most preferred), then `<source type="image/webp">` as the fallback, then the plain `<img>` element as the final fallback. This ordering is confirmed by the output structure shown in Section 3.5:
+
+```html
+<source type="image/avif" srcset="..." sizes="...">
+<source type="image/webp" srcset="..." sizes="...">
+<img src="..." ...>
+```
+
+A prior conformance fix ("Article and listing images rendered as plain `<img>` instead of responsive `<picture>` with WebP srcset") added `<picture>` elements to all three public pages but only emitted the WebP source. The AVIF `<source>` element was never added to `Slug.cshtml` (hero image), `Index.cshtml` (homepage article card images), or `Articles/Index.cshtml` (listing page article card images). The `AssetsController.Serve` method already handles AVIF content negotiation via the `Accept` header and will serve pre-generated `{assetId}-{width}w.avif` variants when they exist, falling back to WebP gracefully. The `ImageVariantGenerator` notes that SixLabors.ImageSharp 3.1.x lacks a built-in AVIF encoder, so no `.avif` variant files are generated at upload time today. However, the AVIF `<source>` element must still be present in the HTML so that when AVIF generation is enabled in the future, browsers that support AVIF automatically request the correct format — the serving endpoint already handles the `image/avif` Accept header correctly. Without the AVIF `<source>`, AVIF-capable browsers (Chrome, Firefox, Safari 16+) never request the AVIF format even once it becomes available server-side, and the browser can never benefit from the higher-compression AVIF format the design requires as the preferred delivery format (L2-020, L2-029).
+
+**Status:** OPEN
+
+---
+
 ## 2026-04-04 — Password hash format does not encode the algorithm name; future algorithm migration requires a schema change
 
 **Design reference:** `docs/detailed-designs/01-authentication/README.md`, Section 3.4 — PasswordHasher, Section 7.1 — Password Hashing
