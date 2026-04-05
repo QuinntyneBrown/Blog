@@ -2,7 +2,7 @@
 @model Blog.Api.Pages.Articles.ArticlesIndexModel
 @inject IConfiguration Configuration
 @{
-    ViewBag.Title = "Articles | Quinn Brown";
+    ViewBag.Title = $"Articles | {Configuration["Site:SiteName"] ?? "Quinn Brown"}";
     ViewBag.ActiveNav = "articles";
     ViewBag.CanonicalUrl = $"{Configuration["Site:SiteUrl"]?.TrimEnd('/')}/articles";
 }
