@@ -881,4 +881,10 @@ The design resolves Open Question #5: "Published articles only. Non-article page
 **Description:**
 The design specifies an `IETagGenerator` service that "computes a weak validator from the page version metadata" and, when the incoming `If-None-Match` request header matches, short-circuits the response with `304 Not Modified` (Section 5.1, step 8: "If `If-None-Match` matches, short-circuits with 304 Not Modified"). This is confirmed by the RESTful API design Open Question 6 resolution: "weak validators on cacheable GET responses." Neither the `IETagGenerator` interface nor any implementation existed in the codebase. The `ArticleDetailModel` (`Pages/Articles/Slug.cshtml.cs`) always re-queries the database and re-renders the page regardless of whether the client already holds a current version. Without the 304 path, every repeat visit from a browser or CDN that already has the page in its local cache still incurs a full database round-trip and Razor render, even when the article content has not changed since the last visit. The `AssetsController` already implements the same pattern correctly for binary files via `If-None-Match` → 304.
 
-**Status:** OPEN
+**Fix applied:**
+- Created `src/Blog.Api/Services/IETagGenerator.cs` — interface with `Generate(Guid articleId, int version)` and `IsMatch(string etag, string? ifNoneMatch)` methods.
+- Created `src/Blog.Api/Services/ETagGenerator.cs` — singleton implementation that produces weak ETags (`W/"article-{id}-v{version}"`) and parses comma-separated `If-None-Match` header values, including the `*` wildcard.
+- Registered `IETagGenerator` → `ETagGenerator` as a singleton in `Program.cs`.
+- Updated `ArticleDetailModel` (`Pages/Articles/Slug.cshtml.cs`) to inject `IETagGenerator`, compute the ETag after a successful article fetch, compare it against the `If-None-Match` request header, and return `StatusCode(304)` when the values match. When no match, the `ETag` response header is set alongside the existing `Cache-Control` header so subsequent requests can trigger 304s.
+
+**Status:** FIXED
