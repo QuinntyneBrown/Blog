@@ -2268,3 +2268,21 @@ Design 13 specifies a dedicated server-rendered Razor Page at `/search` (`Pages/
 - Added `Disallow: /search` to the `robots.txt` output in `SeoController.Robots()` to prevent search engines from indexing query-specific result pages, avoiding duplicate content penalties.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — SearchArticlesHandler uses relative asset URL instead of design-specified absolute URL from configuration
+
+**Design reference:** `docs/detailed-designs/11-search-infrastructure/README.md`, Section 3.6 — `SearchArticlesQuery` and Handler
+
+**Description:**
+The design specifies that `SearchArticlesHandler` should inject `IConfiguration` and build an absolute `featuredImageUrl` for each search result using the configured base URL: `a.FeaturedImage != null ? $"{baseUrl}/assets/{a.FeaturedImage.StoredFileName}" : null` where `baseUrl` is read from `config["Site:BaseUrl"]` (the rest of the codebase uses the equivalent `Site:SiteUrl` key throughout). The implementation omits `IConfiguration` from the handler's constructor entirely and uses a bare relative path `$"/assets/{a.FeaturedImage.StoredFileName}"`. The `SearchResultDto.FeaturedImageUrl` is consumed by `search.js` in autocomplete suggestion cards and by the search results page for article thumbnails. A relative URL works when the page and the API share the same origin, but external API consumers — headless clients, feed readers, or crawlers calling `GET /api/public/articles/search` directly — receive a relative path they cannot resolve without knowing the site's base URL. The design uniquely specifies absolute URLs for the search result DTO by showing explicit `IConfiguration` injection and base-URL construction in the handler pseudocode, a requirement absent from the other article DTO handlers.
+
+**Fix applied:**
+- Injected `IConfiguration` into `SearchArticlesHandler` as a primary constructor parameter.
+- Added `var baseUrl = (config["Site:SiteUrl"] ?? "").TrimEnd('/')` to read the configured base URL (using the `Site:SiteUrl` key that the rest of the codebase uses consistently, matching the design's `Site:BaseUrl` intent).
+- Changed `FeaturedImageUrl` construction from `$"/assets/{a.FeaturedImage.StoredFileName}"` to `$"{baseUrl}/assets/{a.FeaturedImage.StoredFileName}"`, producing an absolute URL in all search result DTOs.
+
+**Status:** FIXED
+
+---
