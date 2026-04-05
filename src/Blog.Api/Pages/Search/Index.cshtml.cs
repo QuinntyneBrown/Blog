@@ -10,13 +10,15 @@ namespace Blog.Api.Pages.Search;
 public class SearchIndexModel(IMediator mediator) : PageModel
 {
     public string Query { get; private set; } = string.Empty;
+    public string Sort { get; private set; } = string.Empty;
     public PagedResponse<SearchResultDto> Results { get; private set; } = new();
     public bool IsEmpty => Results.TotalCount == 0 && !string.IsNullOrWhiteSpace(Query);
     public int CurrentPage { get; private set; } = 1;
 
     public async Task<IActionResult> OnGetAsync(
         [FromQuery(Name = "q")] string? q,
-        [FromQuery(Name = "page")] int page = 1)
+        [FromQuery(Name = "page")] int page = 1,
+        [FromQuery(Name = "sort")] string? sort = null)
     {
         // Empty query → render empty state immediately, no DB call
         if (string.IsNullOrWhiteSpace(q))
@@ -30,6 +32,7 @@ public class SearchIndexModel(IMediator mediator) : PageModel
             q = q[..200];
 
         Query = q.Trim();
+        Sort = sort is "newest" or "oldest" or "relevant" ? sort : "relevant";
         CurrentPage = Math.Max(1, page);
 
         Results = await mediator.Send(

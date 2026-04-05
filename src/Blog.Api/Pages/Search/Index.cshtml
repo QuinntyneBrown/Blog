@@ -87,6 +87,63 @@
         flex: 1;
         flex-wrap: wrap;
     }
+    .search-filter-spacer {
+        flex: 1;
+        min-width: 8px;
+    }
+    .search-sort-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+    .search-sort-label {
+        font-size: 14px;
+        color: var(--foreground-tertiary);
+        white-space: nowrap;
+    }
+    .search-sort-dropdown {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        background: var(--surface-elevated);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        font-family: var(--font-body);
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--foreground-primary);
+        cursor: pointer;
+        outline: none;
+        appearance: none;
+        -webkit-appearance: none;
+    }
+    .search-sort-dropdown:focus { border-color: var(--border-focus); }
+    .search-sort-select-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        background: var(--surface-elevated);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-sm);
+        position: relative;
+    }
+    .search-sort-select-wrap select {
+        background: none;
+        border: none;
+        outline: none;
+        font-family: var(--font-body);
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--foreground-primary);
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+        padding-right: 4px;
+    }
+    .search-sort-select-wrap svg { flex-shrink: 0; color: var(--foreground-secondary); pointer-events: none; }
     .search-tag {
         display: flex;
         align-items: center;
@@ -145,19 +202,21 @@
     }
     @@media (max-width: 575px) {
         .search-hero { padding: 32px 24px 24px; gap: 14px; }
-        .search-filters-bar { padding: 10px 24px; gap: 8px; }
+        .search-filters-bar { padding: 10px 24px; gap: 8px; flex-wrap: wrap; }
         .search-content { padding: 24px 24px; }
+        .search-sort-wrap { width: 100%; justify-content: flex-end; }
     }
     @@media (max-width: 375px) {
         .search-hero { padding: 24px 16px 20px; }
         .search-filters-bar { padding: 10px 16px; overflow-x: auto; flex-wrap: nowrap; }
         .search-content { padding: 20px 16px; }
+        .search-sort-wrap { display: none; }
     }
 </style>
 
 <section class="search-hero">
     <span class="search-hero-label">Search Results</span>
-    <form action="/search" method="get" class="search-hero-bar">
+    <form action="/search" method="get" class="search-hero-bar" id="search-form">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
@@ -184,6 +243,18 @@
     <span class="search-filter-label">Filter by:</span>
     <div class="search-filter-tags">
         <span class="search-tag search-tag-active">All</span>
+    </div>
+    <div class="search-filter-spacer" aria-hidden="true"></div>
+    <div class="search-sort-wrap">
+        <span class="search-sort-label">Sort:</span>
+        <div class="search-sort-select-wrap">
+            <select name="sort" form="search-form" aria-label="Sort results" onchange="this.form.submit()">
+                <option value="relevant" selected="@(Model.Sort == "relevant" || string.IsNullOrEmpty(Model.Sort) ? "selected" : null)">Most Relevant</option>
+                <option value="newest" selected="@(Model.Sort == "newest" ? "selected" : null)">Newest First</option>
+                <option value="oldest" selected="@(Model.Sort == "oldest" ? "selected" : null)">Oldest First</option>
+            </select>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
     </div>
 </div>
 
@@ -243,10 +314,11 @@
 
         @if (Model.Results.TotalPages > 1)
         {
+            var sortParam = !string.IsNullOrEmpty(Model.Sort) && Model.Sort != "relevant" ? $"&sort={Uri.EscapeDataString(Model.Sort)}" : "";
             <nav aria-label="Search results pages" class="pagination">
                 @if (Model.Results.HasPreviousPage)
                 {
-                    <a href="/search?q=@Uri.EscapeDataString(Model.Query)&page=@(Model.CurrentPage - 1)"
+                    <a href="/search?q=@Uri.EscapeDataString(Model.Query)&page=@(Model.CurrentPage - 1)@sortParam"
                        rel="prev" class="pagination-btn">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
                         Prev
@@ -268,13 +340,13 @@
                     }
                     else
                     {
-                        <a href="/search?q=@Uri.EscapeDataString(Model.Query)&page=@p" class="pagination-page">@p</a>
+                        <a href="/search?q=@Uri.EscapeDataString(Model.Query)&page=@p@sortParam" class="pagination-page">@p</a>
                     }
                 }
 
                 @if (Model.Results.HasNextPage)
                 {
-                    <a href="/search?q=@Uri.EscapeDataString(Model.Query)&page=@(Model.CurrentPage + 1)"
+                    <a href="/search?q=@Uri.EscapeDataString(Model.Query)&page=@(Model.CurrentPage + 1)@sortParam"
                        rel="next" class="pagination-btn pagination-btn-next">
                         Next
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
