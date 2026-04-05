@@ -32,17 +32,17 @@
                         {
                             var cardFileName = article.FeaturedImageUrl.StartsWith("/assets/")
                                 ? article.FeaturedImageUrl.Substring("/assets/".Length)
-                                : System.IO.Path.GetFileName(article.FeaturedImageUrl);
+                                : System.IO.Path.GetFileName(article.FeaturedImageUrl ?? "");
                             var cardAssetId = System.IO.Path.GetFileNameWithoutExtension(cardFileName);
-                            var cardWebpSrcset = string.Join(", ",
-                                new[] { 320, 640, 960 }
-                                    .Select(w => $"/assets/{cardAssetId}-{w}w.webp {w}w"));
+                            var cardWebpSrcset = string.Join(", ", new int[] { 320, 640, 960 }.Select(w => "/assets/" + cardAssetId + "-" + w + "w.webp " + w + "w"));
+                            <text>
                             <picture>
                                 <source type="image/webp"
                                         srcset="@cardWebpSrcset"
                                         sizes="(max-width: 576px) 100vw, (max-width: 1200px) 50vw, 33vw" />
                                 <img src="@article.FeaturedImageUrl" alt="@article.Title" loading="lazy" decoding="async" />
                             </picture>
+                            </text>
                         }
                         else
                         {
