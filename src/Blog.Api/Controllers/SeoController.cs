@@ -15,7 +15,7 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
     private string BaseUrl => configuration["Site:SiteUrl"]!.TrimEnd('/');
 
     [HttpGet("robots.txt")]
-    [ResponseCache(Duration = 86400)]
+    [ResponseCache(Duration = 3600)]
     public IActionResult Robots()
     {
         var content = $"""
@@ -30,7 +30,7 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
     }
 
     [HttpGet("llms.txt")]
-    [ResponseCache(Duration = 86400)]
+    [ResponseCache(Duration = 3600)]
     public async Task<IActionResult> LlmsTxt()
     {
         var result = await mediator.Send(new GetPublishedArticlesQuery(1, 100));

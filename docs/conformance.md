@@ -1041,4 +1041,17 @@ The design specifies (Section 3.7): "If the URL contains file extensions or nume
 
 **Status:** FIXED
 
-**Date:** 2026-04-04
+---
+
+## 2026-04-05 — DeleteArticleCommandHandler does not invalidate response cache
+
+**Design reference:** `docs/detailed-designs/07-web-performance/README.md`, Section 3.1 — ResponseCachingMiddleware, Section 7.2 — Caching Strategy
+
+**Description:**
+The design specifies (Section 7.2): "When an author publishes or updates a post, the `ICacheInvalidator` service evicts the relevant entries from the in-memory response cache." Both `UpdateArticleCommandHandler` and `PublishArticleCommandHandler` correctly inject `ICacheInvalidator` and call `InvalidateArticle(slug)` after saving. However, `DeleteArticleCommandHandler` did not inject or call `ICacheInvalidator`. After deleting an article, the cached response for `/articles/{slug}` and the listing pages (homepage, `/articles`) would continue serving the deleted article's content until the cache entry naturally expired (60 seconds). During that window, readers would see a stale listing including the deleted article, and the detail page would serve cached HTML for a no-longer-existent article.
+
+**Fix applied:**
+- Injected `ICacheInvalidator` into `DeleteArticleCommandHandler`.
+- Captured the article's `Slug` before removal and called `cacheInvalidator.InvalidateArticle(slug)` after `SaveChangesAsync`.
+
+**Status:** FIXED
