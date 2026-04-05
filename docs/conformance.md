@@ -1731,3 +1731,21 @@ The design specifies (Section 3.5): "a 'Read more' link" on each ArticleCard com
 - Changed "Read article" to "Read more" in both `Index.cshtml` and `Articles/Index.cshtml`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — IDigitalAssetRepository missing GetByStoredFileNameAsync; AssetsController serves files without repository validation
+
+**Design reference:** `docs/detailed-designs/04-digital-asset-management/README.md`, Section 3.6 — AssetRepository
+
+**Description:**
+The design specifies that `AssetRepository` (Section 3.6) exposes `GetByStoredFileNameAsync(string storedFileName)` — "retrieves an asset by its stored filename (used during serve)." This method is absent from both `IDigitalAssetRepository` and `DigitalAssetRepository`. As a consequence, `AssetsController.Serve` bypasses the repository entirely: it reads files directly from `wwwroot/assets/` using `System.IO.File.Exists` and `PhysicalFile`, with no check that a requested filename corresponds to a registered `DigitalAsset` entity. Any file placed in the `wwwroot/assets/` directory (including stale variant files from deleted assets, or files placed there by other means) can be served without a matching database record. The design intends the serve path to validate through `AssetStorage.GetAsync()` — which in the design flows through the repository — ensuring only registered assets are served. Absent the repository method, this validation cannot be expressed at the abstraction level the design defines, leaving the interface contract incomplete.
+
+**Fix applied:**
+- Added `Task<DigitalAsset?> GetByStoredFileNameAsync(string storedFileName, CancellationToken cancellationToken = default)` to `IDigitalAssetRepository` in `src/Blog.Domain/Interfaces/IDigitalAssetRepository.cs`.
+- Implemented the method in `DigitalAssetRepository` in `src/Blog.Infrastructure/Data/Repositories/DigitalAssetRepository.cs` using a `FirstOrDefaultAsync` query on `StoredFileName`.
+- Updated `AssetsController.Serve` to inject `IDigitalAssetRepository`, look up the base stored filename via `GetByStoredFileNameAsync` before serving, and return 404 if no matching asset entity is found. Variant filenames (`{assetId}-{width}w.webp`) are resolved only after the parent asset record is confirmed to exist.
+
+**Status:** OPEN
+
+---
