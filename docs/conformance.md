@@ -2244,6 +2244,13 @@ Design 12 specifies a global search input component embedded in the public site'
 
 Without the search input, the global search feature added by design 11 (the server-side endpoints, `SearchArticlesHandler`, and `GetSearchSuggestionsHandler`) is entirely unreachable from the public UI. Visitors cannot search for articles from any page, and the designed `/` keyboard shortcut does not exist.
 
-**Status:** OPEN
+**Fix applied:**
+- Created `src/Blog.Api/wwwroot/js/search.js` — vanilla JavaScript (~160 lines) implementing the `/` keyboard shortcut (focus input from any page, skips when an input/textarea is active), small-screen expand/collapse via `header.search-expanded` CSS class, debounced autocomplete fetch (200 ms) to `/api/public/articles/suggestions` with `AbortController` to cancel in-flight requests, ARIA combobox keyboard navigation (ArrowDown/Up between options, Enter to navigate, Escape to dismiss, Tab to close), clear button toggling, and outside-click dismissal.
+- Added search CSS to `_Layout.cshtml` `<style>` block: `.search-wrapper`, `.search-form`, `.search-icon`, `.search-input`, `.search-shortcut`, `.search-clear`, `.search-toggle`, `#search-suggestions` (dropdown), and `#search-suggestions mark` (highlight colour). Responsive rules added to the `max-width: 991px` media query: hides the form and shows the toggle button on small screens; when `header.search-expanded` is set, shows the full-width form and hides the toggle button.
+- Added `.sr-only` utility class to the base CSS (used by the search label).
+- Added the search form HTML inside the `<nav>` right-hand side: `<div class="search-wrapper" role="search">` containing the `<form action="/search" method="get">` with accessible label, magnifying-glass icon, `<input type="search" id="site-search">`, keyboard shortcut hint `<kbd>/</kbd>`, and clear button; a separate `<button class="search-toggle">` icon for SM/XS viewports; and the `<ul id="search-suggestions" role="listbox">` dropdown.
+- Added `<script src="/js/search.js" defer></script>` to `_Layout.cshtml` before `@RenderSection("Scripts")`.
+
+**Status:** FIXED
 
 ---
