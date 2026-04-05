@@ -77,8 +77,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
     <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style" onload="this.rel='stylesheet'" />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" /></noscript>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600;700&display=swap" as="style" onload="this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600;700&display=swap" /></noscript>
     <style nonce="@cspNonce">
         :root {
             --surface-primary: #000000;
@@ -373,7 +373,7 @@
         .article-card-image-placeholder {
             width: 100%;
             height: 100%;
-            background: linear-gradient(180deg, #1A1A2E, #16213E);
+            background: var(--surface-elevated);
         }
         .article-card-body {
             padding: 24px;
@@ -447,6 +447,9 @@
         }
         .pagination-btn:hover { color: var(--foreground-primary); }
         .pagination-btn.disabled { color: var(--foreground-disabled); cursor: default; pointer-events: none; }
+        .pagination-btn-next { color: var(--foreground-secondary); }
+        .pagination-btn-next:hover { color: var(--foreground-primary); }
+        .pagination-btn-next.disabled { color: var(--foreground-disabled); cursor: default; pointer-events: none; }
         .pagination-page {
             padding: 8px 14px;
             border-radius: var(--radius-sm);
@@ -603,7 +606,7 @@
             margin-bottom: 32px;
         }
         .article-divider { height: 1px; background: var(--border-subtle); margin: 32px 0; }
-        .article-body { font-size: 18px; color: var(--foreground-primary); line-height: 1.6; }
+        .article-body { font-size: 17px; color: var(--foreground-primary); line-height: 1.8; }
         .article-body h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin: 32px 0 16px; }
         .article-body h3 { font-size: 22px; font-weight: 700; margin: 24px 0 12px; }
         .article-body p { margin-bottom: 16px; }
@@ -690,7 +693,7 @@
 
         /* 404 */
         .not-found { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 600px; gap: 24px; padding: 48px; text-align: center; }
-        .not-found-number { font-size: 120px; font-weight: 800; color: var(--border-strong); line-height: 1; }
+        .not-found-number { font-size: 120px; font-weight: 800; letter-spacing: -4px; color: var(--border-subtle); line-height: 1; }
         .not-found-title { font-size: 28px; font-weight: 700; }
         .not-found-desc { font-size: 16px; color: var(--foreground-secondary); }
         .btn-primary {
@@ -863,7 +866,6 @@
     </main>
     <footer class="footer" role="contentinfo">
         <div class="footer-links">
-            <a href="/articles">Articles</a>
             <a href="/feed.xml">RSS Feed</a>
             <a href="/atom.xml">Atom Feed</a>
             <a href="/sitemap.xml">Sitemap</a>
