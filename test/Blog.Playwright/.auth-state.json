@@ -2,7 +2,7 @@
   "cookies": [
     {
       "name": ".AspNetCore.Antiforgery.DgMQEGI7um0",
-      "value": "CfDJ8J41cETgV3BAomklPi1GMg4WaKnyDeHTrI8u_gWTdXcFDCqYI3vRmpWVKA0QNdd00RVSNChNIcpX7RYQy4GZPgmv1E4lCc-7tuRnzGXktVmspa_LozjQeflVH33IU8yYD_Q6nmnB5PouuRUQqPpf-pI",
+      "value": "CfDJ8J41cETgV3BAomklPi1GMg4cg_cydsvQej3C97mvV0bGLwMAkclteJxR1H-fXYVLGjTBIMm5JL0fmZF6Bcv6i2DvMs_6QYbEIEitbXQ0nNDRGKMlks9Mq6egwYIwyh8hb0n9G1Di9d4EWvWrS2gWEjg",
       "domain": "localhost",
       "path": "/",
       "expires": -1,
@@ -12,7 +12,7 @@
     },
     {
       "name": ".blog.admin.session",
-      "value": "CfDJ8J41cETgV3BAomklPi1GMg7oPNPgYVG8phOlwlGzM1ksH06Tjp1ZOUMWsa6ruvfMqJRSmq1FL2Dkb5RDXgZaGAP1lVKokwb2tJT38%2F6V%2BteWPzDtEljANm8Z0vLMv1acbJZ%2BbbFBukwVc7cQzi1KHgEJa1iRi7zRkkINbHpwFPlx",
+      "value": "CfDJ8J41cETgV3BAomklPi1GMg6G4c04NSO9tNxFwyYsyk6jw2NNr3CFhMnUSKrZBYjkiYNODyCYtKf%2BbgeiUCyPzLcX0L1%2BCqo5pgYGA6wRd4eb4WQUt87PC2yl2ul7%2Bsf5s8FK3Qz5SSH%2FvYJDTIyTMfiwLVOZB3o%2Bxiy%2BeJL0UdM9",
       "domain": "localhost",
       "path": "/",
       "expires": -1,
