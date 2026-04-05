@@ -1,6 +1,7 @@
 @{
     var pageTitle = ViewBag.AdminTitle ?? "Admin";
     var activeNav = ViewBag.AdminNav ?? "";
+    var cspNonce = Context.Items[Blog.Api.Middleware.SecurityHeadersMiddleware.CspNonceKey] as string ?? "";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -11,7 +12,7 @@
     <meta name="robots" content="noindex, nofollow" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <style>
+    <style nonce="@cspNonce">
         :root {
             --bg: #000000;
             --surface: #0A0A0A;

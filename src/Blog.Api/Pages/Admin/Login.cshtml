@@ -3,6 +3,7 @@
 @{
     Layout = null;
     ViewData["Title"] = "Sign In — QB Admin";
+    var cspNonce = Context.Items[Blog.Api.Middleware.SecurityHeadersMiddleware.CspNonceKey] as string ?? "";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -12,7 +13,7 @@
     <title>@ViewData["Title"]</title>
     <meta name="robots" content="noindex, nofollow" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <style>
+    <style nonce="@cspNonce">
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; background: #000; color: #fff; -webkit-font-smoothing: antialiased; }
         .login-left {

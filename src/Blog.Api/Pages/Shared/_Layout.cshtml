@@ -1,5 +1,6 @@
 @inject IConfiguration Configuration
 @{
+    var cspNonce = Context.Items[Blog.Api.Middleware.SecurityHeadersMiddleware.CspNonceKey] as string ?? "";
     var rawTitle = (string)(ViewBag.Title ?? Configuration["Site:SiteName"] ?? "Quinn Brown");
     var title = rawTitle.Length <= 60 ? rawTitle : rawTitle[..57] + "...";
     var rawDescription = (string)(ViewBag.Description ?? Configuration["Site:SiteDescription"] ?? "Personal blog about software engineering, architecture, and .NET");
@@ -74,7 +75,7 @@
     <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style" onload="this.rel='stylesheet'" />
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" /></noscript>
-    <style>
+    <style nonce="@cspNonce">
         :root {
             --surface-primary: #000000;
             --surface-secondary: #0A0A0A;
