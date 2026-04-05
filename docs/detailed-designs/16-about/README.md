@@ -52,9 +52,10 @@ The About Page feature provides a publicly visible biography for the site author
 ### 3.2 UpsertAboutContentHandler
 
 - **Responsibility**: Creates the about record if it does not exist; updates it if it does. This is the only mutation handler for about content.
-- **Dependencies**: `AboutContentRepository`, `IMarkdownConverter`, `DigitalAssetRepository` (to validate `profileImageId` and verify asset ownership matches the requesting user)
+- **Dependencies**: `AboutContentRepository`, `IMarkdownConverter`, `ICacheInvalidator`, `DigitalAssetRepository` (to validate `profileImageId` and verify asset ownership matches the requesting user)
 - **Pre-render**: Markdown `Body` is converted to sanitized HTML at save time and stored in `BodyHtml`. Runtime rendering is not performed (same pattern as articles).
 - **Optimistic concurrency**: On update, the command must include the current `version`. If the stored `Version` differs, the handler returns 409 (conflict). On success, `Version` is incremented before saving.
+- **Cache invalidation**: After a successful upsert (both insert and update paths), the handler must call `ICacheInvalidator.InvalidateAsync("/about")` to evict the cached public GET response. This ensures visitors see updated content within the `stale-while-revalidate` window rather than waiting for the full `max-age=60` TTL to expire.
 
 ### 3.3 RestoreAboutContentHandler
 
