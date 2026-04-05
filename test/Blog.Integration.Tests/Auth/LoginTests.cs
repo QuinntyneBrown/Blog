@@ -31,8 +31,9 @@ public class LoginTests : IClassFixture<BlogWebApplicationFactory>
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var body = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(body);
-        doc.RootElement.GetProperty("token").GetString().Should().NotBeNullOrWhiteSpace();
-        doc.RootElement.GetProperty("expiresAt").GetString().Should().NotBeNullOrWhiteSpace();
+        var data = doc.RootElement.GetProperty("data");
+        data.GetProperty("token").GetString().Should().NotBeNullOrWhiteSpace();
+        data.GetProperty("expiresAt").GetString().Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]
@@ -87,5 +88,31 @@ public class LoginTests : IClassFixture<BlogWebApplicationFactory>
             JsonBody(new { email = "admin@blog.dev", password = "short" }));
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Login_InvalidPassword_Returns401WithProblemDetail()
+    {
+        var response = await _client.PostAsync("/api/auth/login",
+            JsonBody(new { email = "admin@blog.dev", password = "WrongPassword123" }));
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        var body = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(body);
+        doc.RootElement.GetProperty("detail").GetString()
+            .Should().Be("Invalid email or password.");
+    }
+
+    [Fact]
+    public async Task Login_NonExistentEmail_Returns401WithSameGenericMessage()
+    {
+        var response = await _client.PostAsync("/api/auth/login",
+            JsonBody(new { email = "nobody@example.com", password = "SomePassword1" }));
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        var body = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(body);
+        doc.RootElement.GetProperty("detail").GetString()
+            .Should().Be("Invalid email or password.");
     }
 }
