@@ -51,23 +51,28 @@ public class AssetsController(IAssetStorage assetStorage, IDigitalAssetRepositor
             var nearestWidth = FindNearestBreakpoint(w.Value);
 
             // Try AVIF first (highest compression), then WebP.
+            // Use AssetStorage.GetAsync() per the design (Section 5.2, step 5) so the serving
+            // path works regardless of whether the backing store is local filesystem or cloud blob.
             if (preferAvif)
             {
                 var avifVariantName = $"{assetId}-{nearestWidth}w.avif";
-                if (assetStorage.Exists(avifVariantName))
-                    return ServeFile(assetStorage.GetFilePath(avifVariantName), "image/avif");
+                var avifStream = await assetStorage.GetAsync(avifVariantName, ct);
+                if (avifStream != null)
+                    return await ServeStreamAsync(avifStream, avifVariantName, "image/avif");
             }
 
             if (preferWebp)
             {
                 var webpVariantName = $"{assetId}-{nearestWidth}w.webp";
-                if (assetStorage.Exists(webpVariantName))
-                    return ServeFile(assetStorage.GetFilePath(webpVariantName), "image/webp");
+                var webpStream = await assetStorage.GetAsync(webpVariantName, ct);
+                if (webpStream != null)
+                    return await ServeStreamAsync(webpStream, webpVariantName, "image/webp");
             }
         }
 
-        // Fall back to serving the exact filename requested.
-        if (!assetStorage.Exists(fileName))
+        // Fall back to serving the exact filename requested via AssetStorage.GetAsync().
+        var fallbackStream = await assetStorage.GetAsync(fileName, ct);
+        if (fallbackStream == null)
             return NotFound();
 
         var extension = Path.GetExtension(fileName).ToLowerInvariant();
@@ -82,23 +87,25 @@ public class AssetsController(IAssetStorage assetStorage, IDigitalAssetRepositor
             _                 => "application/octet-stream"
         };
 
-        return ServeFile(assetStorage.GetFilePath(fileName), contentType);
+        return await ServeStreamAsync(fallbackStream, fileName, contentType);
     }
 
-    private IActionResult ServeFile(string filePath, string contentType)
+    private Task<IActionResult> ServeStreamAsync(Stream stream, string name, string contentType)
     {
         Response.Headers["Cache-Control"] = "public, max-age=31536000, immutable";
         // Vary: Accept ensures caches distinguish between format-negotiated variants.
         Response.Headers["Vary"] = "Accept";
 
-        var fileName = Path.GetFileName(filePath);
-        var etag = $"\"{fileName}\"";
+        var etag = $"\"{name}\"";
         Response.Headers["ETag"] = etag;
 
         if (Request.Headers.IfNoneMatch.Contains(etag))
-            return StatusCode(304);
+        {
+            stream.Dispose();
+            return Task.FromResult<IActionResult>(StatusCode(304));
+        }
 
-        return PhysicalFile(filePath, contentType);
+        return Task.FromResult<IActionResult>(File(stream, contentType));
     }
 
     /// <summary>

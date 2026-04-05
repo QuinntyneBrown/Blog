@@ -13,6 +13,9 @@ public class BlobAssetStorage(IConfiguration configuration) : IAssetStorage
     public Task SaveAsync(string storedFileName, Stream stream, CancellationToken cancellationToken = default)
         => throw new NotImplementedException("Azure Blob Storage not yet configured. Set AssetStorage:Provider = 'Local' or configure blob connection string.");
 
+    public Task<Stream?> GetAsync(string storedFileName, CancellationToken cancellationToken = default)
+        => throw new NotImplementedException("Azure Blob Storage not yet configured. Implement using Azure SDK BlobClient.DownloadStreamingAsync.");
+
     public string GetFilePath(string storedFileName)
         => throw new NotImplementedException("Azure Blob Storage does not support local file paths. Use GetUrl for cloud storage.");
 

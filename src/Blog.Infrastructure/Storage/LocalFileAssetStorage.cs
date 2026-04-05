@@ -15,6 +15,16 @@ public class LocalFileAssetStorage(IConfiguration configuration) : IAssetStorage
         await stream.CopyToAsync(fileStream, cancellationToken);
     }
 
+    public Task<Stream?> GetAsync(string storedFileName, CancellationToken cancellationToken = default)
+    {
+        var filePath = Path.Combine(StoragePath, storedFileName);
+        if (!File.Exists(filePath))
+            return Task.FromResult<Stream?>(null);
+        Stream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read,
+            bufferSize: 4096, FileOptions.SequentialScan | FileOptions.Asynchronous);
+        return Task.FromResult<Stream?>(stream);
+    }
+
     public string GetFilePath(string storedFileName) => Path.Combine(StoragePath, storedFileName);
 
     public Task DeleteAsync(string storedFileName, CancellationToken cancellationToken = default)
