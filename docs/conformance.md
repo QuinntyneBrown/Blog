@@ -319,3 +319,14 @@ The design specifies three Serilog configuration requirements that were all abse
 - Updated the `Using` array to include the new assemblies.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — CORS policy allows any origin instead of configured allowlist
+
+**Design reference:** `docs/detailed-designs/08-security-hardening/README.md`, Section 3.4 — CorsMiddleware
+
+**Description:**
+The design specifies a strict CORS policy: "Only origins explicitly listed in configuration are allowed. Requests from unlisted origins receive no CORS headers, causing the browser to block the response." Allowed origins are to be loaded from `appsettings.json` under `Cors:AllowedOrigins`. The implementation in `Program.cs` registers the CORS policy with `policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()` — a fully-open policy that permits every origin without restriction. The `Cors:AllowedOrigins` key is entirely absent from `appsettings.json`. This means any web page on any domain can make credentialed or non-credentialed cross-origin requests to the API, bypassing the cross-origin access control that the design lists as the mitigation for OWASP A01 (Broken Access Control) via CORS.
+
+**Status:** OPEN
