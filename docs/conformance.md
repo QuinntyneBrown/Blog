@@ -664,3 +664,18 @@ The design specifies (Section 6.1, L2-009): "`og:type` is 'article' for article 
 - Set `ViewBag.OgType = "article"` in `Slug.cshtml` when the article is found. All other pages default to `"website"`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — SlugRedirectMiddleware not implemented; uppercase and trailing-slash article URLs served without 301 redirect
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.7 — SlugRedirectMiddleware, L2-015 — Clean URL Structure
+
+**Description:**
+The design specifies (Section 3.7): "Intercepts incoming requests to `/articles/{slug}` paths. If the slug contains uppercase characters, issues a 301 redirect to the lowercase version. If the URL has a trailing slash, issues a 301 redirect to the version without it." The design also specifies (Section 6.2) that this middleware runs before routing. No `SlugRedirectMiddleware` existed anywhere in the codebase. As a result, requests to `/articles/My-Article` or `/articles/my-article/` would either 404 or serve content at a non-canonical URL, creating duplicate content visible to search engines and fragmenting link equity across URL variants.
+
+**Fix applied:**
+- Created `src/Blog.Api/Middleware/SlugRedirectMiddleware.cs` that intercepts `/articles/*` requests, checks for uppercase characters and trailing slashes, and returns 301 with the corrected lowercase, no-trailing-slash URL.
+- Registered `app.UseMiddleware<SlugRedirectMiddleware>()` in `Program.cs` before `UseStaticFiles()` and `UseRouting()`, matching the design's pipeline order (Section 6.2).
+
+**Status:** FIXED
