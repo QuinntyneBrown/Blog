@@ -795,6 +795,17 @@ The design's `DigitalAssetDto` (Section 4.2) specifies these fields: `DigitalAss
 
 ---
 
+## 2026-04-04 — 429 responses missing Retry-After header
+
+**Design reference:** `docs/detailed-designs/01-authentication/README.md`, Section 7.3 — Rate Limiting on Login; `docs/detailed-designs/08-security-hardening/README.md`, Section 3.3 — RateLimitingMiddleware
+
+**Description:**
+Both design documents explicitly require that when a rate limit is exceeded the response includes a `Retry-After` header indicating the number of seconds until the sliding window resets. The authentication design (Section 7.3) states: "the endpoint returns `429 Too Many Requests` with a `Retry-After` header indicating the number of seconds until the window resets." The security hardening design (Section 3.3) states the same. The `ExceptionHandlingMiddleware` catches `RateLimitExceededException` and writes a 429 ProblemDetails body, but never sets the `Retry-After` header on the response. `IEmailRateLimitService.TryAcquire` returns only a `bool` and has no mechanism to surface the reset time, so even if the middleware wanted to emit the header it had no data to populate it with. Clients (browsers, API consumers) that respect `Retry-After` to implement automatic back-off therefore had no delay hint and would immediately retry — the opposite of what rate limiting is designed to achieve.
+
+**Status:** OPEN
+
+---
+
 ## 2026-04-04 — Sitemap includes non-article pages (/articles, /feed) contrary to design resolution
 
 **Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.3 — SitemapGenerator, Section 8 — Open Question #5
