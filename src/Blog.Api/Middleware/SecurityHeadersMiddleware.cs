@@ -1,0 +1,63 @@
+using System.Security.Cryptography;
+
+namespace Blog.Api.Middleware;
+
+/// <summary>
+/// Injects security-related HTTP response headers on every response, including a
+/// per-request nonce-based Content-Security-Policy as resolved in design OQ-1
+/// (docs/detailed-designs/08-security-hardening/README.md).
+/// </summary>
+public class SecurityHeadersMiddleware(RequestDelegate next, IHostEnvironment env)
+{
+    /// <summary>
+    /// Key used to store the per-request CSP nonce in HttpContext.Items so that
+    /// Razor Pages tag helpers can embed it into inline <style> blocks.
+    /// </summary>
+    public const string CspNonceKey = "CspNonce";
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        // Generate a cryptographically-random per-request nonce (16 bytes → 24-char base-64).
+        var nonceBytes = RandomNumberGenerator.GetBytes(16);
+        var nonce = Convert.ToBase64String(nonceBytes);
+
+        // Store the nonce so Razor views/tag-helpers can embed it into <style> blocks.
+        context.Items[CspNonceKey] = nonce;
+
+        // Register a callback so headers are written just before the response body starts.
+        context.Response.OnStarting(() =>
+        {
+            var headers = context.Response.Headers;
+
+            // Content-Security-Policy — nonce-based; eliminates 'unsafe-inline' for styles.
+            headers["Content-Security-Policy"] =
+                $"default-src 'self'; " +
+                $"script-src 'self'; " +
+                $"style-src 'self' 'nonce-{nonce}'; " +
+                $"img-src 'self' data:; " +
+                $"font-src 'self'; " +
+                $"frame-ancestors 'none'; " +
+                $"object-src 'none'; " +
+                $"base-uri 'self'; " +
+                $"form-action 'self'";
+
+            // Strict-Transport-Security — only sent over HTTPS / non-development.
+            if (!env.IsDevelopment())
+            {
+                headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload";
+            }
+
+            headers["X-Content-Type-Options"] = "nosniff";
+            headers["X-Frame-Options"] = "DENY";
+            headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+            headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()";
+
+            // Remove the Server header to avoid information disclosure.
+            headers.Remove("Server");
+
+            return Task.CompletedTask;
+        });
+
+        await next(context);
+    }
+}
