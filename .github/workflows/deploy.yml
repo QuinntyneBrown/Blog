@@ -1,0 +1,154 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deploy to environment'
+        required: true
+        default: 'production'
+        type: choice
+        options: [production]
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  STAGING_APP: blog-staging-api
+  STAGING_RG: rg-blog-staging
+  PROD_APP: blog-production-api
+  PROD_RG: rg-blog-production
+
+jobs:
+  # ──────────────────────────────────────────
+  # Build, test, publish
+  # ──────────────────────────────────────────
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore -c Release
+
+      - name: Test
+        run: |
+          dotnet test --no-build -c Release \
+            --logger "trx;LogFileName=results.trx" \
+            --results-directory ./test-results
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: ./test-results/*.trx
+
+      - name: Publish
+        run: dotnet publish src/Blog.Api -c Release -o ./publish --no-build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: blog-publish
+          path: ./publish
+
+  # ──────────────────────────────────────────
+  # Deploy to Staging — runs on every push to master
+  # ──────────────────────────────────────────
+  deploy-staging:
+    name: Deploy → Staging
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://${{ env.STAGING_APP }}.azurewebsites.net
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: blog-publish
+          path: ./publish
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Staging App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.STAGING_APP }}
+          resource-group-name: ${{ env.STAGING_RG }}
+          package: ./publish
+
+      - name: Wait for app start
+        run: sleep 20
+
+      - name: Health check
+        run: |
+          STATUS=$(curl -sf -o /dev/null -w "%{http_code}" \
+            https://${{ env.STAGING_APP }}.azurewebsites.net/health)
+          echo "Health status: $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "Health check failed"
+            exit 1
+          fi
+
+  # ──────────────────────────────────────────
+  # Deploy to Production — manual trigger only
+  # Run via: gh workflow run deploy.yml -f environment=production
+  # Or: GitHub Actions UI → Run workflow
+  # ──────────────────────────────────────────
+  deploy-production:
+    name: Deploy → Production
+    needs: build
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://${{ env.PROD_APP }}.azurewebsites.net
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: blog-publish
+          path: ./publish
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Production App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.PROD_APP }}
+          resource-group-name: ${{ env.PROD_RG }}
+          package: ./publish
+
+      - name: Wait for app start
+        run: sleep 20
+
+      - name: Health check
+        run: |
+          STATUS=$(curl -sf -o /dev/null -w "%{http_code}" \
+            https://${{ env.PROD_APP }}.azurewebsites.net/health/ready)
+          echo "Health status: $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "Production health check failed"
+            exit 1
+          fi
