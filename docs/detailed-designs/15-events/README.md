@@ -52,8 +52,8 @@ The Events feature allows the blog author to manage a list of speaking engagemen
   - `POST /api/events/{id}/publish` — publish
   - `POST /api/events/{id}/unpublish` — unpublish
   - `GET /api/events` — paginated list for back office
-  - `GET /api/events/public` — public: returns upcoming + past published events (no auth)
-  - `GET /api/events/{slug}` — public event detail by slug (no auth)
+  - `GET /api/events/published` — public: returns paginated upcoming + past published events (no auth)
+  - `GET /api/events/by-slug/{slug}` — public event detail by slug (no auth); uses explicit prefix to avoid routing conflict with `/{id}`
 
 ### 3.2 Command Handlers
 
@@ -70,7 +70,7 @@ The Events feature allows the blog author to manage a list of speaking engagemen
 | Handler | Query | Returns |
 |---------|-------|---------|
 | `GetEventsHandler` | `GetEventsQuery(page, pageSize)` | Paginated list, all statuses, descending by `StartDate` |
-| `GetPublishedEventsHandler` | `GetPublishedEventsQuery` | `{ upcoming: Event[], past: Event[] }` split by `StartDate` vs `UtcNow` |
+| `GetPublishedEventsHandler` | `GetPublishedEventsQuery(upcomingPage, pastPage, pageSize)` | `{ upcoming: PagedResult<EventDto>, past: PagedResult<EventDto> }` split by `StartDate` vs `UtcNow` |
 | `GetEventBySlugHandler` | `GetEventBySlugQuery(slug)` | Single published event; 404 if not found or not published |
 | `GetEventByIdHandler` | `GetEventByIdQuery(eventId)` | Admin detail by ID |
 
@@ -81,8 +81,8 @@ The Events feature allows the blog author to manage a list of speaking engagemen
   - `GetByIdAsync(eventId)` — by PK
   - `GetBySlugAsync(slug)` — by unique slug
   - `GetAllAsync(page, pageSize)` — paginated, all statuses, ordered by `StartDate DESC`
-  - `GetUpcomingAsync()` — published, `StartDate >= UtcNow`, ordered `StartDate ASC`
-  - `GetPastAsync()` — published, `StartDate < UtcNow`, ordered `StartDate DESC`
+  - `GetUpcomingAsync(page, pageSize)` — published, `StartDate >= UtcNow`, ordered `StartDate ASC`
+  - `GetPastAsync(page, pageSize)` — published, `StartDate < UtcNow`, ordered `StartDate DESC`
   - `SlugExistsAsync(slug, excludeEventId?)` — uniqueness check
 
 ### 3.5 ISlugGenerator
@@ -158,15 +158,15 @@ Key points:
 
 | Method | Path | Params | Success | Errors |
 |--------|------|--------|---------|--------|
-| `GET` | `/api/events/public` | — | 200 + `PublicEventsDto` | — |
-| `GET` | `/api/events/{slug}` | — | 200 + `EventDto` | 404 |
+| `GET` | `/api/events/published` | `?upcomingPage&pastPage&pageSize` | 200 + `PublicEventsDto` | — |
+| `GET` | `/api/events/by-slug/{slug}` | — | 200 + `EventDto` | 404 |
 
 ### DTOs
 
 ```
 EventDto         { eventId, title, slug, description, startDate, endDate?, location, externalUrl?, published, createdAt, updatedAt, version }
 EventListDto     { eventId, title, slug, startDate, location, published }
-PublicEventsDto  { upcoming: EventDto[], past: EventDto[] }
+PublicEventsDto  { upcoming: PagedResult<EventDto>, past: PagedResult<EventDto> }
 ```
 
 ---
@@ -174,13 +174,13 @@ PublicEventsDto  { upcoming: EventDto[], past: EventDto[] }
 ## 7. Security Considerations
 
 - **Authorization**: All write endpoints (`POST`, `PUT`, `DELETE`, publish/unpublish) are protected by `[Authorize]` and the JWT middleware. The back-office list endpoint also requires auth (L2-067.3).
-- **Slug immutability**: Unlike articles (where the slug is frozen on publish), event slugs are regenerated on every update from the current title. This is intentional — events rarely change title, and the external URL (if provided) is the canonical reference. If stable public URLs are needed, slug freezing should be added.
+- **Slug regeneration**: Event slugs are regenerated on every update from the current title (see OQ1). The external URL field (`ExternalUrl`) is the canonical reference for the event. Callers should use `ExternalUrl` for stable linking when available.
 - **Unpublished event access**: `GetEventBySlugHandler` explicitly checks `Published == true` before returning the event, ensuring draft events are not accessible to public visitors (L2-070.2).
 
 ---
 
 ## 8. Open Questions
 
-1. **Slug regeneration on update**: Regenerating the slug on every edit can break bookmarked public URLs. Consider freezing the slug after first publish (matching the Article pattern). Decision needed.
-2. **Pagination on public events**: L2-069 does not mention pagination for the public events page (it splits by upcoming/past). If the event count grows large, pagination or a count cap may be needed.
-3. **Time zone handling**: `StartDate` is stored as UTC. The public display likely needs to render in the author's local time zone. Should the time zone be a field on the event, a site-wide setting, or always displayed as UTC?
+1. **Slug regeneration on update**: ~~Consider freezing the slug after first publish.~~ **Resolved**: The slug is regenerated on every update from the current title. Bookmarked URLs may break on title changes; this is accepted. `UpdateEventHandler` regenerates the slug and returns 409 if it conflicts with a different event.
+2. **Pagination on public events**: ~~L2-069 does not mention pagination.~~ **Resolved**: Pagination is added to the public events page. Both the upcoming and past sections are paginated independently. `GetPublishedEventsQuery` accepts `upcomingPage`, `pastPage`, and `pageSize` parameters. The public API response is updated to `{ upcoming: PagedResult<EventDto>, past: PagedResult<EventDto> }`.
+3. **Time zone handling**: ~~Should the time zone be a field on the event, a site-wide setting, or always UTC?~~ **Resolved**: `StartDate` is stored and displayed as UTC. No time zone conversion is performed. The public page renders dates with an explicit "UTC" suffix so visitors understand the reference.

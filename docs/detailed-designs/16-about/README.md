@@ -50,7 +50,7 @@ The About Page feature provides a publicly visible biography for the site author
 ### 3.2 UpsertAboutContentHandler
 
 - **Responsibility**: Creates the about record if it does not exist; updates it if it does. This is the only mutation handler for about content.
-- **Dependencies**: `AboutContentRepository`, `IMarkdownConverter`, `DigitalAssetRepository` (to validate `profileImageId`)
+- **Dependencies**: `AboutContentRepository`, `IMarkdownConverter`, `DigitalAssetRepository` (to validate `profileImageId` and verify asset ownership matches the requesting user)
 - **Pre-render**: Markdown `Body` is converted to sanitized HTML at save time and stored in `BodyHtml`. Runtime rendering is not performed (same pattern as articles).
 - **Version increment**: On update, `Version` is incremented for optimistic concurrency.
 
@@ -91,7 +91,20 @@ The About Page feature provides a publicly visible biography for the site author
 | `UpdatedAt` | `datetime2` | UTC, updated on save |
 | `Version` | `int` | Optimistic concurrency |
 
-**Design note**: The table is treated as a singleton. `UpsertAboutContentHandler` calls `GetCurrentAsync()` — if null, it inserts; otherwise it updates. No unique constraints beyond the PK are needed.
+**Design note**: The table is treated as a singleton. `UpsertAboutContentHandler` calls `GetCurrentAsync()` — if null, it inserts; otherwise it copies the current row to `AboutContentHistory` then updates. No unique constraints beyond the PK are needed.
+
+#### AboutContentHistory
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `AboutContentHistoryId` | `Guid` | PK |
+| `AboutContentId` | `Guid` | FK → `AboutContent.AboutContentId` |
+| `Heading` | `nvarchar(256)` | Snapshot at time of save |
+| `Body` | `nvarchar(max)` | Raw Markdown snapshot |
+| `BodyHtml` | `nvarchar(max)` | Pre-rendered HTML snapshot |
+| `ProfileImageId` | `Guid?` | FK snapshot |
+| `Version` | `int` | Version number copied from parent at time of snapshot |
+| `ArchivedAt` | `datetime2` | UTC timestamp when snapshot was created |
 
 ---
 
@@ -105,7 +118,7 @@ Key points:
 - Validation rejects empty `Heading` or `Body` with 400 (L2-072.3).
 - Unauthenticated PUT returns 401 (L2-072.4).
 - Markdown is converted and sanitized at save time; the public page reads `BodyHtml` directly.
-- `profileImageId`, if provided, must reference an existing `DigitalAsset` — validated before save (L2-072.5).
+- `profileImageId`, if provided, must reference an existing `DigitalAsset` owned by the requesting user — validated before save (L2-072.5). Returns 403 if the asset exists but belongs to a different user.
 
 ### 5.2 Public About Page Render
 
@@ -127,7 +140,9 @@ Key points:
 | Method | Path | Auth | Body | Success | Errors |
 |--------|------|------|------|---------|--------|
 | `GET` | `/api/about` | None | — | 200 + `AboutContentDto?` | — |
-| `PUT` | `/api/about` | Bearer token | `{ heading, body, profileImageId? }` | 200 + `AboutContentDto` | 400, 401 |
+| `PUT` | `/api/about` | Bearer token | `{ heading, body, profileImageId? }` | 200 + `AboutContentDto` | 400, 401, 403 |
+| `GET` | `/api/about/history` | Bearer token | `?page&pageSize` | 200 + `PagedResponse<AboutContentHistoryDto>` | 401 |
+| `PUT` | `/api/about/restore/{historyId}` | Bearer token | — | 200 + `AboutContentDto` | 401, 404 |
 
 ### DTOs
 
@@ -141,6 +156,15 @@ AboutContentDto  {
     profileImageUrl: string?,     // Resolved CDN/storage URL
     updatedAt:      DateTime,
     version:        int
+}
+
+AboutContentHistoryDto  {
+    aboutContentHistoryId: Guid,
+    heading:               string,
+    body:                  string,
+    profileImageId:        Guid?,
+    version:               int,
+    archivedAt:            DateTime
 }
 ```
 
@@ -157,6 +181,6 @@ AboutContentDto  {
 
 ## 8. Open Questions
 
-1. **Profile image ownership**: Should the about profile image be restricted to assets uploaded by the authenticated user, or any asset in the library? Current article design allows any asset.
-2. **History / versioning**: The design stores only the current version. If the author needs to revert to a previous biography, audit history would require a separate `AboutContentHistory` table or soft-delete + insert approach.
-3. **Cache key**: The `ICacheInvalidator` implementation currently targets specific routes. The `/about` route needs to be added to the invalidation set when `UpsertAboutContentHandler` succeeds.
+1. **Profile image ownership**: ~~Should the about profile image be restricted to assets uploaded by the authenticated user, or any asset in the library?~~ **Resolved**: Restricted to assets uploaded by the authenticated user. `UpsertAboutContentHandler` must verify that the referenced `DigitalAsset` is owned by the requesting user before accepting the `profileImageId`.
+2. **History / versioning**: ~~The design stores only the current version.~~ **Resolved**: Revision history is supported via a separate `AboutContentHistory` table. On every successful upsert, `UpsertAboutContentHandler` copies the current row into `AboutContentHistory` before applying the update. A back-office endpoint (`GET /api/about/history`) lists past revisions and a `PUT /api/about/restore/{version}` allows the author to revert to a previous version.
+3. **Cache key**: ~~The `/about` route needs to be added to the invalidation set.~~ **Resolved**: The `/about` route is added to the `ICacheInvalidator` invalidation set. `UpsertAboutContentHandler` calls `ICacheInvalidator.InvalidateAsync("/about")` after a successful upsert.
