@@ -50,8 +50,8 @@ public class SeoController(IMediator mediator, IHttpContextAccessor httpContextA
             sb.AppendLine($"- [{a.Title}]({BaseUrl}/articles/{a.Slug}) — {a.Abstract}");
         sb.AppendLine();
         sb.AppendLine("## Feeds");
-        sb.AppendLine($"- RSS: {BaseUrl}/feed/rss");
-        sb.AppendLine($"- Atom: {BaseUrl}/feed/atom");
+        sb.AppendLine($"- RSS: {BaseUrl}/feed.xml");
+        sb.AppendLine($"- Atom: {BaseUrl}/atom.xml");
         sb.AppendLine($"- JSON: {BaseUrl}/feed/json");
         return Content(sb.ToString(), "text/plain; charset=utf-8");
     }
@@ -94,7 +94,7 @@ public class SeoController(IMediator mediator, IHttpContextAccessor httpContextA
         return Content(doc.ToString(), "application/xml; charset=utf-8");
     }
 
-    [HttpGet("feed/rss")]
+    [HttpGet("feed.xml")]
     [ResponseCache(Duration = 3600)]
     public async Task<IActionResult> Rss()
     {
@@ -117,7 +117,7 @@ public class SeoController(IMediator mediator, IHttpContextAccessor httpContextA
             new XElement("lastBuildDate", DateTime.UtcNow.ToString("R")),
             new XElement("atom:link",
                 new XAttribute(XNamespace.Xmlns + "atom", "http://www.w3.org/2005/Atom"),
-                new XAttribute("href", $"{BaseUrl}/feed/rss"),
+                new XAttribute("href", $"{BaseUrl}/feed.xml"),
                 new XAttribute("rel", "self"),
                 new XAttribute("type", "application/rss+xml")));
         channel.Add(items);
@@ -133,7 +133,7 @@ public class SeoController(IMediator mediator, IHttpContextAccessor httpContextA
         return Content(doc.ToString(), "application/rss+xml; charset=utf-8");
     }
 
-    [HttpGet("feed/atom")]
+    [HttpGet("atom.xml")]
     [ResponseCache(Duration = 3600)]
     public async Task<IActionResult> Atom()
     {
@@ -155,7 +155,7 @@ public class SeoController(IMediator mediator, IHttpContextAccessor httpContextA
             new XElement(atom + "subtitle", "Thoughts on software engineering, .NET architecture, and building systems that last."),
             new XElement(atom + "link", new XAttribute("href", BaseUrl)),
             new XElement(atom + "link",
-                new XAttribute("href", $"{BaseUrl}/feed/atom"),
+                new XAttribute("href", $"{BaseUrl}/atom.xml"),
                 new XAttribute("rel", "self")),
             new XElement(atom + "updated", DateTime.UtcNow.ToString("O")),
             new XElement(atom + "author", new XElement(atom + "name", "Quinn Brown")));

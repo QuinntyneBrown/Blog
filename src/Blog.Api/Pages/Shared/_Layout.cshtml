@@ -28,8 +28,8 @@
     <meta name="twitter:title" content="@title" />
     <meta name="twitter:description" content="@description" />
     <!-- Feeds -->
-    <link rel="alternate" type="application/rss+xml" title="Quinn Brown RSS Feed" href="/feed/rss" />
-    <link rel="alternate" type="application/atom+xml" title="Quinn Brown Atom Feed" href="/feed/atom" />
+    <link rel="alternate" type="application/rss+xml" title="Quinn Brown RSS Feed" href="/feed.xml" />
+    <link rel="alternate" type="application/atom+xml" title="Quinn Brown Atom Feed" href="/atom.xml" />
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -546,7 +546,7 @@
             <li><a href="/articles" class="@(ViewBag.ActiveNav == "articles" ? "active" : "")">Articles</a></li>
             <li><a href="/feed" class="@(ViewBag.ActiveNav == "feed" ? "active" : "")">Feed</a></li>
             <li>
-                <a href="/feed/rss" class="rss-link" aria-label="RSS Feed">
+                <a href="/feed.xml" class="rss-link" aria-label="RSS Feed">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/>
                     </svg>
@@ -560,7 +560,7 @@
     <div class="mobile-menu" id="mobile-menu">
         <a href="/articles">Articles</a>
         <a href="/feed">Feed</a>
-        <a href="/feed/rss">RSS Feed</a>
+        <a href="/feed.xml">RSS Feed</a>
     </div>
     </header>
     <main role="main" id="main-content">
@@ -568,7 +568,7 @@
     </main>
     <footer class="footer" role="contentinfo">
         <div class="footer-links">
-            <a href="/feed/rss">RSS Feed</a>
+            <a href="/feed.xml">RSS Feed</a>
             <a href="/feed/atom">Atom Feed</a>
             <a href="/sitemap.xml">Sitemap</a>
         </div>
