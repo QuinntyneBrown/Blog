@@ -105,3 +105,14 @@
         }
     }
 </section>
+@section Head {
+    <script type="application/ld+json">
+    {
+        "@@context": "https://schema.org",
+        "@@type": "Blog",
+        "name": "@(Configuration["Site:SiteName"] ?? "Quinn Brown")",
+        "description": "@(Configuration["Site:SiteDescription"] ?? "Personal blog")",
+        "url": "@(Configuration["Site:SiteUrl"]?.TrimEnd('/'))/articles"
+    }
+    </script>
+}

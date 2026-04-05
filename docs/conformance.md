@@ -1938,6 +1938,20 @@ The design specifies (Section 5.2, step 8): "the framework renders the custom 40
 
 ---
 
+## 2026-04-04 — Articles listing page missing Schema.org/Blog JSON-LD structured data block
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.2 — JsonLdGenerator, Section 6.1 — L2-008 — Structured Data
+
+**Description:**
+The design specifies (Section 3.2, L2-008): "Listing pages emit a `Schema.org/Blog` object with a reference to the site and its articles." A prior conformance fix ("JSON-LD structured data not implemented on any page") added a `Schema.org/Blog` JSON-LD block to `Index.cshtml` (the homepage, `/`) but did not add the same block to `Pages/Articles/Index.cshtml` (the articles listing page, `/articles`). The design says "listing pages" (plural), and `/articles` is explicitly a listing page — it is the primary article discovery surface of the public site. Without a JSON-LD `<script type="application/ld+json">` block, search engine crawlers cannot extract structured metadata from the `/articles` page via the schema.org protocol, and the page fails automated SEO audit tools that check for structured data on listing pages as required by L1-003 ("perfect SEO rating across all automated audit tools").
+
+**Fix applied:**
+- Added a `@section Head` block to `Pages/Articles/Index.cshtml` containing a `<script type="application/ld+json">` with a `Schema.org/Blog` object: `@context`, `@type: "Blog"`, `name` (from `Site:SiteName` config), `description` (from `Site:SiteDescription` config), and `url` (canonical URL of `/articles` derived from `Site:SiteUrl` config). Pattern matches the JSON-LD block already on `Index.cshtml`.
+
+**Status:** FIXED
+
+---
+
 ## 2026-04-04 — CSP `style-src` and `font-src` directives block Google Fonts; fonts never load under enforced CSP
 
 **Design reference:** `docs/detailed-designs/08-security-hardening/README.md`, Section 3.2 — SecurityHeadersMiddleware, Section 7 — Security Headers Reference
