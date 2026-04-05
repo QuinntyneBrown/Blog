@@ -111,11 +111,11 @@
             </table>
         </div>
 
-        <!-- Mobile card list (visible at <=575px, table hidden) -->
+        <!-- Mobile card list (visible at SM/XS breakpoints, table hidden) -->
         <div class="article-mobile-cards">
             @foreach (var article in Model.Articles.Items)
             {
-                <div class="article-mobile-card" data-testid="article-row">
+                <div class="article-mobile-card" data-testid="article-card">
                     <div class="article-mobile-card-header">
                         <div>
                             <div class="article-mobile-card-title" data-testid="article-title">@article.Title</div>
@@ -125,9 +125,14 @@
                             }
                             <div class="article-mobile-card-slug">/articles/@article.Slug</div>
                         </div>
-                        <a href="/admin/articles/edit/@article.ArticleId" class="btn-icon" title="Edit" aria-label="Edit">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        </a>
+                        <div class="td-actions">
+                            <a href="/admin/articles/edit/@article.ArticleId" class="btn-icon" title="Edit" aria-label="Edit">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </a>
+                            <button class="btn-icon destructive" title="Delete" aria-label="Delete" onclick="confirmDelete('@article.ArticleId', '@Html.Raw(article.Title.Replace("'", "\\'"))', @article.Version)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                            </button>
+                        </div>
                     </div>
                     <div class="article-mobile-card-meta">
                         <span class="badge @(article.Published ? "badge-published" : "badge-draft")" data-testid="status-badge">
@@ -190,7 +195,7 @@
     if (searchInput) {
         searchInput.addEventListener('input', () => {
             const q = searchInput.value.trim().toLowerCase();
-            document.querySelectorAll('[data-testid="article-row"]').forEach(row => {
+            document.querySelectorAll('[data-testid="article-row"], [data-testid="article-card"]').forEach(row => {
                 const titleEl = row.querySelector('[data-testid="article-title"]');
                 const abstractEl = row.querySelector('[data-testid="article-abstract"]');
                 const text = ((titleEl ? titleEl.textContent : '') + ' ' + (abstractEl ? abstractEl.textContent : '')).toLowerCase();
