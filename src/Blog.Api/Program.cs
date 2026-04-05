@@ -247,7 +247,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<SlugRedirectMiddleware>();
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+    }
+});
 
 app.UseRouting();
 app.UseCors();

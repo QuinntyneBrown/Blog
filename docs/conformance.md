@@ -1571,3 +1571,17 @@ The design specifies (Section 7.2): "Decorative images (if any) use `alt=""` and
 - Added `aria-hidden="true"` to all 11 decorative SVG elements across the four public Razor pages.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Static files served without Cache-Control headers
+
+**Design reference:** `docs/detailed-designs/07-web-performance/README.md`, Section 3.3 — StaticFileMiddleware
+
+**Description:**
+The design specifies (Section 3.3): "Serves static assets (CSS, JS, images, fonts) with content-hashed filenames and immutable cache headers. Cache-Control: `max-age=31536000, immutable`." The `Program.cs` called `app.UseStaticFiles()` with no `StaticFileOptions`, which uses ASP.NET Core's defaults — no `Cache-Control` header on static file responses. Every request for a static asset (CSS, JS, images from `wwwroot/`) would trigger a full re-download from the server because the browser had no caching directive. This wastes bandwidth and increases page load time for repeat visitors.
+
+**Fix applied:**
+- Configured `StaticFileOptions` with an `OnPrepareResponse` callback that sets `Cache-Control: public, max-age=31536000, immutable` on every static file response.
+
+**Status:** FIXED
