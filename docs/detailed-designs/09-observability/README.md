@@ -18,7 +18,7 @@ The design addresses requirements **L1-010** (structured logging, health checks,
 
 - Distributed tracing across multiple services (single-service deployment for now).
 - Metrics collection and dashboarding (deferred to a future iteration).
-- Centralized log aggregation platform selection (captured as an open question).
+- Centralized log aggregation uses Azure Monitor with Application Insights (see Open Questions, resolved).
 
 ---
 
@@ -276,9 +276,8 @@ The `LogSanitizer` enforces this by replacing any matching property value with `
 | Sink | Environment | Purpose |
 |------|-------------|---------|
 | **Console** | All | Structured JSON to stdout for container log drivers |
-| **File** | Development, Staging | Rolling file logs in `logs/` directory, 50 MB limit, 7-day retention |
-| **Seq** (optional) | Staging, Production | Centralized structured log server for querying and dashboards |
-| **Elasticsearch** (optional) | Production | ELK stack integration for large-scale log aggregation |
+| **File** | Development | Rolling file logs in `logs/` directory, 50 MB limit, 7-day retention |
+| **Azure Monitor / Application Insights** | Staging, Production | Centralized log aggregation, KQL querying, dashboards, and alerting via `Serilog.Sinks.ApplicationInsights` |
 
 ### 7.2 appsettings.json Configuration
 
@@ -301,13 +300,9 @@ The `LogSanitizer` enforces this by replacing any matching property value with `
         }
       },
       {
-        "Name": "File",
+        "Name": "ApplicationInsights",
         "Args": {
-          "path": "logs/blog-.log",
-          "rollingInterval": "Day",
-          "fileSizeLimitBytes": 52428800,
-          "retainedFileCountLimit": 7,
-          "formatter": "Serilog.Formatting.Compact.CompactJsonFormatter, Serilog.Formatting.Compact"
+          "telemetryConverter": "Serilog.Sinks.ApplicationInsights.TelemetryConverters.TraceTelemetryConverter, Serilog.Sinks.ApplicationInsights"
         }
       }
     ],
@@ -327,8 +322,9 @@ The `LogSanitizer` enforces this by replacing any matching property value with `
 | `Serilog.Formatting.Compact` | Compact JSON log formatter |
 | `Serilog.Enrichers.Environment` | Machine name enrichment |
 | `Serilog.Enrichers.Thread` | Thread ID enrichment |
-| `Serilog.Sinks.File` | Rolling file sink |
-| `Serilog.Sinks.Seq` (optional) | Seq log server sink |
+| `Serilog.Sinks.File` | Rolling file sink (development only) |
+| `Serilog.Sinks.ApplicationInsights` | Azure Monitor / Application Insights sink |
+| `Microsoft.ApplicationInsights.AspNetCore` | Application Insights SDK for ASP.NET Core |
 | `Microsoft.Extensions.Diagnostics.HealthChecks` | Health check framework |
 | `Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore` | EF Core database health check |
 

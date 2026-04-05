@@ -176,9 +176,8 @@ The component diagram details the digital-asset-related components inside the AP
 1. Browser requests `GET /assets/{filename}?w=800` with an `Accept` header indicating format support (e.g., `image/avif,image/webp,image/*`).
 2. `DigitalAssetController` parses query parameters into `ImageTransformOptions`.
 3. Controller reads the `Accept` header to determine the best output format via content negotiation.
-4. Controller calls `AssetStorage.GetAsync()` to retrieve the original file stream.
-5. If resizing is requested (`?w=800`), controller calls `ImageProcessor.Resize()`.
-6. If format conversion is needed (browser supports WebP/AVIF and the original is not in that format), controller calls `ImageProcessor.ConvertFormat()`.
+4. Controller resolves the pre-generated variant filename matching the requested width and negotiated format (e.g., `{assetId}-640w.webp` for the nearest available breakpoint).
+5. Controller calls `AssetStorage.GetAsync()` to retrieve the pre-generated variant. If no matching variant exists (e.g., the requested width exceeds the original), falls back to the original file.
 7. Controller sets response headers:
    - `Cache-Control: public, max-age=31536000, immutable`
    - `Content-Type` matching the negotiated format
@@ -354,7 +353,7 @@ Content-Length: 52480
 |---|----------|--------|--------|
 | 1 | Should we use local filesystem storage or cloud blob storage (Azure Blob Storage / AWS S3) for production? Local is simpler for development; cloud provides scalability and CDN integration. | Deployment architecture, cost, operational complexity | Open |
 | 2 | ~~Which image processing library should be used?~~ **Resolved: SixLabors.ImageSharp.** Fully managed (no native dependencies), cross-platform, Apache 2.0 license, ~7.8k GitHub stars, actively maintained with 3 maintainers and fast issue/PR turnaround. Chosen over SkiaSharp to avoid native binary management overhead. | Performance, cross-platform support, licensing | Resolved |
-| 3 | Should processed/transformed images (resized, format-converted) be cached on disk or generated on-the-fly per request? Caching avoids repeated processing but increases storage requirements. | Performance vs. storage cost tradeoff | Open |
-| 4 | Should we generate responsive image variants (srcset widths) at upload time or on-demand? Pre-generation simplifies serving but increases upload latency and storage. | Upload UX, storage cost, serving performance | Open |
+| 3 | ~~Should processed/transformed images be cached on disk or generated on-the-fly?~~ **Resolved: Eager generation at upload time.** All responsive variants (WebP + AVIF at breakpoints 320, 640, 960, 1280, 1920) are generated and persisted during upload. This guarantees fast first-request serving with no runtime processing overhead. | Performance vs. storage cost tradeoff | Resolved |
+| 4 | ~~Should we generate responsive image variants at upload time or on-demand?~~ **Resolved: Upload time (eager).** Variants are pre-generated during the upload workflow. Trade-off: slightly slower uploads and more storage, but deterministic serving performance and simpler request handling. | Upload UX, storage cost, serving performance | Resolved |
 | 5 | What is the maximum allowed image dimension (width/height) to prevent processing abuse? Should we enforce a pixel-count limit in addition to the 10 MB file size limit? | Security, resource consumption | Resolved: 8192x8192 max, 40 megapixels max |
 | 6 | Should asset deletion be supported, and if so, should it be a soft delete with a retention period or a hard delete? Articles referencing deleted assets would show broken images. | Data integrity, storage management | Open |
