@@ -19,7 +19,7 @@ public class JwtMiddlewareTests
     {
         _mockTokenService = Substitute.For<ITokenService>();
         _mockNext = Substitute.For<RequestDelegate>();
-        _middleware = new JwtMiddleware(_mockNext, _mockTokenService);
+        _middleware = new JwtMiddleware(_mockNext);
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public class JwtMiddlewareTests
         _mockTokenService.ValidateToken(token).Returns(expectedPrincipal);
 
         // Act
-        await _middleware.InvokeAsync(context);
+        await _middleware.InvokeAsync(context, _mockTokenService);
 
         // Assert
         context.User.Should().BeSameAs(expectedPrincipal);
@@ -56,7 +56,7 @@ public class JwtMiddlewareTests
         _mockTokenService.ValidateToken(token).Returns((ClaimsPrincipal?)null);
 
         // Act
-        await _middleware.InvokeAsync(context);
+        await _middleware.InvokeAsync(context, _mockTokenService);
 
         // Assert
         context.User.Should().NotBeNull();
@@ -84,7 +84,7 @@ public class JwtMiddlewareTests
         _mockTokenService.ValidateToken(token).Returns(expectedPrincipal);
 
         // Act
-        await _middleware.InvokeAsync(context);
+        await _middleware.InvokeAsync(context, _mockTokenService);
 
         // Assert
         context.User.Should().BeSameAs(expectedPrincipal);
@@ -106,7 +106,7 @@ public class JwtMiddlewareTests
         _mockTokenService.ValidateToken(token).Returns((ClaimsPrincipal?)null);
 
         // Act
-        await _middleware.InvokeAsync(context);
+        await _middleware.InvokeAsync(context, _mockTokenService);
 
         // Assert
         context.User.Should().NotBeNull();
@@ -136,7 +136,7 @@ public class JwtMiddlewareTests
         _mockTokenService.ValidateToken(bearerToken).Returns(bearerPrincipal);
 
         // Act
-        await _middleware.InvokeAsync(context);
+        await _middleware.InvokeAsync(context, _mockTokenService);
 
         // Assert
         context.User.Should().BeSameAs(bearerPrincipal);
@@ -152,7 +152,7 @@ public class JwtMiddlewareTests
         var context = new DefaultHttpContext();
 
         // Act
-        await _middleware.InvokeAsync(context);
+        await _middleware.InvokeAsync(context, _mockTokenService);
 
         // Assert
         context.User.Should().NotBeNull();
@@ -173,7 +173,7 @@ public class JwtMiddlewareTests
         context.Session.SetString("jwt_token", "");
 
         // Act
-        await _middleware.InvokeAsync(context);
+        await _middleware.InvokeAsync(context, _mockTokenService);
 
         // Assert
         _mockTokenService.DidNotReceive().ValidateToken(Arg.Any<string>());
@@ -195,7 +195,7 @@ public class JwtMiddlewareTests
         _mockTokenService.ValidateToken(token).Returns(expectedPrincipal);
 
         // Act
-        await _middleware.InvokeAsync(context);
+        await _middleware.InvokeAsync(context, _mockTokenService);
 
         // Assert
         context.User.Should().BeSameAs(expectedPrincipal);
