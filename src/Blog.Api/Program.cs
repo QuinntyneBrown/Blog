@@ -53,6 +53,7 @@ builder.Services.AddSingleton<IEmailRateLimitService, EmailRateLimitService>();
 builder.Services.AddSingleton<ICacheInvalidator, CacheInvalidator>();
 builder.Services.AddSingleton<IETagGenerator, ETagGenerator>();
 builder.Services.AddSingleton<IImageVariantGenerator, ImageVariantGenerator>();
+builder.Services.AddSingleton<ISearchHighlighter, SearchHighlighter>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
 // MediatR + Validation
