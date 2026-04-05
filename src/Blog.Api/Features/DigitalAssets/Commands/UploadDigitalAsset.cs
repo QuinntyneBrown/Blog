@@ -62,7 +62,7 @@ public class UploadDigitalAssetCommandHandler(IUnitOfWork uow, IWebHostEnvironme
         await uow.SaveChangesAsync(cancellationToken);
 
         return new DigitalAssetDto(
-            asset.DigitalAssetId, asset.OriginalFileName, asset.StoredFileName,
+            asset.DigitalAssetId, asset.OriginalFileName,
             asset.ContentType, asset.FileSizeBytes, asset.Width, asset.Height,
             $"/assets/{asset.StoredFileName}", asset.CreatedAt);
     }
