@@ -140,18 +140,18 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
                     new XAttribute("rel", "alternate")),
                 new XElement(atom + "published", a.DatePublished?.ToString("O") ?? a.CreatedAt.ToString("O")),
                 new XElement(atom + "updated", a.UpdatedAt.ToString("O")),
-                new XElement(atom + "author", new XElement(atom + "name", "Quinn Brown"))));
+                new XElement(atom + "author", new XElement(atom + "name", AuthorName))));
 
         var feed = new XElement(atom + "feed",
             new XElement(atom + "id", BaseUrl),
-            new XElement(atom + "title", "Quinn Brown"),
-            new XElement(atom + "subtitle", "Thoughts on software engineering, .NET architecture, and building systems that last."),
+            new XElement(atom + "title", SiteName),
+            new XElement(atom + "subtitle", SiteDescription),
             new XElement(atom + "link", new XAttribute("href", BaseUrl)),
             new XElement(atom + "link",
                 new XAttribute("href", $"{BaseUrl}/atom.xml"),
                 new XAttribute("rel", "self")),
             new XElement(atom + "updated", DateTime.UtcNow.ToString("O")),
-            new XElement(atom + "author", new XElement(atom + "name", "Quinn Brown")));
+            new XElement(atom + "author", new XElement(atom + "name", AuthorName)));
         feed.Add(entries);
 
         var doc = new XDocument(new XDeclaration("1.0", "utf-8", null), feed);
@@ -166,10 +166,10 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
         var feed = new
         {
             version = "https://jsonfeed.org/version/1.1",
-            title = "Quinn Brown",
+            title = SiteName,
             home_page_url = BaseUrl,
             feed_url = $"{BaseUrl}/feed/json",
-            description = "Thoughts on software engineering, .NET architecture, and building systems that last.",
+            description = SiteDescription,
             language = "en-US",
             items = result.Items.Select(a => new
             {
