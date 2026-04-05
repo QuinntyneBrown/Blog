@@ -12,3 +12,6 @@
 | 08 | [Security Hardening](08-security-hardening/README.md) | Draft | OWASP Top 10 mitigations, security headers, rate limiting, and CORS |
 | 09 | [Observability](09-observability/README.md) | Draft | Health checks, structured JSON logging, and correlation IDs |
 | 10 | [Data Persistence](10-data-persistence/README.md) | Draft | EF Core code-first, migrations, repository pattern, and database schema |
+| 11 | [Search Infrastructure](11-search-infrastructure/README.md) | Draft | SQL Server FTS index, SearchArticlesQuery, GetSearchSuggestionsQuery, and SearchHighlighter |
+| 12 | [Search Input & Autocomplete](12-search-input/README.md) | Draft | Global header search input, / shortcut, ARIA combobox dropdown, and search.js |
+| 13 | [Search Results Page](13-search-results-page/README.md) | Draft | /search Razor Page, result cards with mark highlighting, empty state, and pagination |
