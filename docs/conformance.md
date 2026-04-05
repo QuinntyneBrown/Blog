@@ -2199,3 +2199,23 @@ The fix is to include the algorithm identifier in the stored hash format, making
 **Status:** FIXED
 
 ---
+
+## 2026-04-04 — Search infrastructure entirely absent; IArticleRepository missing SearchAsync and GetSuggestionsAsync; no SearchHighlighter, no search/suggestions query handlers, no API endpoints
+
+**Design reference:** `docs/detailed-designs/11-search-infrastructure/README.md`, Sections 3.2–3.8
+
+**Description:**
+Design 11 specifies a complete full-text search feature consisting of six components, all of which are absent from the codebase:
+
+1. **`IArticleRepository` extensions** (Section 3.2): `Task<(IReadOnlyList<Article> Articles, int TotalCount)> SearchAsync(string query, int page, int pageSize, CancellationToken)` and `Task<IReadOnlyList<Article>> GetSuggestionsAsync(string query, CancellationToken)` are missing from both `IArticleRepository` and `ArticleRepository`.
+2. **`ISearchHighlighter` / `SearchHighlighter`** (Section 3.5): The service that wraps matched query substrings in `<mark>` elements does not exist anywhere in the codebase. It is neither defined as an interface nor registered in DI.
+3. **`SearchArticlesQuery` and handler** (Section 3.6): The MediatR query record and `SearchArticlesHandler` class do not exist. There is no file at `Features/Articles/Queries/SearchArticles.cs` or equivalent.
+4. **`GetSearchSuggestionsQuery` and handler** (Section 3.7): The MediatR query record and `GetSearchSuggestionsHandler` class do not exist.
+5. **`SearchResultDto` and `SearchSuggestionDto`** (Section 4.2): Neither DTO record is defined anywhere.
+6. **API endpoints** (Section 3.8): `GET /api/public/articles/search` and `GET /api/public/articles/suggestions` are missing from `PublicArticlesController`. The controller only exposes `GET /` and `GET /{slug}`.
+
+As a result, any client (the search results page, the header autocomplete, or an API consumer) that calls the designed search or suggestions endpoints receives a 404. The entire public search capability is unavailable.
+
+**Status:** OPEN
+
+---

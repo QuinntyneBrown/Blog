@@ -1,6 +1,7 @@
 using Blog.Domain.Entities;
 using Blog.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace Blog.Infrastructure.Data.Repositories;
 
@@ -72,6 +73,71 @@ public class ArticleRepository(BlogDbContext context) : IArticleRepository
 
     public async Task<int> GetPublishedCountAsync(CancellationToken cancellationToken = default)
         => await context.Articles.CountAsync(a => a.Published, cancellationToken);
+
+    public async Task<(IReadOnlyList<Article> Articles, int TotalCount)> SearchAsync(
+        string query, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var ftsQuery = BuildFtsQuery(query);
+        var offset = (page - 1) * pageSize;
+
+        var sql = @"
+            SELECT a.ArticleId, a.Title, a.Slug, a.Abstract,
+                   a.FeaturedImageId, a.Published, a.DatePublished,
+                   a.ReadingTimeMinutes, a.CreatedAt, a.UpdatedAt, a.Version,
+                   a.Body, a.BodyHtml, a.CreatedBy
+            FROM Articles a
+            INNER JOIN CONTAINSTABLE(Articles, (Title, Abstract, Body), {0})
+                AS KEY_TBL ON a.ArticleId = KEY_TBL.[KEY]
+            WHERE a.Published = 1
+            ORDER BY KEY_TBL.RANK DESC, a.DatePublished DESC
+            OFFSET {1} ROWS FETCH NEXT {2} ROWS ONLY";
+
+        var countSql = @"
+            SELECT COUNT(*)
+            FROM Articles a
+            INNER JOIN CONTAINSTABLE(Articles, (Title, Abstract, Body), {0})
+                AS KEY_TBL ON a.ArticleId = KEY_TBL.[KEY]
+            WHERE a.Published = 1";
+
+        var articles = await context.Articles
+            .FromSqlRaw(sql, ftsQuery, offset, pageSize)
+            .Include(a => a.FeaturedImage)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        var totalResult = await context.Database
+            .SqlQueryRaw<int>(countSql, ftsQuery)
+            .ToListAsync(cancellationToken);
+        var total = totalResult.FirstOrDefault();
+
+        return (articles, total);
+    }
+
+    public async Task<IReadOnlyList<Article>> GetSuggestionsAsync(
+        string query, CancellationToken cancellationToken = default)
+    {
+        var ftsQuery = $"\"{query.Trim().Replace("\"", "")}*\"";
+        return await context.Articles
+            .FromSqlRaw(@"
+                SELECT TOP 8 ArticleId, Title, Slug,
+                       Abstract, FeaturedImageId, Published,
+                       DatePublished, ReadingTimeMinutes,
+                       CreatedAt, UpdatedAt, Version, Body, BodyHtml, CreatedBy
+                FROM Articles
+                WHERE Published = 1
+                  AND CONTAINS(Title, {0})
+                ORDER BY DatePublished DESC",
+                ftsQuery)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+
+    private static string BuildFtsQuery(string raw)
+    {
+        var terms = raw.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                       .Select(t => $"\"{t.Replace("\"", "")}*\"");
+        return string.Join(" AND ", terms);
+    }
 
     public async Task<bool> SlugExistsAsync(string slug, Guid? excludeId = null, CancellationToken cancellationToken = default)
         => await context.Articles.AnyAsync(a => a.Slug == slug && (excludeId == null || a.ArticleId != excludeId), cancellationToken);
