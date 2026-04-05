@@ -13,6 +13,9 @@ namespace Blog.Api.Controllers;
 public class SeoController(IMediator mediator, IConfiguration configuration) : ControllerBase
 {
     private string BaseUrl => configuration["Site:SiteUrl"]!.TrimEnd('/');
+    private string SiteName => configuration["Site:SiteName"] ?? "Quinn Brown";
+    private string SiteDescription => configuration["Site:SiteDescription"] ?? "Personal blog";
+    private string AuthorName => configuration["Site:AuthorName"] ?? "Quinn Brown";
 
     [HttpGet("robots.txt")]
     [ResponseCache(Duration = 3600)]
@@ -35,9 +38,9 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
     {
         var result = await mediator.Send(new GetPublishedArticlesQuery(1, 100));
         var sb = new StringBuilder();
-        sb.AppendLine("# Quinn Brown's Blog");
+        sb.AppendLine($"# {SiteName}'s Blog");
         sb.AppendLine();
-        sb.AppendLine("Personal blog about software engineering, .NET architecture, and building systems that last.");
+        sb.AppendLine(SiteDescription);
         sb.AppendLine();
         sb.AppendLine("## Articles");
         sb.AppendLine();
@@ -94,13 +97,13 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
                 new XElement("link", $"{BaseUrl}/articles/{a.Slug}"),
                 new XElement("description", a.Abstract),
                 new XElement("pubDate", a.DatePublished?.ToString("R")),
-                new XElement(dc + "creator", "Quinn Brown"),
+                new XElement(dc + "creator", AuthorName),
                 new XElement("guid", $"{BaseUrl}/articles/{a.Slug}")));
 
         var channel = new XElement("channel",
-            new XElement("title", "Quinn Brown"),
+            new XElement("title", SiteName),
             new XElement("link", BaseUrl),
-            new XElement("description", "Thoughts on software engineering, .NET architecture, and building systems that last."),
+            new XElement("description", SiteDescription),
             new XElement("language", "en-us"),
             new XElement("lastBuildDate", DateTime.UtcNow.ToString("R")),
             new XElement("atom:link",
