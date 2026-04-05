@@ -40,7 +40,9 @@
                                 <source type="image/webp"
                                         srcset="@cardWebpSrcset"
                                         sizes="(max-width: 576px) 100vw, (max-width: 1200px) 50vw, 33vw" />
-                                <img src="@article.FeaturedImageUrl" alt="@article.Title" loading="lazy" decoding="async" />
+                                <img src="@article.FeaturedImageUrl" alt="@article.Title"
+                                     @(article.FeaturedImageWidth.HasValue ? $"width=\"{article.FeaturedImageWidth}\" height=\"{article.FeaturedImageHeight}\"" : "")
+                                     loading="lazy" decoding="async" />
                             </picture>
                             </text>
                         }
