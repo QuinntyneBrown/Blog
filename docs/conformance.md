@@ -505,7 +505,14 @@ The design specifies the meta title pattern as `{Article Title} | {Site Name}` u
 **Description:**
 The design specifies that when an author publishes or updates an article, the `ICacheInvalidator` service evicts the relevant entries from the in-memory response cache so the next request triggers a fresh render. Section 3.1 documents this under "Invalidation: Time-based expiry; explicit purge via `ICacheInvalidator` on content update." Section 7.2 states explicitly: "When an author publishes or updates a post, the `ICacheInvalidator` service evicts the relevant entries from the in-memory response cache." Neither an `ICacheInvalidator` interface nor any concrete implementation existed anywhere in the codebase. `PublishArticleCommandHandler` and `UpdateArticleCommandHandler` both save changes and return without calling any cache invalidation. As a result, after an article is published or its content is updated, the in-memory response cache continues serving the stale pre-change HTML for up to the 60-second TTL — meaning live readers may see outdated content immediately after a publish action, and a newly-published article's page may show draft content until the cache naturally expires.
 
-**Status:** OPEN
+**Fix applied:**
+- Created `src/Blog.Api/Services/ICacheInvalidator.cs` — interface with a single `InvalidateArticle(string slug)` method.
+- Created `src/Blog.Api/Services/CacheInvalidator.cs` — concrete singleton implementation that removes the article detail page key (`/articles/{slug}`), the listing and home page keys (`/articles`, `/`, and paged variants up to page 5) from the `IMemoryCache` that backs ASP.NET Core's `ResponseCachingMiddleware`.
+- Registered `ICacheInvalidator` → `CacheInvalidator` as a singleton in `Program.cs`.
+- Injected `ICacheInvalidator` into `PublishArticleCommandHandler` and called `InvalidateArticle(article.Slug)` after `SaveChangesAsync`.
+- Injected `ICacheInvalidator` into `UpdateArticleCommandHandler` and called `InvalidateArticle(article.Slug)` after `SaveChangesAsync`.
+
+**Status:** FIXED
 
 ---
 
