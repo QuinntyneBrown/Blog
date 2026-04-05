@@ -347,3 +347,23 @@ The design specifies a `LogSanitizer` (at `src/Blog.Api/Core/LogSanitizer.cs`) i
 The design specifies a strict CORS policy: "Only origins explicitly listed in configuration are allowed. Requests from unlisted origins receive no CORS headers, causing the browser to block the response." Allowed origins are to be loaded from `appsettings.json` under `Cors:AllowedOrigins`. The implementation in `Program.cs` registers the CORS policy with `policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()` — a fully-open policy that permits every origin without restriction. The `Cors:AllowedOrigins` key is entirely absent from `appsettings.json`. This means any web page on any domain can make credentialed or non-credentialed cross-origin requests to the API, bypassing the cross-origin access control that the design lists as the mitigation for OWASP A01 (Broken Access Control) via CORS.
 
 **Status:** OPEN
+
+---
+
+## 2026-04-04 — Required business events not logged (ArticlePublished, UserAuthenticated, UserAuthenticationFailed)
+
+**Design reference:** `docs/detailed-designs/09-observability/README.md`, Section 6.4 — Business Events
+
+**Description:**
+The design requires three business events logged at `Information` level using the structured pattern `Log.Information("Business event {EventType} occurred: {@Details}", ...)`:
+1. **`ArticlePublished`** — when a post is published or updated (Section 6.4).
+2. **`UserAuthenticated`** — when a user successfully logs in (Section 6.4).
+3. **`UserAuthenticationFailed`** — when a login attempt fails, with no PII in details (Section 6.4).
+
+None of these events were present anywhere in the codebase. The `PublishArticleCommandHandler` updated the article and saved without emitting any log. The `LoginCommandHandler` threw `UnauthorizedException` on failure and returned a token on success without logging either outcome. This means operators had no visibility into authentication activity or content publishing via structured business event logs.
+
+**Fix applied:**
+- `PublishArticleCommandHandler`: Injected `ILogger`, added `ArticlePublished` event after successful save when `request.Published` is true, with `ArticleId` and `Slug` in details.
+- `LoginCommandHandler`: Injected `ILogger`, added `UserAuthenticationFailed` event before each `throw UnauthorizedException` with only `Reason` and optionally `UserId` (no email/password — no PII). Added `UserAuthenticated` event after successful token generation with `UserId`.
+
+**Status:** FIXED

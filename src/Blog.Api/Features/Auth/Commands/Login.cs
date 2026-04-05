@@ -27,18 +27,28 @@ public class LoginCommandHandler(
     IPasswordHasher passwordHasher,
     ITokenService tokenService,
     IEmailRateLimitService emailRateLimitService,
-    IUnitOfWork uow) : IRequestHandler<LoginCommand, LoginResponse>
+    IUnitOfWork uow,
+    ILogger<LoginCommandHandler> logger) : IRequestHandler<LoginCommand, LoginResponse>
 {
     public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         if (!emailRateLimitService.TryAcquire(request.Email))
             throw new RateLimitExceededException("Too many login attempts for this email address. Please try again later.");
 
-        var user = await userRepository.GetByEmailAsync(request.Email, cancellationToken)
-            ?? throw new UnauthorizedException("Invalid email or password.");
+        var user = await userRepository.GetByEmailAsync(request.Email, cancellationToken);
+        if (user == null)
+        {
+            logger.LogInformation("Business event {EventType} occurred: {@Details}",
+                "UserAuthenticationFailed", new { Reason = "UserNotFound" });
+            throw new UnauthorizedException("Invalid email or password.");
+        }
 
         if (!passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
+        {
+            logger.LogInformation("Business event {EventType} occurred: {@Details}",
+                "UserAuthenticationFailed", new { Reason = "InvalidPassword", UserId = user.UserId });
             throw new UnauthorizedException("Invalid email or password.");
+        }
 
         user.LastLoginAt = DateTime.UtcNow;
         userRepository.Update(user);
@@ -47,6 +57,9 @@ public class LoginCommandHandler(
 
         var token = tokenService.GenerateToken(user);
         var expiresAt = tokenService.GetExpiration();
+
+        logger.LogInformation("Business event {EventType} occurred: {@Details}",
+            "UserAuthenticated", new { UserId = user.UserId });
 
         return new LoginResponse(token, expiresAt);
     }
