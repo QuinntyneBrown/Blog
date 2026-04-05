@@ -41,6 +41,14 @@
     {
         <meta property="og:image" content="@ogImage" />
     }
+    @if (ViewBag.ArticlePublishedTime != null)
+    {
+        <meta property="article:published_time" content="@ViewBag.ArticlePublishedTime" />
+    }
+    @if (ViewBag.ArticleModifiedTime != null)
+    {
+        <meta property="article:modified_time" content="@ViewBag.ArticleModifiedTime" />
+    }
     <!-- Twitter Card -->
     <meta name="twitter:card" content="@(!string.IsNullOrEmpty(ogImage) ? "summary_large_image" : "summary")" />
     <meta name="twitter:title" content="@title" />

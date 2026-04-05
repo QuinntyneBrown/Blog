@@ -1596,3 +1596,18 @@ The design specifies (Section 3.3): "Serves static assets (CSS, JS, images, font
 The design specifies (Section 3.5) that article images are transformed into `<picture>` elements with `<source type="image/webp" srcset="...">` entries at all pre-generated breakpoints (320, 640, 960, 1280, 1920 px), plus a standard `<img>` fallback for browsers without `<picture>` support. Section 7.4 confirms: "ImageTagHelper emits `<picture>` elements with `<source>` for AVIF and WebP, plus `<img>` fallback." The `ImageVariantGenerator` correctly pre-generates `{assetId}-{width}w.webp` variants at upload time, and the `AssetsController` supports `?w=` + `Accept` header negotiation. However, all three public Razor pages still emit bare `<img src="@article.FeaturedImageUrl" ...>` tags: the article detail hero (`Slug.cshtml` line 36), the homepage article card images (`Index.cshtml`), and the articles listing card images (`Articles/Index.cshtml`). The pre-generated WebP variants are never referenced, forcing every visitor to download the original format (JPEG/PNG) at full resolution regardless of viewport width. Browsers that support `<picture>` (all modern browsers) receive no WebP alternative and no responsive width selection, violating L2-020 (image optimization with modern formats and responsive srcset) and the performance budget requirements the design establishes for LCP and total transferred bytes.
 
 **Status:** OPEN
+
+---
+
+## 2026-04-05 — Article pages missing article:published_time and article:modified_time Open Graph tags
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 4.2 — SeoMetadata
+
+**Description:**
+The design's `SeoMetadata` record (Section 4.2) specifies `ArticlePublishedTime` (DateTime?) and `ArticleModifiedTime` (DateTime?) fields, corresponding to the Open Graph `article:published_time` and `article:modified_time` meta tags. These are standard OG article properties that search engines and social platforms use to display publication dates in search results and link previews, and to assess content freshness. Neither tag was rendered on any page. The article detail page had `DatePublished` and `UpdatedAt` available but didn't pass them to the layout.
+
+**Fix applied:**
+- `Slug.cshtml`: Set `ViewBag.ArticlePublishedTime` and `ViewBag.ArticleModifiedTime` (ISO 8601 format) when the article is found.
+- `_Layout.cshtml`: Added conditional `<meta property="article:published_time">` and `<meta property="article:modified_time">` tags in the OG section, rendered only on article pages.
+
+**Status:** FIXED
