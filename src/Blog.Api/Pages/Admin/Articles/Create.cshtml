@@ -6,16 +6,16 @@
     Layout = "/Pages/Admin/Shared/_AdminLayout.cshtml";
 }
 
-<div class="toolbar">
+<div class="toolbar" data-testid="toolbar">
     <div class="toolbar-left">
-        <a href="/admin/articles" class="btn-icon">
+        <a href="/admin/articles" class="btn-icon" data-testid="toolbar-back-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
         </a>
-        <h1 class="toolbar-title">New Article</h1>
-        <span class="badge badge-draft">Draft</span>
+        <h1 class="toolbar-title" data-testid="toolbar-title">New Article</h1>
+        <span class="badge badge-draft" data-testid="toolbar-badge">Draft</span>
     </div>
     <div class="toolbar-right">
-        <button type="submit" form="create-form" class="btn btn-primary">
+        <button type="submit" form="create-form" class="btn btn-primary" data-testid="create-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             <span>Create</span>
         </button>
@@ -24,6 +24,7 @@
 
 <form id="create-form" method="post">
     @Html.AntiForgeryToken()
+    <input type="hidden" name="featuredImageId" id="featured-image-id-input" value="" />
     <div class="editor-layout">
         <div class="editor-main">
             <div class="form-group">

@@ -10,6 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@pageTitle — QB Admin</title>
     <meta name="robots" content="noindex, nofollow" />
+    <meta name="api-token" content="@(Context.Session.GetString("jwt_token") ?? "")" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <style nonce="@cspNonce">
@@ -488,6 +489,7 @@
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = `toast toast-${type}`;
+            toast.setAttribute('data-testid', `toast-${type}`);
             const iconColor = type === 'success' ? '#22C55E' : '#EF4444';
             toast.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" style="flex-shrink:0;margin-top:1px">
