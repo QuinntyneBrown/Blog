@@ -41,7 +41,7 @@
                     <tr>
                         <th>Title</th>
                         <th style="width:100px">Status</th>
-                        <th style="width:120px">Date</th>
+                        <th class="date-col" style="width:120px">Date</th>
                         <th style="width:70px">Actions</th>
                     </tr>
                 </thead>
@@ -58,7 +58,7 @@
                                     @(article.Published ? "Published" : "Draft")
                                 </span>
                             </td>
-                            <td class="td-date">
+                            <td class="td-date date-col">
                                 @((article.DatePublished ?? article.CreatedAt).ToString("MMM d, yyyy"))
                             </td>
                             <td>
