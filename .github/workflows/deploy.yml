@@ -1,97 +1,76 @@
-name: CI/CD
+name: Deploy
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [master]
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Deploy to environment'
+        description: 'Target environment'
         required: true
-        default: 'production'
+        default: 'staging'
         type: choice
-        options: [production]
+        options: [staging, production]
 
 env:
-  DOTNET_VERSION: '8.0.x'
   STAGING_APP: blog-staging-api
   STAGING_RG: rg-blog-staging
   PROD_APP: blog-production-api
   PROD_RG: rg-blog-production
+  DOTNET_VERSION: '8.0.x'
 
 jobs:
   # ──────────────────────────────────────────
-  # Build, test, publish
-  # ──────────────────────────────────────────
-  build:
-    name: Build & Test
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Restore
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --no-restore -c Release
-
-      - name: Test
-        run: |
-          dotnet test --no-build -c Release \
-            --logger "trx;LogFileName=results.trx" \
-            --results-directory ./test-results
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results
-          path: ./test-results/*.trx
-
-      - name: Publish
-        run: dotnet publish src/Blog.Api -c Release -o ./publish --no-build
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: blog-publish
-          path: ./publish
-
-  # ──────────────────────────────────────────
-  # Deploy to Staging — runs on every push to master
+  # Deploy to Staging — runs after CI passes on master
   # ──────────────────────────────────────────
   deploy-staging:
     name: Deploy → Staging
-    needs: build
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
     environment:
       name: staging
       url: https://${{ env.STAGING_APP }}.azurewebsites.net
 
     steps:
-      - name: Download artifact
+      # Re-build on workflow_dispatch (no artifact from CI run)
+      - uses: actions/checkout@v4
+        if: github.event_name == 'workflow_dispatch'
+
+      - name: Setup .NET
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Build & Publish
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          dotnet restore
+          dotnet publish src/Blog.Api -c Release -o ./publish
+
+      # Download artifact produced by CI run
+      - name: Download CI artifact
+        if: github.event_name == 'workflow_run'
         uses: actions/download-artifact@v4
         with:
           name: blog-publish
           path: ./publish
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Deploy to Staging App Service
+      - name: Deploy to Staging
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.STAGING_APP }}
-          resource-group-name: ${{ env.STAGING_RG }}
           package: ./publish
 
       - name: Wait for app start
@@ -110,34 +89,37 @@ jobs:
   # ──────────────────────────────────────────
   # Deploy to Production — manual trigger only
   # Run via: gh workflow run deploy.yml -f environment=production
-  # Or: GitHub Actions UI → Run workflow
   # ──────────────────────────────────────────
   deploy-production:
     name: Deploy → Production
-    needs: build
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
     environment:
       name: production
       url: https://${{ env.PROD_APP }}.azurewebsites.net
 
     steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
-          name: blog-publish
-          path: ./publish
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Build & Publish
+        run: |
+          dotnet restore
+          dotnet publish src/Blog.Api -c Release -o ./publish
 
       - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Deploy to Production App Service
+      - name: Deploy to Production
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.PROD_APP }}
-          resource-group-name: ${{ env.PROD_RG }}
           package: ./publish
 
       - name: Wait for app start
