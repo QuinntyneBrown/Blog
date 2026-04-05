@@ -22,7 +22,7 @@ public class JwtMiddleware(RequestDelegate next)
     private const string BearerPrefix = "Bearer ";
     private const string SessionTokenKey = "jwt_token";
 
-    public async Task InvokeAsync(HttpContext context, ITokenService tokenService)
+    public async Task InvokeAsync(HttpContext context, ITokenService tokenService, ILogger<JwtMiddleware> logger)
     {
         string? token = null;
 
@@ -33,9 +33,18 @@ public class JwtMiddleware(RequestDelegate next)
             token = authHeader[BearerPrefix.Length..].Trim();
         }
         // Priority 2: Check session-stored JWT (for authenticated Razor Pages)
-        else if (context.Session.IsAvailable)
+        else
         {
-            token = context.Session.GetString(SessionTokenKey);
+            try
+            {
+                token = context.Session.GetString(SessionTokenKey);
+                if (token != null)
+                    logger.LogDebug("JWT found in session for {Path}", context.Request.Path);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to read session for {Path}", context.Request.Path);
+            }
         }
 
         // Validate token and set HttpContext.User if valid
@@ -45,6 +54,11 @@ public class JwtMiddleware(RequestDelegate next)
             if (principal is not null)
             {
                 context.User = principal;
+                logger.LogDebug("User authenticated via JWT for {Path}", context.Request.Path);
+            }
+            else
+            {
+                logger.LogWarning("JWT token validation failed for {Path}", context.Request.Path);
             }
         }
 
