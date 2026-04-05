@@ -1557,3 +1557,17 @@ The design specifies (Section 6.5): "The footer adapts from a horizontal link la
 - Added `.footer-links { flex-direction: column; align-items: center; }` to the `max-width: 767px` media query, so footer links stack into a single vertical column on both SM and XS breakpoints.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Decorative SVG icons missing aria-hidden="true" across public pages
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 7.2 — Image Accessibility
+
+**Description:**
+The design specifies (Section 7.2): "Decorative images (if any) use `alt=""` and `aria-hidden="true"`." All decorative SVG icons across the public pages — the RSS icon in the nav bar, arrow icons in "Read article" links, prev/next pagination arrows, back-link arrows, and the empty-state document icon — lacked `aria-hidden="true"`. Without this attribute, screen readers attempt to announce SVG child elements (path coordinates, polyline points) as content, producing unintelligible audio output for each icon. This affects `_Layout.cshtml` (1 SVG), `Index.cshtml` (4 SVGs), `Articles/Index.cshtml` (4 SVGs), and `Articles/Slug.cshtml` (2 SVGs).
+
+**Fix applied:**
+- Added `aria-hidden="true"` to all 11 decorative SVG elements across the four public Razor pages.
+
+**Status:** FIXED
