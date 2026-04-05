@@ -29,7 +29,7 @@ else
     @if (Model.Article.FeaturedImageId.HasValue)
     {
         <figure class="article-featured-image">
-            <img src="/assets/@Model.Article.FeaturedImageId" alt="@Model.Article.Title" />
+            <img src="/assets/@Model.Article.FeaturedImageId" alt="@Model.Article.Title" loading="eager" fetchpriority="high" decoding="async" />
         </figure>
     }
     else
