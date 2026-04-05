@@ -70,6 +70,7 @@ Within the API server, security is implemented as a series of middleware compone
   - **Write endpoints** (POST, PUT, PATCH, DELETE): Maximum 60 requests per minute per authenticated user.
 - **Behavior:** Uses a sliding window counter. When the limit is exceeded, returns HTTP 429 Too Many Requests with a `Retry-After` header indicating the number of seconds until the window resets.
 - **Implementation:** Built on ASP.NET Core's `System.Threading.RateLimiting` with the `SlidingWindowRateLimiter`.
+- **Public newsletter endpoints**: The anonymous subscription endpoints (`POST /api/newsletter-subscriptions`, `POST /api/newsletter-subscriptions/confirm`, `POST /api/newsletter-subscriptions/unsubscribe`) use dedicated per-IP and per-email rate-limit policies defined in Feature 14 §7 rather than the authenticated `write-endpoints` policy. These policies are registered alongside the authentication and write-endpoint policies in `Program.cs` using the same `SlidingWindowRateLimiter` infrastructure.
 
 ### 3.4 CorsMiddleware
 
