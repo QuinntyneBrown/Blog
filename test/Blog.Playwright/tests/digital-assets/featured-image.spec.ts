@@ -22,9 +22,8 @@ test.describe('Featured Image in Article Editor', () => {
   test('selecting an image sets the featured image preview in editor', async ({
     articleEditorPage,
     digitalAssetModal,
-    page,
   }) => {
-    const toast = new ToastComponent(page);
+    const toast = new ToastComponent(articleEditorPage.page);
 
     await articleEditorPage.featuredImageButton.click();
     await digitalAssetModal.selectFile(VALID_JPEG);
@@ -38,11 +37,9 @@ test.describe('Featured Image in Article Editor', () => {
   test('clicking Remove Image clears the featured image preview', async ({
     articleEditorPage,
     digitalAssetModal,
-    page,
   }) => {
-    const toast = new ToastComponent(page);
+    const toast = new ToastComponent(articleEditorPage.page);
 
-    // First set a featured image
     await articleEditorPage.featuredImageButton.click();
     await digitalAssetModal.selectFile(VALID_JPEG);
     await digitalAssetModal.upload();
@@ -50,7 +47,6 @@ test.describe('Featured Image in Article Editor', () => {
 
     await expect(articleEditorPage.featuredImagePreview).toBeVisible();
 
-    // Now remove it
     await articleEditorPage.removeFeaturedImageButton.click();
 
     await expect(articleEditorPage.featuredImagePreview).not.toBeVisible();
