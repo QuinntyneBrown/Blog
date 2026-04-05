@@ -548,6 +548,24 @@ The design specifies six Open Graph properties on every page (Section 3.1): `og:
 
 ---
 
+## 2026-04-04 — Sitemap and feed cache TTL uses Section 6.3 draft values instead of the resolved Open Question 4 value of 60 minutes
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Open Question 4 (resolved)
+
+**Description:**
+Open Question 4 in the SEO design is explicitly marked **Resolved** with the decision: "60 minutes. `Cache-Control: public, max-age=3600`. Balances freshness with performance. Matches the HTML page cache strategy from Feature 07." Resolved open questions represent the authoritative, superseding decision over any earlier draft text in the body of the document. Section 6.3 of the same design contains earlier draft text ("Sitemap: 10 minutes", "Feeds: 5 minutes") that was written before the open question was resolved, and should have been updated in step with the resolution.
+
+The `SeoController` implemented the Section 6.3 draft values rather than the OQ-4 resolution:
+- `GET /sitemap.xml` — `[ResponseCache(Duration = 600)]` (10 minutes)
+- `GET /feed.xml` — `[ResponseCache(Duration = 300)]` (5 minutes)
+- `GET /atom.xml` — `[ResponseCache(Duration = 300)]` (5 minutes)
+
+All three should be `Duration = 3600` (60 minutes) per OQ-4. The inline code comments even cite "Design spec: 10 minutes" and "Design spec: 5 minutes", recording the wrong values as if they were authoritative. Search engine crawlers and feed readers that honour `Cache-Control: max-age` will re-request the sitemap and feeds 6–12 times more often than the resolved design intends, creating unnecessary server load and database queries for every poll.
+
+**Status:** OPEN
+
+---
+
 ## 2026-04-04 — RSS feed items missing author; Atom feed entries missing published date and per-entry author
 
 **Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.5 — FeedGenerator, Section 4.5 — FeedEntry
