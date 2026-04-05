@@ -17,12 +17,12 @@ namespace Blog.Api.Middleware;
 /// If the token is missing or invalid the request proceeds without an authenticated identity;
 /// the <c>[Authorize]</c> attribute on protected controllers/pages then returns 401 Unauthorized.
 /// </summary>
-public class JwtMiddleware(RequestDelegate next, ITokenService tokenService)
+public class JwtMiddleware(RequestDelegate next)
 {
     private const string BearerPrefix = "Bearer ";
     private const string SessionTokenKey = "jwt_token";
 
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, ITokenService tokenService)
     {
         string? token = null;
 
