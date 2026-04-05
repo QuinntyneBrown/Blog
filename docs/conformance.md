@@ -1231,3 +1231,18 @@ The previous conformance fix replaced hardcoded values in `SeoController` but th
 - `Index.cshtml`: Changed JSON-LD `name` to `Configuration["Site:SiteName"]` and `description` to `Configuration["Site:SiteDescription"]` with fallbacks.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Rate limit policies use global counters instead of per-client partitions
+
+**Design reference:** `docs/detailed-designs/01-authentication/README.md`, Section 7.3 — Rate Limiting on Login; `docs/detailed-designs/08-security-hardening/README.md`, Section 3.3 — RateLimitingMiddleware
+
+**Description:**
+The design specifies (Section 7.3): "10 requests per minute **per client IP address**" for the login endpoint, and (Section 3.3): "60 requests per minute **per authenticated user**" for write endpoints. Both rate limit policies were registered via `AddSlidingWindowLimiter("name", ...)` which creates a single global counter shared by all clients. Under this configuration, 10 login attempts total (across all IPs worldwide) would trigger the rate limit, and 60 write operations total (across all authenticated users) would exhaust the write quota. A single legitimate user's activity could lock out all other users. The design requires per-client partitioning — each IP address gets its own 10-request window, and each authenticated user gets their own 60-request window.
+
+**Fix applied:**
+- Replaced `AddSlidingWindowLimiter("login-ip", ...)` with `AddPolicy("login-ip", ...)` using `RateLimitPartition.GetSlidingWindowLimiter` partitioned by `context.Connection.RemoteIpAddress`.
+- Replaced `AddSlidingWindowLimiter("write-endpoints", ...)` with `AddPolicy("write-endpoints", ...)` using `RateLimitPartition.GetSlidingWindowLimiter` partitioned by the authenticated user's `sub` claim, falling back to IP address for unauthenticated requests.
+
+**Status:** FIXED

@@ -85,22 +85,31 @@ builder.Services.AddAuthorization();
 // Rate Limiting
 builder.Services.AddRateLimiter(options =>
 {
-    options.AddSlidingWindowLimiter("login-ip", opt =>
-    {
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.SegmentsPerWindow = 6;
-        opt.PermitLimit = 10;
-        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        opt.QueueLimit = 0;
-    });
-    options.AddSlidingWindowLimiter("write-endpoints", opt =>
-    {
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.SegmentsPerWindow = 6;
-        opt.PermitLimit = 60;
-        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        opt.QueueLimit = 0;
-    });
+    options.AddPolicy("login-ip", context =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new SlidingWindowRateLimiterOptions
+            {
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 6,
+                PermitLimit = 10,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+    options.AddPolicy("write-endpoints", context =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                ?? context.User?.FindFirst("sub")?.Value
+                ?? context.Connection.RemoteIpAddress?.ToString()
+                ?? "unknown",
+            factory: _ => new SlidingWindowRateLimiterOptions
+            {
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 6,
+                PermitLimit = 60,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
     options.RejectionStatusCode = 429;
     options.OnRejected = async (context, cancellationToken) =>
     {
