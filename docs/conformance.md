@@ -1489,4 +1489,7 @@ The design specifies (Design 02, Section 8): "All endpoints require a valid JWT 
 **Description:**
 The design specifies (Section 4.2) that the public `/health` response is `{"status":"healthy"}` or `{"status":"unhealthy"}` in JSON. Section 5.1 states: "The controller returns 200 OK with `{"status":"healthy"}` if all checks pass, or 503 Service Unavailable with `{"status":"unhealthy"}` on the public `/health` endpoint if any check fails." `Program.cs` calls `app.MapHealthChecks("/health")` with no custom `ResponseWriter`. ASP.NET Core's default response writer returns plain text (`Healthy` / `Unhealthy` / `Degraded`) with `Content-Type: text/plain`, not JSON. Monitoring tools, load balancers, and Kubernetes probes that parse the response body as JSON (e.g., to inspect the `status` field) would fail to deserialize the plain-text body. The `/health/ready` endpoint already uses a custom JSON response writer; the public endpoint was inconsistently left at the framework default.
 
-**Status:** OPEN
+**Fix applied:**
+- Added a custom `ResponseWriter` to the `MapHealthChecks("/health")` call in `Program.cs`. The writer sets `Content-Type: application/json` and serializes `{ "status": "healthy" }` or `{ "status": "unhealthy" }` (lowercase, no `checks` detail — the public endpoint remains minimal per the design). This matches the format used by the existing `/health/ready` writer and satisfies the design's `HealthCheckResponse` schema.
+
+**Status:** FIXED
