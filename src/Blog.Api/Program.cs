@@ -35,6 +35,7 @@ builder.Services.AddSingleton<ISlugGenerator, SlugGenerator>();
 builder.Services.AddSingleton<IMarkdownConverter, MarkdownConverter>();
 builder.Services.AddSingleton<IReadingTimeCalculator, ReadingTimeCalculator>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
+builder.Services.AddSingleton<IEmailRateLimitService, EmailRateLimitService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
 // MediatR + Validation

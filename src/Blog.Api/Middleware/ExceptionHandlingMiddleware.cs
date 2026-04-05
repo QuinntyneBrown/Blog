@@ -33,6 +33,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             ConflictException ce => (409, "Conflict", ce.Message, (Dictionary<string, string[]>?)null),
             PreconditionFailedException pfe => (412, "Precondition Failed", pfe.Message, (Dictionary<string, string[]>?)null),
             FileTooLargeException fte => (413, "Payload Too Large", fte.Message, (Dictionary<string, string[]>?)null),
+            TooManyRequestsException tmre => (429, "Too Many Requests", tmre.Message, (Dictionary<string, string[]>?)null),
             _ => (500, "Internal Server Error", env.IsDevelopment() ? ex.Message : "An unexpected error occurred.", (Dictionary<string, string[]>?)null)
         };
 
