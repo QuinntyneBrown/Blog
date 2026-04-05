@@ -192,6 +192,7 @@
     /* LG: 992–1199px */
     @@media (max-width: 1199px) {
         .search-hero { padding: 48px 48px 40px; gap: 20px; }
+        .search-hero-bar { height: 52px; gap: 12px; padding: 0 16px; }
         .search-filters-bar { padding: 14px 48px; }
         .search-filter-label { display: none; }
         .search-content { padding: 40px 48px; gap: 40px; }
@@ -199,36 +200,32 @@
     }
     /* MD: 768–991px */
     @@media (max-width: 991px) {
-        .search-hero { padding: 44px 40px 36px; }
+        .search-hero { padding: 40px 32px 32px; gap: 16px; }
+        .search-hero-bar { height: 48px; gap: 12px; padding: 0 14px; }
         .search-hero-label { font-size: 11px; }
         .search-hero-count { font-size: 13px; }
-        .search-filters-bar { padding: 12px 40px; }
-        .search-content { padding: 36px 40px; }
+        .search-filters-bar { padding: 12px 32px; }
+        .search-content { padding: 32px; }
         .search-results-grid { grid-template-columns: repeat(2, 1fr); }
     }
     /* SM: 576–767px */
     @@media (max-width: 767px) {
-        .search-hero { padding: 40px 32px 32px; gap: 16px; }
+        .search-hero { padding: 32px 24px 24px; gap: 14px; }
+        .search-hero-bar { height: 44px; gap: 10px; padding: 0 12px; }
         .search-hero-label { font-size: 11px; }
         .search-hero-count { font-size: 12px; }
-        .search-filters-bar { padding: 12px 32px; }
-        .search-content { padding: 32px 32px; gap: 20px; }
+        .search-filters-bar { padding: 10px 24px; }
+        .search-content { padding: 24px; gap: 20px; }
         .search-results-grid { grid-template-columns: 1fr; }
         .search-sort-wrap { display: none; }
     }
-    /* XS: 375–575px */
+    /* XS: ≤575px */
     @@media (max-width: 575px) {
-        .search-hero { padding: 32px 24px 24px; gap: 14px; }
-        .search-filters-bar { padding: 10px 24px; gap: 8px; flex-wrap: wrap; }
-        .search-content { padding: 24px 24px; gap: 16px; }
-    }
-    /* XXS: ≤375px */
-    @@media (max-width: 375px) {
         .search-hero { padding: 24px 16px 20px; gap: 12px; }
         .search-hero-label { font-size: 10px; }
         .search-hero-count { font-size: 12px; }
-        .search-filters-bar { padding: 10px 16px; overflow-x: auto; flex-wrap: nowrap; }
-        .search-content { padding: 20px 16px; }
+        .search-filters-bar { padding: 10px 16px; gap: 8px; overflow-x: auto; flex-wrap: nowrap; }
+        .search-content { padding: 20px 16px; gap: 16px; }
     }
 </style>
 
