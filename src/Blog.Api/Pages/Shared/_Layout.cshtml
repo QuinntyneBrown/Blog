@@ -204,6 +204,113 @@
             border-bottom: 1px solid var(--border-subtle);
         }
 
+        /* Search */
+        .search-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .search-form {
+            display: flex;
+            align-items: center;
+            position: relative;
+            gap: 0;
+        }
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--foreground-tertiary);
+            pointer-events: none;
+            display: flex;
+        }
+        .search-input {
+            background: var(--surface-input);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            color: var(--foreground-primary);
+            font-family: var(--font-body);
+            font-size: 13px;
+            height: 34px;
+            padding: 0 64px 0 32px;
+            width: 220px;
+            outline: none;
+            transition: border-color 0.15s, width 0.2s;
+        }
+        .search-input::placeholder { color: var(--foreground-placeholder); }
+        .search-input:focus { border-color: var(--border-focus); width: 260px; }
+        .search-shortcut {
+            position: absolute;
+            right: 28px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--foreground-tertiary);
+            background: var(--surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 3px;
+            padding: 1px 5px;
+            pointer-events: none;
+        }
+        .search-input:focus ~ .search-shortcut,
+        .search-input:not(:placeholder-shown) ~ .search-shortcut { display: none; }
+        .search-clear {
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--foreground-tertiary);
+            display: flex;
+            padding: 2px;
+        }
+        .search-clear:hover { color: var(--foreground-primary); }
+        .search-toggle {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--foreground-secondary);
+            padding: 8px;
+            min-width: 44px;
+            min-height: 44px;
+        }
+        .search-toggle:hover { color: var(--foreground-primary); }
+        #search-suggestions {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            width: 320px;
+            background: var(--surface-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            list-style: none;
+            padding: 4px 0;
+            z-index: 200;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+        #search-suggestions li {
+            padding: 10px 16px;
+            font-size: 14px;
+            color: var(--foreground-primary);
+            cursor: pointer;
+            outline: none;
+        }
+        #search-suggestions li:hover,
+        #search-suggestions li:focus { background: var(--surface-elevated); }
+        #search-suggestions mark {
+            background: var(--accent-primary);
+            color: #fff;
+            border-radius: 2px;
+            padding: 0 2px;
+        }
+
         /* Hero */
         .hero {
             display: flex;
@@ -418,6 +525,15 @@
             .articles-section { padding: 0 32px 48px; }
             .footer { padding: 48px 32px; }
         }
+        @@media (max-width: 991px) {
+            .search-form { display: none; }
+            .search-toggle { display: flex; }
+            header.search-expanded .search-form { display: flex; width: 100%; }
+            header.search-expanded .search-toggle { display: none; }
+            header.search-expanded .nav { flex-wrap: wrap; height: auto; padding-bottom: 8px; }
+            header.search-expanded .search-form { order: 3; width: 100%; padding: 0 32px 8px; box-sizing: border-box; }
+            header.search-expanded .search-input { width: 100%; }
+        }
         @@media (max-width: 767px) {
             .nav { height: 56px; padding: 0 24px; }
             .nav-links { display: none; }
@@ -610,6 +726,44 @@
                 </a>
             </li>
         </ul>
+        <div class="search-wrapper" role="search">
+            <!-- LG+ viewports: inline expanded input -->
+            <form action="/search" method="get" class="search-form" id="site-search-form">
+                <label for="site-search" class="sr-only">Search articles</label>
+                <span class="search-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                </span>
+                <input
+                    type="search"
+                    id="site-search"
+                    name="q"
+                    class="search-input"
+                    placeholder="Search articles…"
+                    autocomplete="off"
+                    aria-label="Search articles"
+                    aria-autocomplete="list"
+                    aria-controls="search-suggestions"
+                    aria-expanded="false"
+                    maxlength="200"
+                    spellcheck="false" />
+                <kbd class="search-shortcut" aria-hidden="true">/</kbd>
+                <button type="button" class="search-clear" aria-label="Clear search" hidden>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </form>
+            <!-- SM/XS viewports: icon button that expands the form -->
+            <button type="button" class="search-toggle" aria-label="Open search" aria-expanded="false">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+            </button>
+            <!-- Autocomplete dropdown -->
+            <ul id="search-suggestions" role="listbox" aria-label="Search suggestions" hidden></ul>
+        </div>
         <button class="nav-hamburger" id="hamburger-btn" aria-label="Menu" aria-expanded="false" aria-controls="mobile-menu">
             <span></span><span></span><span></span>
         </button>
@@ -640,6 +794,7 @@
             btn.setAttribute('aria-expanded', isOpen.toString());
         });
     </script>
+    <script src="/js/search.js" defer></script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>
