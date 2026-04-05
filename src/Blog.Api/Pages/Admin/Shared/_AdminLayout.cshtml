@@ -266,6 +266,76 @@
             flex-shrink: 0;
         }
 
+        /* Nav Drawer (small-screen slide-in panel) */
+        .nav-drawer-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 40;
+        }
+        .nav-drawer-backdrop.open { display: block; }
+        .nav-drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            max-width: 85vw;
+            height: 100%;
+            background: var(--surface-sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 50;
+            transform: translateX(-100%);
+            transition: transform 0.25s ease;
+        }
+        .nav-drawer.open { transform: translateX(0); }
+        .nav-drawer-header {
+            height: 64px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .nav-drawer-brand { font-size: 20px; font-weight: 800; letter-spacing: -1px; }
+        .nav-drawer-close {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: transparent;
+            border: none;
+            border-radius: var(--radius);
+            color: var(--fg-secondary);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .nav-drawer-close:hover { background: var(--surface-elevated); color: var(--fg-primary); }
+        .nav-drawer-close svg { width: 18px; height: 18px; }
+        .nav-drawer-nav { padding: 12px 8px; display: flex; flex-direction: column; gap: 2px; flex: 1; }
+        .nav-drawer-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--fg-secondary);
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+        }
+        .nav-drawer-item:hover { background: var(--surface-elevated); color: var(--fg-primary); }
+        .nav-drawer-item.active { background: var(--surface-elevated); color: var(--fg-primary); }
+        .nav-drawer-item.active svg { color: var(--accent); }
+        .nav-drawer-item svg { width: 18px; height: 18px; color: var(--fg-tertiary); flex-shrink: 0; }
+        .nav-drawer-bottom { padding: 12px 8px; border-top: 1px solid var(--border); }
+
         /* Responsive */
         @@media (max-width: 991px) {
             .sidebar { width: 220px; }
@@ -315,6 +385,43 @@
         </div>
     </div>
 
+    <!-- Nav Drawer backdrop -->
+    <div class="nav-drawer-backdrop" id="nav-drawer-backdrop" data-testid="nav-drawer-backdrop" aria-hidden="true"></div>
+
+    <!-- Nav Drawer (small-screen slide-in panel) -->
+    <nav class="nav-drawer" id="nav-drawer" data-testid="nav-drawer" aria-label="Mobile navigation" aria-modal="true" hidden>
+        <div class="nav-drawer-header">
+            <span class="nav-drawer-brand">QB</span>
+            <button class="nav-drawer-close" id="nav-drawer-close" data-testid="nav-drawer-close" aria-label="Close navigation menu" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="nav-drawer-nav">
+            <a href="/admin/articles" class="nav-drawer-item @(activeNav == "articles" ? "active" : "")" data-testid="nav-drawer-articles-link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Articles
+            </a>
+            <a href="/admin/digital-assets" class="nav-drawer-item @(activeNav == "assets" ? "active" : "")" data-testid="nav-drawer-media-link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                Media
+            </a>
+            <a href="/admin/settings" class="nav-drawer-item @(activeNav == "settings" ? "active" : "")" data-testid="nav-drawer-settings-link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                Settings
+            </a>
+        </div>
+        <div class="nav-drawer-bottom">
+            <form method="post" action="/admin/logout">
+                <button type="submit" class="nav-drawer-item" data-testid="nav-drawer-signout" style="width:100%; background:none; border:none; cursor:pointer; text-align:left;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Sign out
+                </button>
+            </form>
+        </div>
+    </nav>
+
     <!-- Desktop Sidebar (visible at LG+ breakpoints) -->
     <aside class="sidebar" data-testid="sidebar">
         <div class="sidebar-header">
@@ -329,6 +436,10 @@
             <a href="/admin/digital-assets" class="sidebar-nav-item @(activeNav == "assets" ? "active" : "")" data-testid="sidebar-media-link">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                 Media
+            </a>
+            <a href="/admin/settings" class="sidebar-nav-item @(activeNav == "settings" ? "active" : "")" data-testid="sidebar-settings-link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                Settings
             </a>
         </nav>
         <div class="sidebar-bottom">
@@ -367,6 +478,42 @@
         const params = new URLSearchParams(window.location.search);
         if (params.get('success')) showToast('success', 'Success', decodeURIComponent(params.get('success')));
         if (params.get('error')) showToast('error', 'Error', decodeURIComponent(params.get('error')));
+
+        // Nav Drawer
+        (function () {
+            const drawer = document.getElementById('nav-drawer');
+            const backdrop = document.getElementById('nav-drawer-backdrop');
+            const hamburger = document.querySelector('[data-testid="hamburger-button"]');
+            const closeBtn = document.getElementById('nav-drawer-close');
+
+            function openDrawer() {
+                drawer.removeAttribute('hidden');
+                // Allow the browser to paint with hidden removed before adding .open for the transition
+                requestAnimationFrame(function () {
+                    drawer.classList.add('open');
+                    backdrop.classList.add('open');
+                });
+                document.body.style.overflow = 'hidden';
+                drawer.removeAttribute('aria-hidden');
+            }
+
+            function closeDrawer() {
+                drawer.classList.remove('open');
+                backdrop.classList.remove('open');
+                document.body.style.overflow = '';
+                drawer.setAttribute('aria-hidden', 'true');
+                // Re-add hidden after the CSS transition ends (250 ms)
+                setTimeout(function () { drawer.setAttribute('hidden', ''); }, 250);
+            }
+
+            if (hamburger) hamburger.addEventListener('click', openDrawer);
+            if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+            if (backdrop) backdrop.addEventListener('click', closeDrawer);
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && drawer.classList.contains('open')) closeDrawer();
+            });
+        }());
     </script>
     @RenderSection("AdminScripts", required: false)
 </body>

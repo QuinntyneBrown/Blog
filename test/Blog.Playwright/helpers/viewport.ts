@@ -7,3 +7,11 @@ export const viewports = {
 } as const;
 
 export type ViewportName = keyof typeof viewports;
+
+export const VIEWPORTS = {
+  XL: viewports.xl,
+  LG: viewports.lg,
+  MD: viewports.md,
+  SM: viewports.sm,
+  XS: viewports.xs,
+} as const;

@@ -1,16 +1,18 @@
-import { Page, Locator } from '@playwright/test';
+import { Locator } from '@playwright/test';
 
 export class SidebarComponent {
-  readonly page: Page;
+  readonly root: Locator;
   readonly articlesLink: Locator;
   readonly assetsLink: Locator;
+  readonly settingsLink: Locator;
   readonly signOutButton: Locator;
 
-  constructor(page: Page) {
-    this.page = page;
-    this.articlesLink = page.locator('a[href="/admin/articles"]');
-    this.assetsLink = page.locator('a[href="/admin/digital-assets"]');
-    this.signOutButton = page.locator('button:has-text("Sign out")');
+  constructor(root: Locator) {
+    this.root = root;
+    this.articlesLink = root.locator('a[href="/admin/articles"]');
+    this.assetsLink = root.locator('a[href="/admin/digital-assets"]');
+    this.settingsLink = root.locator('a[href="/admin/settings"]');
+    this.signOutButton = root.locator('button:has-text("Sign out")');
   }
 
   async navigateToArticles() {

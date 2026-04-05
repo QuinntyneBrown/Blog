@@ -2,16 +2,19 @@ import { test, expect } from '@playwright/test';
 import { VIEWPORTS } from '../../helpers/viewport';
 import { SidebarComponent } from '../../page-objects/back-office/components/sidebar.component';
 import { TopBarComponent } from '../../page-objects/back-office/components/top-bar.component';
+import { NavDrawerComponent } from '../../page-objects/back-office/components/nav-drawer.component';
 
 const BACK_OFFICE_URL = '/admin/articles';
 
 test.describe('Back Office – Responsive Layout', () => {
   let sidebar: SidebarComponent;
   let topBar: TopBarComponent;
+  let navDrawer: NavDrawerComponent;
 
   test.beforeEach(async ({ page }) => {
     sidebar = new SidebarComponent(page.locator('[data-testid="sidebar"]'));
     topBar = new TopBarComponent(page.locator('[data-testid="top-bar"]'));
+    navDrawer = new NavDrawerComponent(page.locator('[data-testid="nav-drawer"]'));
     await page.goto(BACK_OFFICE_URL);
   });
 
@@ -39,6 +42,44 @@ test.describe('Back Office – Responsive Layout', () => {
         await page.setViewportSize(size);
 
         await expect(topBar.hamburgerButton).toBeVisible();
+      });
+    }
+  });
+
+  test.describe('small viewports (MD/SM/XS): nav drawer opens and contains all nav items', () => {
+    for (const [name, size] of Object.entries({ MD: VIEWPORTS.MD, SM: VIEWPORTS.SM, XS: VIEWPORTS.XS })) {
+      test(`${name} (${size.width}px): hamburger opens nav drawer with all nav links`, async ({ page }) => {
+        await page.setViewportSize(size);
+
+        await expect(navDrawer.root).toBeHidden();
+
+        await topBar.hamburgerButton.click();
+
+        await expect(navDrawer.root).toBeVisible();
+        await expect(navDrawer.articlesLink).toBeVisible();
+        await expect(navDrawer.mediaLink).toBeVisible();
+        await expect(navDrawer.settingsLink).toBeVisible();
+        await expect(navDrawer.signOutButton).toBeVisible();
+      });
+
+      test(`${name} (${size.width}px): close button dismisses the nav drawer`, async ({ page }) => {
+        await page.setViewportSize(size);
+
+        await topBar.hamburgerButton.click();
+        await expect(navDrawer.root).toBeVisible();
+
+        await navDrawer.closeButton.click();
+        await expect(navDrawer.root).toBeHidden();
+      });
+
+      test(`${name} (${size.width}px): backdrop click dismisses the nav drawer`, async ({ page }) => {
+        await page.setViewportSize(size);
+
+        await topBar.hamburgerButton.click();
+        await expect(navDrawer.root).toBeVisible();
+
+        await page.locator('[data-testid="nav-drawer-backdrop"]').click({ position: { x: 5, y: 5 } });
+        await expect(navDrawer.root).toBeHidden();
       });
     }
   });
