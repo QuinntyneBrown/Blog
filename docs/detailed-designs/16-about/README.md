@@ -60,7 +60,7 @@ The About Page feature provides a publicly visible biography for the site author
 
 ### 3.3 RestoreAboutContentHandler
 
-- **Validator**: `RestoreAboutContentCommandValidator` (validates `historyId` non-empty, `currentVersion` ≥ 1)
+- **Validator**: `RestoreAboutContentCommandValidator` — FluentValidation rules: `HistoryId` NotEmpty (rejects `Guid.Empty`; the route binder rejects non-GUID values before the command is constructed, so a separate "valid GUID" rule is redundant); `CurrentVersion` GreaterThan(0) (a zero value indicates the caller has no live row to protect, which is an invalid request on the restore path — the live row always exists and always has version ≥ 1 by the time a restore is attempted)
 - **Responsibility**: Reverts the live about content to a prior revision identified by `historyId`.
 - **Dependencies**: `AboutContentRepository`, `IMarkdownConverter`, `ICacheInvalidator`
 - **Steps**: (1) Load history record by `historyId`; return 404 if not found. (2) Verify `AboutContentId` matches the singleton — prevents cross-resource access. (3) Load the current live row; if the supplied `currentVersion` does not match the stored `Version`, return 409 (prevents a restore from silently overwriting concurrent edits). (4) Snapshot the current live row into `AboutContentHistory`. (5) Overwrite live row with the history snapshot's `Heading`, `Body`, and `ProfileImageId`; re-render `BodyHtml` by calling `IMarkdownConverter.Convert(historyRecord.Body)` rather than copying the snapshot's `BodyHtml` directly — this ensures the restored HTML is produced under the current sanitizer allow-list rather than stale rules that may have been in effect when the snapshot was originally saved; increment `Version`. (6) Call `ICacheInvalidator.InvalidateAsync("/about")`. Steps 4 and 5 must execute within a single DB transaction so that a failure between them cannot produce an orphaned history snapshot with no corresponding live-row update.
@@ -126,7 +126,7 @@ The About Page feature provides a publicly visible biography for the site author
 | `BodyHtml` | `nvarchar(max)` | Pre-rendered HTML snapshot — stored for preview rendering in the history list UI. **Not used verbatim on restore**: `RestoreAboutContentHandler` (§3.3 step 5) re-renders `BodyHtml` from `Body` via `IMarkdownConverter` at restore time so that the restored HTML reflects the current sanitizer allow-list rather than rules that may have been in effect when the snapshot was originally saved. Implementers must not "optimise" restore by copying this field directly. |
 | `ProfileImageId` | `Guid?` | Snapshot value — **no FK constraint**. Storing this as a live FK to `DigitalAssets` would cause `ON DELETE RESTRICT` to block asset deletion whenever a history snapshot references that asset. Since history rows are immutable records of past state, the `ProfileImageId` value here is informational only; the corresponding asset may no longer exist. |
 | `Version` | `int` | Version number copied from parent at time of snapshot |
-| `ArchivedAt` | `datetime2` | UTC timestamp when snapshot was created |
+| `ArchivedAt` | `datetime2` | UTC timestamp when this snapshot was written (i.e. when the previous live state was captured). This is **not** the timestamp of the original content creation — `AboutContent.CreatedAt` holds that value. `ArchivedAt` advances each time a new snapshot is taken (on every successful upsert and on every restore). |
 
 **Recommended index**: `IX_AboutContentHistory_AboutContentId_ArchivedAt` on `(AboutContentId, ArchivedAt DESC)` to support the paginated history query efficiently.
 
@@ -171,7 +171,7 @@ Key points:
 
 | Method | Path | Auth | Body / Params | Success | Errors |
 |--------|------|------|---------------|---------|--------|
-| `GET` | `/api/about` | None | — | 200 + `AboutContentDto?` | — |
+| `GET` | `/api/about` | None | — | 200 + `PublicAboutContentDto?` | — |
 | `PUT` | `/api/about` | Bearer token | `{ heading, body, profileImageId?, version }` — `version` must be `0` on first-ever insert (no prior version exists); must be ≥ 1 (current stored version) on subsequent updates | 200 + `AboutContentDto` | 400, 401, 403, 409 |
 | `GET` | `/api/about/history` | Bearer token | `?page&pageSize` (default pageSize=20, max 50) | 200 + `PagedResponse<AboutContentHistoryDto>` | 401 |
 | `PUT` | `/api/about/restore/{historyId}` | Bearer token | `{ currentVersion }` | 200 + `AboutContentDto` | 401, 403, 404, 409 |
@@ -179,10 +179,20 @@ Key points:
 ### DTOs
 
 ```
+PublicAboutContentDto  {
+    heading:         string,
+    bodyHtml:        string,       // Pre-rendered HTML — the only field the public page renders
+    profileImageId:  Guid?,
+    profileImageUrl: string?       // Resolved CDN/storage URL
+    // body (raw Markdown) is intentionally excluded — anonymous visitors need only the
+    // rendered HTML; exposing raw Markdown to the public serves no purpose and leaks
+    // authoring artefacts (syntax characters) into the API surface
+}
+
 AboutContentDto  {
     aboutContentId:  Guid,
     heading:         string,
-    body:            string,       // Markdown source
+    body:            string,       // Markdown source — included for the back-office editor
     bodyHtml:        string,       // Pre-rendered HTML
     profileImageId:  Guid?,
     profileImageUrl: string?,      // Resolved CDN/storage URL
@@ -203,6 +213,8 @@ AboutContentHistoryDto  {
 }
 ```
 
+**Public vs back-office DTO split**: `GET /api/about` (anonymous) returns `PublicAboutContentDto` — it omits `body` (raw Markdown), `aboutContentId`, `createdAt`, `updatedAt`, and `version`, none of which the public page needs. `PUT /api/about` (authenticated) returns the full `AboutContentDto` so the back-office editor can display the current Markdown source and version for the next optimistic concurrency check. `GET /api/about/history` returns `AboutContentHistoryDto` (authenticated only) which retains `body` for the restore preview UI.
+
 ---
 
 ## 7. Security Considerations
@@ -216,6 +228,7 @@ AboutContentHistoryDto  {
 - **Pagination bounds**: `page` must be ≥ 1 and `pageSize` must be ≥ 1 and ≤ 50. Requests outside these bounds are rejected with 400. Zero or negative values cause division-by-zero or negative offsets in pagination math and must not be forwarded to the repository.
 - **Content-Type enforcement**: The `PUT /api/about` and `PUT /api/about/restore/{historyId}` endpoints must require `Content-Type: application/json`. Requests with a missing or mismatched `Content-Type` are rejected with 415 (Unsupported Media Type). This prevents silent null-model-binding failures.
 - **First-insert concurrency**: `UpsertAboutContentHandler` performs a read-then-write (check for existing row → insert if null, update if found). Two simultaneous first-ever saves will both read null and both attempt insert, causing a primary key violation on the second writer. The handler must either: (a) catch the resulting `DbUpdateException` and retry as an update, or (b) wrap the check and insert in a serializable DB transaction. Option (a) (catch-and-retry) is preferred as it avoids elevated isolation level overhead on every save.
+- **`profileImageId` TOCTOU race**: `UpsertAboutContentHandler` validates `profileImageId` (calls `DigitalAssetRepository` to verify the asset exists and is owned by the requesting user) before the EF Core save. Because `ProfileImageId` has no enforced FK constraint at the database level (§4.2 — the FK is intentionally unguarded to allow asset deletion without cascade), the asset could be deleted between the validation step and the save, leaving a dangling reference in `AboutContent.ProfileImageId`. This race is accepted and documented: the window is sub-millisecond under normal operating conditions and the site displays no image (broken image at worst) rather than corrupting data. No additional guard is required. If the image URL resolver (`GetAboutContentHandler` / `DigitalAssetRepository`) returns `null` for a missing asset ID, the public page must render without a profile image rather than throwing.
 - **Observability**: Key operations must emit structured log events at `Information` level: `about.upserted` (version), `about.restored` (historyId, restoredVersion). Cache invalidation failures are logged at `Warning` level with the cache key so operators can manually evict stale entries.
 
 ---

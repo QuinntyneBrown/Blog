@@ -177,7 +177,7 @@ Key points:
 
 ```
 EventDto         { eventId, title, slug, description, startDate, endDate?, location, externalUrl?, published, createdAt, updatedAt, version }
-EventListDto     { eventId, title, slug, startDate, location, published }
+EventListDto     { eventId, title, slug, startDate, location, published }  // slug is guaranteed non-null: event slugs are generated at create time (unlike Newsletter slugs which are null until send); every Event row always has a slug value
 PublicEventDto   { title, slug, description, startDate, endDate?, location, externalUrl? }  // eventId omitted — public consumers navigate by slug; exposing PK enables GUID enumeration. Strips internal fields (published, version, updatedAt)
 PublicEventsDto  { upcoming: PagedResponse<PublicEventDto>, past: PagedResponse<PublicEventDto> }
 ```
