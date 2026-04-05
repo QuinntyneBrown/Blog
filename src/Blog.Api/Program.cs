@@ -204,6 +204,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<SlugRedirectMiddleware>();
 app.UseStaticFiles();
 
 app.UseRouting();
