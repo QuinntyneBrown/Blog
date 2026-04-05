@@ -33,7 +33,7 @@
                     <div class="article-card-image">
                         @if (article.FeaturedImageId.HasValue)
                         {
-                            <img src="/assets/@article.FeaturedImageId" alt="@article.Title" loading="lazy" />
+                            <img src="/assets/@article.FeaturedImageId" alt="@article.Title" loading="lazy" decoding="async" />
                         }
                         else
                         {
