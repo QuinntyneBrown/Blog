@@ -10,6 +10,8 @@
     {
         ViewBag.CanonicalUrl = $"{siteUrl}/articles/{Model.Article.Slug}";
         ViewBag.OgType = "article";
+        if (!string.IsNullOrEmpty(Model.Article.FeaturedImageUrl))
+            ViewBag.OgImage = $"{siteUrl}{Model.Article.FeaturedImageUrl}";
     }
 }
 @if (Model.Article == null)
