@@ -139,3 +139,21 @@ The design's exception-to-status-code mapping table specifies the 429 exception 
 - Updated the throw site in `Login.cs` from `TooManyRequestsException` to `RateLimitExceededException`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — RSS and Atom feed endpoint URLs do not match design specification
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.5 — FeedGenerator, Section 6.1 — L2-014
+
+**Description:**
+The design specifies RSS feed at `/feed.xml` (RSS 2.0) and Atom feed at `/atom.xml` (L2-014). The implementation routed RSS to `/feed/rss` and Atom to `/feed/atom`. This mismatch affected six locations: the `SeoController` route attributes and self-referencing `<atom:link>` URLs within both feeds, the `llms.txt` output, the `<link rel="alternate">` tags in `_Layout.cshtml`, the RSS icon link in the desktop/mobile nav, and the Feed landing page buttons. Feed readers and AI agents discovering feeds via the `<link rel="alternate">` tags or `llms.txt` would request the design-specified URLs and receive 404s.
+
+**Fix applied:**
+- Changed `[HttpGet("feed/rss")]` → `[HttpGet("feed.xml")]` and `[HttpGet("feed/atom")]` → `[HttpGet("atom.xml")]` in `SeoController`.
+- Updated self-referencing `<atom:link href>` in both feeds to use the new URLs.
+- Updated `llms.txt` output to reference `/feed.xml` and `/atom.xml`.
+- Updated `_Layout.cshtml` alternate links, RSS nav icon, mobile menu link, and footer link.
+- Updated `Feed.cshtml` subscribe buttons.
+
+**Status:** FIXED
