@@ -1509,3 +1509,14 @@ Design 02 Section 3.4 enables Markdig "advanced extensions: tables, autolinks, t
 - Added `.article-body th { background: var(--surface-elevated); font-weight: 600; }` for header cell visual distinction.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — IArticleRepository.GetAllAsync returns a tuple instead of IReadOnlyList<Article>; GetAllCountAsync missing
+
+**Design reference:** `docs/detailed-designs/10-data-persistence/README.md`, Section 3.3 — Repository Pattern (IArticleRepository); `docs/detailed-designs/02-article-management/README.md`, Section 3.6 — ArticleRepository
+
+**Description:**
+Design 10 Section 3.3 establishes the `IArticleRepository` contract and specifies `GetPublishedAsync(int page, int pageSize)` returning `Task<IReadOnlyList<Article>>` with a separate `GetPublishedCountAsync()` for the total. A prior conformance fix corrected `GetPublishedAsync` exactly this way. The admin-facing `GetAllAsync(int page, int pageSize)` was never corrected by the same fix and still returns `Task<(List<Article> Items, int TotalCount)>` — a tuple. This diverges from the design pattern in two ways: (1) the return type is `List<Article>` (not `IReadOnlyList<Article>`), and (2) the total count is bundled into the tuple rather than exposed as a separate `GetAllCountAsync()` method. `GetArticlesHandler` uses tuple destructuring `var (items, total) = await articles.GetAllAsync(...)`, coupling the handler to the non-standard shape. Any test double or alternative implementation of `IArticleRepository` must satisfy the tuple signature rather than the consistent pattern the design establishes.
+
+**Status:** OPEN

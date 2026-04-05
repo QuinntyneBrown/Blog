@@ -6,7 +6,8 @@ public interface IArticleRepository
 {
     Task<Article?> GetByIdAsync(Guid articleId, CancellationToken cancellationToken = default);
     Task<Article?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default);
-    Task<(List<Article> Items, int TotalCount)> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Article>> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken = default);
+    Task<int> GetAllCountAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Article>> GetPublishedAsync(int page, int pageSize, CancellationToken cancellationToken = default);
     Task<int> GetPublishedCountAsync(CancellationToken cancellationToken = default);
     Task<bool> SlugExistsAsync(string slug, Guid? excludeId = null, CancellationToken cancellationToken = default);
