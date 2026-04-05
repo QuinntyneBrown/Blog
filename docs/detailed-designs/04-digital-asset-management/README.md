@@ -74,7 +74,7 @@ The component diagram details the digital-asset-related components inside the AP
   - `ConvertFormat(Stream source, ImageFormat targetFormat)` -- converts the source image to the specified format and returns the result stream.
   - `Resize(Stream source, int targetWidth)` -- resizes the image proportionally to the target width, preserving aspect ratio.
   - `GetDimensions(Stream source)` -- reads image metadata to extract width and height without fully decoding the image.
-- **Library:** Uses an image processing library (see Open Questions) such as ImageSharp or SkiaSharp.
+- **Library:** SixLabors.ImageSharp — fully managed, cross-platform, no native dependencies. Licensed under Apache 2.0.
 
 ### 3.5 AssetStorage
 
@@ -349,7 +349,7 @@ Content-Length: 52480
 | # | Question | Impact | Status |
 |---|----------|--------|--------|
 | 1 | Should we use local filesystem storage or cloud blob storage (Azure Blob Storage / AWS S3) for production? Local is simpler for development; cloud provides scalability and CDN integration. | Deployment architecture, cost, operational complexity | Open |
-| 2 | Which image processing library should be used: SixLabors.ImageSharp (pure managed, Apache 2.0 for open source), SkiaSharp (Skia wrapper, good performance), or System.Drawing (Windows-only, not recommended for server)? | Performance, cross-platform support, licensing | Open |
+| 2 | ~~Which image processing library should be used?~~ **Resolved: SixLabors.ImageSharp.** Fully managed (no native dependencies), cross-platform, Apache 2.0 license, ~7.8k GitHub stars, actively maintained with 3 maintainers and fast issue/PR turnaround. Chosen over SkiaSharp to avoid native binary management overhead. | Performance, cross-platform support, licensing | Resolved |
 | 3 | Should processed/transformed images (resized, format-converted) be cached on disk or generated on-the-fly per request? Caching avoids repeated processing but increases storage requirements. | Performance vs. storage cost tradeoff | Open |
 | 4 | Should we generate responsive image variants (srcset widths) at upload time or on-demand? Pre-generation simplifies serving but increases upload latency and storage. | Upload UX, storage cost, serving performance | Open |
 | 5 | What is the maximum allowed image dimension (width/height) to prevent processing abuse? Should we enforce a pixel-count limit in addition to the 10 MB file size limit? | Security, resource consumption | Resolved: 8192x8192 max, 40 megapixels max |

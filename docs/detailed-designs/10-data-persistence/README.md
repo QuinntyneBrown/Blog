@@ -30,7 +30,7 @@ The container diagram shows the deployable units involved in data persistence.
 ![C4 Container Diagram](diagrams/c4_container.png)
 
 - **API Server (.NET 8)** hosts the application logic, EF Core DbContext, and repository implementations.
-- **Database** is the relational store (PostgreSQL or SQL Server) that holds all tables, indexes, and constraints.
+- **Database** is SQL Server, the relational store that holds all tables, indexes, and constraints.
 - **Migration Runner** is a startup component (or CLI tool) that applies pending EF Core migrations before the application accepts traffic.
 
 ### 2.3 C4 Component Diagram
@@ -65,7 +65,8 @@ Each entity has a dedicated configuration class implementing `IEntityTypeConfigu
 - `Title`: required, max length 256.
 - `Slug`: required, max length 256, unique index.
 - `Abstract`: required, max length 512.
-- `Body`: required, no max length (nvarchar(max) / text).
+- `Body`: required, Markdown source, no max length (nvarchar(max) / text).
+  - `BodyHtml`: required, pre-rendered HTML, no max length (nvarchar(max) / text).
 - `FeaturedImageId`: optional FK to `DigitalAssets`.
 - `ReadingTimeMinutes`: required, default 1, minimum 1.
 - `Version`: required concurrency token, default 1.
@@ -162,7 +163,8 @@ Repositories provide a domain-oriented abstraction over EF Core DbSets. Each rep
 | Title | string | Required, max 256 chars |
 | Slug | string | Required, unique, max 256 chars |
 | Abstract | string | Required, max 512 chars |
-| Body | string | Required, max length unlimited |
+| Body | string | Required, Markdown source, max length unlimited |
+| BodyHtml | string | Required, pre-rendered HTML from Body, max length unlimited |
 | FeaturedImageId | Guid? | FK to DigitalAssets (nullable) |
 | Published | bool | Required, default false |
 | DatePublished | DateTime? | UTC, set when published |
@@ -226,7 +228,7 @@ Repositories provide a domain-oriented abstraction over EF Core DbSets. Each rep
 1. A service layer (e.g., `ArticleService`) calls a repository method such as `GetPublishedAsync(page, pageSize)`.
 2. The repository composes an IQueryable using the DbContext's DbSet with `Where`, `OrderBy`, `Skip`, and `Take` clauses.
 3. EF Core's query translation pipeline converts the IQueryable expression tree into a parameterized SQL query.
-4. The SQL query is sent to the database via the configured database provider (Npgsql or SqlClient).
+4. The SQL query is sent to the database via the `Microsoft.EntityFrameworkCore.SqlServer` provider.
 5. The database executes the query and returns result rows.
 6. EF Core materializes the rows into entity objects, applying change tracking.
 7. The repository returns the entities to the service layer.
@@ -239,12 +241,12 @@ Repositories provide a domain-oriented abstraction over EF Core DbSets. Each rep
 
 ```sql
 CREATE TABLE Users (
-    UserId          UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
-    Email           VARCHAR(256)    NOT NULL,
-    PasswordHash    VARCHAR(512)    NOT NULL,
-    DisplayName     VARCHAR(128)    NOT NULL,
-    CreatedAt       TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    LastLoginAt     TIMESTAMPTZ     NULL,
+    UserId          UNIQUEIDENTIFIER    PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+    Email           NVARCHAR(256)       NOT NULL,
+    PasswordHash    NVARCHAR(512)       NOT NULL,
+    DisplayName     NVARCHAR(128)       NOT NULL,
+    CreatedAt       DATETIME2           NOT NULL DEFAULT SYSUTCDATETIME(),
+    LastLoginAt     DATETIME2           NULL,
     CONSTRAINT UQ_Users_Email UNIQUE (Email)
 );
 ```
@@ -253,18 +255,19 @@ CREATE TABLE Users (
 
 ```sql
 CREATE TABLE Articles (
-    ArticleId           UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
-    Title               VARCHAR(256)    NOT NULL,
-    Slug                VARCHAR(256)    NOT NULL,
-    Abstract            VARCHAR(512)    NOT NULL,
-    Body                TEXT            NOT NULL,
-    FeaturedImageId     UUID            NULL,
-    Published           BOOLEAN         NOT NULL DEFAULT FALSE,
-    DatePublished       TIMESTAMPTZ     NULL,
-    ReadingTimeMinutes  INT             NOT NULL DEFAULT 1,
-    Version             INT             NOT NULL DEFAULT 1,
-    CreatedAt           TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    UpdatedAt           TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    ArticleId           UNIQUEIDENTIFIER    PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+    Title               NVARCHAR(256)       NOT NULL,
+    Slug                NVARCHAR(256)       NOT NULL,
+    Abstract            NVARCHAR(512)       NOT NULL,
+    Body                NVARCHAR(MAX)       NOT NULL,
+    BodyHtml            NVARCHAR(MAX)       NOT NULL,
+    FeaturedImageId     UNIQUEIDENTIFIER    NULL,
+    Published           BIT                 NOT NULL DEFAULT 0,
+    DatePublished       DATETIME2           NULL,
+    ReadingTimeMinutes  INT                 NOT NULL DEFAULT 1,
+    Version             INT                 NOT NULL DEFAULT 1,
+    CreatedAt           DATETIME2           NOT NULL DEFAULT SYSUTCDATETIME(),
+    UpdatedAt           DATETIME2           NOT NULL DEFAULT SYSUTCDATETIME(),
     CONSTRAINT UQ_Articles_Slug UNIQUE (Slug),
     CONSTRAINT FK_Articles_FeaturedImage
         FOREIGN KEY (FeaturedImageId) REFERENCES DigitalAssets(DigitalAssetId)
@@ -281,18 +284,18 @@ CREATE INDEX IX_Articles_CreatedAt
 
 ```sql
 CREATE TABLE DigitalAssets (
-    DigitalAssetId  UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
-    OriginalFileName VARCHAR(256)   NOT NULL,
-    StoredFileName  VARCHAR(256)    NOT NULL,
-    ContentType     VARCHAR(128)    NOT NULL,
-    FileSizeBytes   BIGINT          NOT NULL,
-    Width           INT             NULL,
-    Height          INT             NULL,
-    CreatedAt       TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    CreatedBy       UUID            NOT NULL,
+    DigitalAssetId  UNIQUEIDENTIFIER    PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+    OriginalFileName NVARCHAR(256)      NOT NULL,
+    StoredFileName  NVARCHAR(256)       NOT NULL,
+    ContentType     NVARCHAR(128)       NOT NULL,
+    FileSizeBytes   BIGINT              NOT NULL,
+    Width           INT                 NULL,
+    Height          INT                 NULL,
+    CreatedAt       DATETIME2           NOT NULL DEFAULT SYSUTCDATETIME(),
+    CreatedBy       UNIQUEIDENTIFIER    NOT NULL,
     CONSTRAINT FK_DigitalAssets_CreatedBy
         FOREIGN KEY (CreatedBy) REFERENCES Users(UserId)
-        ON DELETE RESTRICT
+        ON DELETE NO ACTION
 );
 
 CREATE INDEX IX_DigitalAssets_CreatedBy ON DigitalAssets (CreatedBy);
@@ -371,8 +374,8 @@ dotnet ef migrations add 20260404120000_InitialCreate --project src/Blog.Api
 
 | # | Question | Impact | Status |
 |---|----------|--------|--------|
-| 1 | Should the primary database be PostgreSQL or SQL Server? PostgreSQL offers better JSON support and is more cost-effective in cloud environments. SQL Server provides tighter integration with the .NET ecosystem and Azure. | Infrastructure cost, feature availability, hosting options | Open |
-| 2 | What connection pooling strategy should be used? Options include EF Core's default pooling, PgBouncer (for PostgreSQL), or Azure SQL elastic pools. | Performance under load, resource utilization | Open |
+| 1 | ~~Should the primary database be PostgreSQL or SQL Server?~~ **Resolved: SQL Server.** Tighter .NET ecosystem integration, first-class Azure support, and familiar tooling for the team. EF Core provider: `Microsoft.EntityFrameworkCore.SqlServer`. | Infrastructure cost, feature availability, hosting options | Resolved |
+| 2 | What connection pooling strategy should be used? Options include EF Core's default pooling or Azure SQL elastic pools. | Performance under load, resource utilization | Open |
 | 3 | Should read replicas be introduced for public-facing read queries to offload the primary database? | Scalability, complexity, consistency model | Open |
 | 4 | Should the migration runner be an IHostedService that runs on app startup, or a separate CLI tool executed in the CI/CD pipeline before deployment? | Deployment strategy, zero-downtime deployments | Open |
 | 5 | What is the data retention policy for soft-deleted records (if soft delete is adopted)? | Storage growth, GDPR compliance | Open |

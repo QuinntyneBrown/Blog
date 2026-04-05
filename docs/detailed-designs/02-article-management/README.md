@@ -54,10 +54,10 @@ Within the API server, article management is handled by a set of focused compone
 ### 3.2 ArticleService
 
 - **Responsibility:** Orchestrates article business logic including create, update, publish/unpublish, and delete workflows.
-- **Dependencies:** `SlugGenerator`, `ReadingTimeCalculator`, `ArticleRepository`.
+- **Dependencies:** `SlugGenerator`, `ReadingTimeCalculator`, `MarkdownConverter`, `ArticleRepository`.
 - **Key behaviors:**
-  - On create: generates slug, computes reading time, defaults `Published = false`.
-  - On update: regenerates slug if title changed, recomputes reading time if body changed.
+  - On create: generates slug, converts Markdown body to HTML via `MarkdownConverter`, computes reading time, defaults `Published = false`.
+  - On update: regenerates slug if title changed; if body changed, reconverts Markdown to HTML and recomputes reading time.
   - On publish: sets `Published = true` and `DatePublished = DateTime.UtcNow`.
   - On unpublish: sets `Published = false`, preserves `DatePublished`.
   - On update, publish, and delete: enforces optimistic concurrency using the current article version carried through `ETag` / `If-Match`.
@@ -69,17 +69,22 @@ Within the API server, article management is handled by a set of focused compone
 - **Algorithm:** Lowercase, replace spaces with hyphens, strip non-alphanumeric characters (except hyphens), collapse consecutive hyphens, trim leading/trailing hyphens.
 - **Example:** `"My First Blog Post!"` becomes `"my-first-blog-post"`.
 
-### 3.4 ReadingTimeCalculator
+### 3.4 MarkdownConverter
+
+- **Responsibility:** Converts Markdown source to sanitized HTML using the Markdig library.
+- **Behavior:** Parses the Markdown body with a configured Markdig pipeline (advanced extensions: tables, autolinks, task lists, pipe tables) and produces HTML output. The resulting HTML is then sanitized via Ganss.Xss HtmlSanitizer (see Feature 08) before storage. Conversion runs at save time so the public site serves pre-rendered HTML with no runtime Markdown processing overhead.
+
+### 3.5 ReadingTimeCalculator
 
 - **Responsibility:** Estimates reading time in minutes from article body content.
-- **Algorithm:** Strip HTML/Markdown tags, count words (split on whitespace), divide by 238 (average reading speed), round up to nearest integer. Minimum value is 1 minute.
+- **Algorithm:** Strip Markdown formatting, count words (split on whitespace), divide by 238 (average reading speed), round up to nearest integer. Minimum value is 1 minute.
 
-### 3.5 ArticleRepository
+### 3.6 ArticleRepository
 
 - **Responsibility:** Data access for the `Article` entity via Entity Framework Core.
 - **Operations:** `GetById`, `GetAll` (with pagination), `Add`, `Update`, `Remove`, `SlugExists`.
 
-### 3.6 ValidationBehavior
+### 3.7 ValidationBehavior
 
 - **Responsibility:** MediatR pipeline behavior that runs FluentValidation validators before the handler executes.
 - **Behavior:** Collects validation errors and throws a `ValidationException` with field-level error details, which the exception-handling middleware maps to a 400 response.
@@ -98,7 +103,8 @@ Within the API server, article management is handled by a set of focused compone
 | Title | `string` | Required, max 256 characters |
 | Slug | `string` | Required, unique, max 256 characters |
 | Abstract | `string` | Required, max 512 characters |
-| Body | `string` | Required, HTML or Markdown content |
+| Body | `string` | Required, Markdown source content |
+| BodyHtml | `string` | Required, pre-rendered HTML generated from Body at save time |
 | FeaturedImageId | `Guid?` | Nullable FK to DigitalAsset |
 | Published | `bool` | Default `false` |
 | DatePublished | `DateTime?` | UTC, set on first publish |
@@ -111,7 +117,7 @@ Within the API server, article management is handled by a set of focused compone
 
 - `Slug` has a unique index for duplicate detection and public URL lookups.
 - `Published` and `DatePublished` are indexed together for efficient public listing queries.
-- `Body` is stored as `nvarchar(max)` and excluded from list projections.
+- `Body` (Markdown source) and `BodyHtml` (pre-rendered HTML) are stored as `nvarchar(max)` / `TEXT` and excluded from list projections.
 
 ## 5. Key Workflows
 
@@ -121,14 +127,15 @@ Within the API server, article management is handled by a set of focused compone
 
 **Source:** [diagrams/sequence_create_article.puml](diagrams/sequence_create_article.puml)
 
-1. Admin submits title, body, abstract, and optional featured image ID.
+1. Admin submits title, body (Markdown), abstract, and optional featured image ID.
 2. `ValidationBehavior` validates required fields (title, body, abstract).
 3. `ArticleService` calls `SlugGenerator` to produce a slug from the title.
 4. `ArticleService` checks `ArticleRepository.SlugExists()` -- returns 409 if duplicate.
-5. `ArticleService` calls `ReadingTimeCalculator` to compute reading time from body.
-6. `ArticleService` creates the `Article` entity with `Published = false` and `CreatedAt = UtcNow`.
-7. `ArticleRepository` persists the entity.
-8. API returns 201 with the created `ArticleDto` and a `Location` header.
+5. `ArticleService` calls `MarkdownConverter` to convert the Markdown body to sanitized HTML, stored as `BodyHtml`.
+6. `ArticleService` calls `ReadingTimeCalculator` to compute reading time from the Markdown body.
+7. `ArticleService` creates the `Article` entity with `Published = false` and `CreatedAt = UtcNow`.
+8. `ArticleRepository` persists the entity.
+9. API returns 201 with the created `ArticleDto` and a `Location` header.
 
 ### 5.2 Edit Article
 
@@ -137,7 +144,7 @@ Within the API server, article management is handled by a set of focused compone
 3. `ArticleService` retrieves the article -- returns 404 if not found.
 4. If title changed, `SlugGenerator` regenerates the slug; `SlugExists` checks for conflicts (409).
 5. The service validates the incoming `If-Match` version token against the current article version and returns 412 if they do not match.
-6. If body changed, `ReadingTimeCalculator` recomputes reading time.
+6. If body changed, `MarkdownConverter` reconverts Markdown to sanitized HTML (`BodyHtml`), and `ReadingTimeCalculator` recomputes reading time.
 7. `ArticleService` updates fields, increments `Version`, and sets `UpdatedAt = UtcNow`.
 8. `ArticleRepository` persists changes.
 9. API returns 200 with the updated `ArticleDto` and a fresh `ETag`.
@@ -216,7 +223,8 @@ GET /api/articles/{id}
   "title": "string",
   "slug": "string",
   "abstract": "string",
-  "body": "string",
+  "body": "string (Markdown source)",
+  "bodyHtml": "string (pre-rendered HTML)",
   "featuredImageId": "guid or null",
   "published": false,
   "datePublished": null,
@@ -236,13 +244,13 @@ Content-Type: application/json
 
 {
   "title": "string (required)",
-  "body": "string (required)",
+  "body": "string (required, Markdown)",
   "abstract": "string (required)",
   "featuredImageId": "guid (optional)"
 }
 ```
 
-**Response 201:** Created `ArticleDto` with `Location` header.
+**Response 201:** Created `ArticleDto` (includes `body` as Markdown source and `bodyHtml` as rendered HTML) with `Location` header.
 **Response 400:** Validation errors (missing title, body, or abstract).
 **Response 401:** Unauthenticated.
 **Response 409:** Duplicate slug conflict.
@@ -255,13 +263,13 @@ Content-Type: application/json
 
 {
   "title": "string (required)",
-  "body": "string (required)",
+  "body": "string (required, Markdown)",
   "abstract": "string (required)",
   "featuredImageId": "guid (optional)"
 }
 ```
 
-**Response 200:** Updated `ArticleDto`.
+**Response 200:** Updated `ArticleDto` (includes `body` as Markdown source and `bodyHtml` as rendered HTML).
 **Response 400:** Empty title or body.
 **Response 401:** Unauthenticated.
 **Response 404:** Article not found.
@@ -325,7 +333,7 @@ At 576px and below, the table is replaced with a card-based layout. Each card di
 
 The editor screen retains the same left sidebar as the list view. The main content area is split into two sections:
 
-- **Left form area:** Contains a title input (`Comp/Input`), abstract textarea (`Comp/Textarea`), and a large body editor for HTML/Markdown content.
+- **Left form area:** Contains a title input (`Comp/Input`), abstract textarea (`Comp/Textarea`), and a Markdown body editor with live preview.
 - **Right metadata sidebar (320px, background `#080808`):** Contains a status selector (`Comp/Select`), a featured image dropzone (`Comp/Dropzone`), and action buttons: Publish/Save (`Comp/Btn/Primary`) and Delete (`Comp/Btn/Destructive`).
 
 Feedback is delivered via `Comp/Toast` components (success, error variants). Destructive actions (delete) trigger a `Comp/Modal` confirmation dialog.
@@ -341,6 +349,6 @@ Feedback is delivered via `Comp/Toast` components (success, error variants). Des
 
 1. **Slug collision strategy:** Should the system auto-append a numeric suffix (e.g., `my-post-2`) on slug collision, or strictly return 409 and require the user to change the title? Current design returns 409 per L2-001 acceptance criteria.
 2. **Soft delete:** Should articles support soft delete (a `DeletedAt` timestamp) for recovery, or is permanent deletion sufficient? Current design implements permanent deletion per L2-004.
-3. **Body format:** Should the system store HTML only, Markdown only, or both? If Markdown, where does the HTML conversion occur (server-side at save time, or client-side at render time)?
+3. **Body format:** ~~Should the system store HTML only, Markdown only, or both?~~ **Resolved:** The system stores both. `Body` holds the Markdown source of truth; `BodyHtml` holds sanitized HTML generated server-side at save time via Markdig. The public site renders `BodyHtml` directly with no runtime conversion.
 4. **Slug immutability after publish:** Should updating a published article's title regenerate the slug (potentially breaking existing public URLs), or should slug regeneration be restricted to draft articles only?
 5. **Concurrent editing:** Should the system implement optimistic concurrency (e.g., via an ETag or row version) to prevent lost updates when multiple admins edit the same article? Current design resolves this with a version token and `If-Match`.

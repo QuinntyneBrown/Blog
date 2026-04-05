@@ -54,7 +54,7 @@ We will use **Entity Framework Core** with a **code-first** approach for data ac
 - EF Core change tracking adds memory overhead for read-heavy queries (mitigated by `AsNoTracking()` for reads).
 
 ### Risks
-- Database provider choice (PostgreSQL vs SQL Server) is still open. EF Core abstracts the provider, but some features (UUID generation, full-text search) differ. The decision should be finalized before the first migration.
+- ~~Database provider choice is still open.~~ **Resolved:** SQL Server selected as the primary database. EF Core provider: `Microsoft.EntityFrameworkCore.SqlServer`. UUID generation uses `NEWSEQUENTIALID()`, timestamps use `DATETIME2` with `SYSUTCDATETIME()`.
 
 ## Implementation Notes
 
