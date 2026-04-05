@@ -1404,3 +1404,16 @@ The design specifies (Section 6.3): "Images within the article body scale fluidl
 - Added `.article-body img { max-width: 100%; height: auto; }` to the layout stylesheet.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — twitter:site meta tag absent; Site:TwitterHandle missing from SiteConfiguration
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 4.6 — SiteConfiguration
+
+**Description:**
+The design's `SiteConfiguration` model (Section 4.6) defines `TwitterHandle: string? Twitter/X handle for twitter:site tag`. The `twitter:site` meta tag (`<meta name="twitter:site" content="@{handle}">`) is part of the Twitter Card specification and tells Twitter/X which account is associated with the site. When set, it appears in link previews alongside the card.
+
+`Site:TwitterHandle` is entirely absent from `appsettings.json` — the key is not present under the `Site` section. `_Layout.cshtml` renders four Twitter Card tags (`twitter:card`, `twitter:title`, `twitter:description`, `twitter:image`) but never renders `twitter:site`. As a result, Twitter/X link previews for every page on the site omit the site attribution tag, and any future operator who sets `Site:TwitterHandle` in configuration will see no effect because no code reads or renders it.
+
+**Status:** OPEN
