@@ -684,3 +684,18 @@ The design specifies (Section 3.7): "Intercepts incoming requests to `/articles/
 - Registered `app.UseMiddleware<SlugRedirectMiddleware>()` in `Program.cs` before `UseStaticFiles()` and `UseRouting()`, matching the design's pipeline order (Section 6.2).
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — JSON-LD structured data not implemented on any page
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.2 — JsonLdGenerator, L2-008 — Structured Data
+
+**Description:**
+The design specifies (Section 3.2, L2-008): "Article pages emit a `Schema.org/Article` object with: `headline`, `datePublished`, `dateModified`, `author` (Person), `description`, `image`, `publisher` (Organization with logo), `mainEntityOfPage`." and "Listing pages emit a `Schema.org/Blog` object." No `<script type="application/ld+json">` tag existed on any page in the codebase. Without JSON-LD, search engines cannot extract structured article metadata for rich snippets (headline, date, author attribution in search results), and the site loses eligibility for Google's Article rich results — a significant SEO gap given the design's goal of "perfect SEO rating across all automated audit tools."
+
+**Fix applied:**
+- `Slug.cshtml`: Added a `@section Head` block with `<script type="application/ld+json">` containing a `Schema.org/Article` object with `headline`, `datePublished`, `dateModified`, `description`, `mainEntityOfPage`, `author` (Person), and `publisher` (Organization). String values are JavaScript-encoded to prevent XSS.
+- `Index.cshtml`: Added a `@section Head` block with a `Schema.org/Blog` object containing `name`, `description`, and `url`.
+
+**Status:** FIXED
