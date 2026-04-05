@@ -6,12 +6,42 @@
     Layout = "/Pages/Admin/Shared/_AdminLayout.cshtml";
 }
 
+@section AdminHead {
+<style>
+    .search-wrap { position: relative; display: flex; align-items: center; }
+    .search-icon { position: absolute; left: 10px; color: var(--fg-tertiary); pointer-events: none; flex-shrink: 0; }
+    .search-input {
+        height: 36px; background: var(--surface-input); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 0 12px 0 34px; font-size: 13px;
+        color: var(--fg-primary); font-family: var(--font); outline: none;
+        transition: border-color 0.15s; width: 220px;
+    }
+    .search-input:focus { border-color: var(--border-focus); border-width: 2px; }
+    .search-input::placeholder { color: var(--fg-tertiary); }
+    .td-abstract {
+        font-size: 12px; color: var(--fg-secondary); margin-top: 3px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 480px;
+    }
+    .article-mobile-card-abstract {
+        font-size: 12px; color: var(--fg-secondary); margin-top: 2px; line-height: 1.4;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    @@media (max-width: 575px) {
+        .search-wrap { display: none; }
+    }
+</style>
+}
+
 <div class="toolbar">
     <div class="toolbar-left">
         <h1 class="toolbar-title">Articles</h1>
     </div>
     <div class="toolbar-right">
-        <a href="/admin/articles/create" class="btn btn-primary">
+        <div class="search-wrap">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="search" id="articles-search" class="search-input" placeholder="Search articles…" data-testid="articles-search" autocomplete="off" />
+        </div>
+        <a href="/admin/articles/create" class="btn btn-primary" data-testid="new-article-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             <span>New Article</span>
         </a>
@@ -48,25 +78,29 @@
                 <tbody>
                     @foreach (var article in Model.Articles.Items)
                     {
-                        <tr>
+                        <tr data-testid="article-row">
                             <td>
-                                <div class="td-title">@article.Title</div>
+                                <div class="td-title" data-testid="article-title">@article.Title</div>
+                                @if (!string.IsNullOrWhiteSpace(article.Abstract))
+                                {
+                                    <div class="td-abstract" data-testid="article-abstract">@article.Abstract</div>
+                                }
                                 <div class="td-slug">/articles/@article.Slug</div>
                             </td>
                             <td>
-                                <span class="badge @(article.Published ? "badge-published" : "badge-draft")">
+                                <span class="badge @(article.Published ? "badge-published" : "badge-draft")" data-testid="status-badge">
                                     @(article.Published ? "Published" : "Draft")
                                 </span>
                             </td>
-                            <td class="td-date date-col">
+                            <td class="td-date date-col" data-testid="article-date">
                                 @((article.DatePublished ?? article.CreatedAt).ToString("MMM d, yyyy"))
                             </td>
                             <td>
                                 <div class="td-actions">
-                                    <a href="/admin/articles/edit/@article.ArticleId" class="btn-icon" title="Edit">
+                                    <a href="/admin/articles/edit/@article.ArticleId" class="btn-icon" title="Edit" aria-label="Edit">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                     </a>
-                                    <button class="btn-icon destructive" title="Delete" onclick="confirmDelete('@article.ArticleId', '@Html.Raw(article.Title.Replace("'", "\\'"))', @article.Version)">
+                                    <button class="btn-icon destructive" title="Delete" aria-label="Delete" onclick="confirmDelete('@article.ArticleId', '@Html.Raw(article.Title.Replace("'", "\\'"))', @article.Version)">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                                     </button>
                                 </div>
@@ -81,21 +115,25 @@
         <div class="article-mobile-cards">
             @foreach (var article in Model.Articles.Items)
             {
-                <div class="article-mobile-card">
+                <div class="article-mobile-card" data-testid="article-row">
                     <div class="article-mobile-card-header">
                         <div>
-                            <div class="article-mobile-card-title">@article.Title</div>
+                            <div class="article-mobile-card-title" data-testid="article-title">@article.Title</div>
+                            @if (!string.IsNullOrWhiteSpace(article.Abstract))
+                            {
+                                <div class="article-mobile-card-abstract" data-testid="article-abstract">@article.Abstract</div>
+                            }
                             <div class="article-mobile-card-slug">/articles/@article.Slug</div>
                         </div>
-                        <a href="/admin/articles/edit/@article.ArticleId" class="btn-icon" title="Edit">
+                        <a href="/admin/articles/edit/@article.ArticleId" class="btn-icon" title="Edit" aria-label="Edit">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </a>
                     </div>
                     <div class="article-mobile-card-meta">
-                        <span class="badge @(article.Published ? "badge-published" : "badge-draft")">
+                        <span class="badge @(article.Published ? "badge-published" : "badge-draft")" data-testid="status-badge">
                             @(article.Published ? "Published" : "Draft")
                         </span>
-                        <span class="article-mobile-card-date">
+                        <span class="article-mobile-card-date" data-testid="article-date">
                             @((article.DatePublished ?? article.CreatedAt).ToString("MMM d, yyyy"))
                         </span>
                     </div>
@@ -108,7 +146,9 @@
             <div style="display:flex;justify-content:center;gap:4px;padding:24px 0">
                 @for (int i = 1; i <= Model.Articles.TotalPages; i++)
                 {
-                    <a href="/admin/articles?page=@i" style="padding:8px 14px;border-radius:4px;font-size:14px;font-weight:@(i == Model.CurrentPage ? "600" : "500");background:@(i == Model.CurrentPage ? "var(--accent)" : "transparent");color:@(i == Model.CurrentPage ? "#000" : "var(--fg-secondary)")">@i</a>
+                    <a href="/admin/articles?page=@i"
+                       @(i == Model.CurrentPage + 1 ? "data-testid=\"pagination-next\"" : "")
+                       style="padding:8px 14px;border-radius:4px;font-size:14px;font-weight:@(i == Model.CurrentPage ? "600" : "500");background:@(i == Model.CurrentPage ? "var(--accent)" : "transparent");color:@(i == Model.CurrentPage ? "#000" : "var(--fg-secondary)")">@i</a>
                 }
             </div>
         }
@@ -145,5 +185,18 @@
     }
     function closeDeleteModal() { deleteModal.classList.add('modal-hidden'); }
     deleteModal.addEventListener('click', e => { if (e.target === deleteModal) closeDeleteModal(); });
+
+    const searchInput = document.getElementById('articles-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            const q = searchInput.value.trim().toLowerCase();
+            document.querySelectorAll('[data-testid="article-row"]').forEach(row => {
+                const titleEl = row.querySelector('[data-testid="article-title"]');
+                const abstractEl = row.querySelector('[data-testid="article-abstract"]');
+                const text = ((titleEl ? titleEl.textContent : '') + ' ' + (abstractEl ? abstractEl.textContent : '')).toLowerCase();
+                row.style.display = (!q || text.includes(q)) ? '' : 'none';
+            });
+        });
+    }
 </script>
 }
