@@ -266,7 +266,7 @@ app.UseCors();
 app.UseSession();
 app.UseRateLimiter();
 app.UseResponseCaching();
-app.UseAuthentication();
+app.UseMiddleware<JwtMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();
