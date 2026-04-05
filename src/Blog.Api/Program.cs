@@ -12,7 +12,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using RedisRateLimiting;
 using Serilog;
+using StackExchange.Redis;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,12 +51,25 @@ builder.Services.AddSingleton<ISlugGenerator, SlugGenerator>();
 builder.Services.AddSingleton<IMarkdownConverter, MarkdownConverter>();
 builder.Services.AddSingleton<IReadingTimeCalculator, ReadingTimeCalculator>();
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
-builder.Services.AddSingleton<IEmailRateLimitService, EmailRateLimitService>();
 builder.Services.AddSingleton<ICacheInvalidator, CacheInvalidator>();
 builder.Services.AddSingleton<IETagGenerator, ETagGenerator>();
 builder.Services.AddSingleton<IImageVariantGenerator, ImageVariantGenerator>();
 builder.Services.AddSingleton<ISearchHighlighter, SearchHighlighter>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Rate limiting — prefer Redis when a connection string is configured; fall back to in-memory.
+var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
+if (!string.IsNullOrWhiteSpace(redisConnectionString))
+{
+    builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(
+        StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnectionString));
+    builder.Services.AddSingleton<IEmailRateLimitService, RedisEmailRateLimitService>();
+}
+else
+{
+    builder.Services.AddSingleton<IEmailRateLimitService, EmailRateLimitService>();
+}
 
 // MediatR + Validation
 builder.Services.AddMediatR(cfg =>
@@ -89,36 +104,65 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// Rate Limiting
+// Rate Limiting — uses Redis-backed sliding window when a Redis connection string is configured;
+// falls back to in-memory sliding window otherwise.
 var loginRateLimit = builder.Configuration.GetValue("RateLimiting:LoginPermitLimit", 10);
 var writeRateLimit = builder.Configuration.GetValue("RateLimiting:WritePermitLimit", 60);
 builder.Services.AddRateLimiter(options =>
 {
-    options.AddPolicy("login-ip", context =>
-        RateLimitPartition.GetSlidingWindowLimiter(
-            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            factory: _ => new SlidingWindowRateLimiterOptions
-            {
-                Window = TimeSpan.FromMinutes(1),
-                SegmentsPerWindow = 6,
-                PermitLimit = loginRateLimit,
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                QueueLimit = 0
-            }));
-    options.AddPolicy("write-endpoints", context =>
-        RateLimitPartition.GetSlidingWindowLimiter(
-            partitionKey: context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-                ?? context.User?.FindFirst("sub")?.Value
-                ?? context.Connection.RemoteIpAddress?.ToString()
-                ?? "unknown",
-            factory: _ => new SlidingWindowRateLimiterOptions
-            {
-                Window = TimeSpan.FromMinutes(1),
-                SegmentsPerWindow = 6,
-                PermitLimit = writeRateLimit,
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                QueueLimit = 0
-            }));
+    if (!string.IsNullOrWhiteSpace(redisConnectionString))
+    {
+        var redisConnection = ConnectionMultiplexer.Connect(redisConnectionString);
+        options.AddPolicy("login-ip", context =>
+            RedisRateLimitPartition.GetSlidingWindowRateLimiter(
+                partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new RedisSlidingWindowRateLimiterOptions
+                {
+                    ConnectionMultiplexerFactory = () => redisConnection,
+                    Window = TimeSpan.FromMinutes(1),
+                    PermitLimit = loginRateLimit,
+                }));
+        options.AddPolicy("write-endpoints", context =>
+            RedisRateLimitPartition.GetSlidingWindowRateLimiter(
+                partitionKey: context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                    ?? context.User?.FindFirst("sub")?.Value
+                    ?? context.Connection.RemoteIpAddress?.ToString()
+                    ?? "unknown",
+                _ => new RedisSlidingWindowRateLimiterOptions
+                {
+                    ConnectionMultiplexerFactory = () => redisConnection,
+                    Window = TimeSpan.FromMinutes(1),
+                    PermitLimit = writeRateLimit,
+                }));
+    }
+    else
+    {
+        options.AddPolicy("login-ip", context =>
+            RateLimitPartition.GetSlidingWindowLimiter(
+                partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new SlidingWindowRateLimiterOptions
+                {
+                    Window = TimeSpan.FromMinutes(1),
+                    SegmentsPerWindow = 6,
+                    PermitLimit = loginRateLimit,
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0
+                }));
+        options.AddPolicy("write-endpoints", context =>
+            RateLimitPartition.GetSlidingWindowLimiter(
+                partitionKey: context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                    ?? context.User?.FindFirst("sub")?.Value
+                    ?? context.Connection.RemoteIpAddress?.ToString()
+                    ?? "unknown",
+                factory: _ => new SlidingWindowRateLimiterOptions
+                {
+                    Window = TimeSpan.FromMinutes(1),
+                    SegmentsPerWindow = 6,
+                    PermitLimit = writeRateLimit,
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0
+                }));
+    }
     options.RejectionStatusCode = 429;
     options.OnRejected = async (context, cancellationToken) =>
     {
