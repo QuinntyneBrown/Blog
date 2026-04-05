@@ -30,9 +30,13 @@
         <meta property="og:image" content="@ogImage" />
     }
     <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:card" content="@(!string.IsNullOrEmpty(ogImage) ? "summary_large_image" : "summary")" />
     <meta name="twitter:title" content="@title" />
     <meta name="twitter:description" content="@description" />
+    @if (!string.IsNullOrEmpty(ogImage))
+    {
+        <meta name="twitter:image" content="@ogImage" />
+    }
     <!-- Feeds -->
     <link rel="alternate" type="application/rss+xml" title="Quinn Brown RSS Feed" href="/feed.xml" />
     <link rel="alternate" type="application/atom+xml" title="Quinn Brown Atom Feed" href="/atom.xml" />
