@@ -3,7 +3,6 @@ using Blog.Api.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.Extensions.Caching.Distributed;
 using NSubstitute;
 using System.Security.Claims;
 using Xunit;
