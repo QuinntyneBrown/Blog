@@ -905,3 +905,18 @@ The design specifies `FeaturedImageUrl` (string?) as a resolved URL in the artic
 - Updated `Index.cshtml`, `Articles/Index.cshtml`, and `Articles/Slug.cshtml` to use `FeaturedImageUrl` instead of the bare `FeaturedImageId`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — PublicArticleController absent; GET /api/public/articles endpoints not implemented
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 3.7 — PublicArticleController
+
+**Description:**
+The design specifies a `PublicArticleController` (Section 3.7) that exposes two unauthenticated endpoints:
+1. `GET /api/public/articles?page={page}&pageSize={pageSize}` — returns a paginated list of published articles.
+2. `GET /api/public/articles/{slug}` — returns a single published article by slug, returning 404 if the article is not found or not published.
+
+Neither endpoint exists anywhere in the codebase. The only `ArticlesController` is guarded by `[Authorize]` and routes to `/api/articles` — meaning external consumers (feed readers, headless clients, or integrations) that follow the documented public API contract receive 401 instead of article data. Additionally, the existing `GetArticleBySlugQuery` does not filter for `Published == true`, so even if wired to a public endpoint it would incorrectly return draft articles to unauthenticated callers. The `GetPublishedArticlesQuery` and handler already exist but have no HTTP surface.
+
+**Status:** OPEN
