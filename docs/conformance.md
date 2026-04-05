@@ -1689,3 +1689,17 @@ The design specifies `SiteName` as a configurable value in `SiteConfiguration` (
 - Changed the `rawTitle` fallback in `_Layout.cshtml` from `ViewBag.Title ?? "Quinn Brown"` to `ViewBag.Title ?? Configuration["Site:SiteName"] ?? "Quinn Brown"`.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Homepage meta description hardcoded instead of reading from Site:SiteDescription
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 4.6 — SiteConfiguration
+
+**Description:**
+The design specifies `SiteDescription` as a configurable value in `SiteConfiguration` (Section 4.6). The homepage (`Index.cshtml`) set `ViewBag.Description` to the hardcoded string `"Thoughts on software engineering, .NET architecture, and building systems that last."` instead of reading from `Configuration["Site:SiteDescription"]`. This meant the homepage meta description was not configurable without a code change, inconsistent with the SeoController feeds and layout fallback which already used the config value.
+
+**Fix applied:**
+- Changed `ViewBag.Description` in `Index.cshtml` to read from `Configuration["Site:SiteDescription"]` with the original string as fallback.
+
+**Status:** FIXED
