@@ -449,3 +449,20 @@ The design specifies: "Ensures all communication occurs over TLS by redirecting 
 - Gated behind `!app.Environment.IsDevelopment()` to avoid redirect loops in local development without HTTPS configured.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — File upload validates Content-Type header instead of inspecting magic bytes; missing GIF support and dimension validation
+
+**Design reference:** `docs/detailed-designs/04-digital-asset-management/README.md`, Section 3.3 — FileValidator
+
+**Description:**
+The design specifies: "Validates uploaded files by inspecting content (magic bytes), not just file extension." It lists specific byte signatures — JPEG (`FF D8 FF`), PNG (`89 50 4E 47`), WebP (`52 49 46 46...57 45 42 50`), GIF (`47 49 46 38`), AVIF (`ftypavif`) — and requires dimension validation: "rejects images whose dimensions exceed 8192×8192 or whose total pixel count exceeds 40 megapixels." The implementation validated uploads using `request.File.ContentType`, which is a client-declared header that can be trivially spoofed. A malicious file with a `Content-Type: image/jpeg` header but containing executable or HTML content would pass validation. Additionally, GIF was listed in the design's supported types but absent from the implementation's allow-list, and no dimension validation existed.
+
+**Fix applied:**
+- Replaced the `ContentType` header check with a `DetectContentTypeAsync` method that reads the first 12 bytes from the file stream and matches against the magic byte signatures for all five formats (JPEG, PNG, GIF, WebP, AVIF).
+- The detected content type and correct file extension are used for storage, not the client-declared values.
+- Added dimension validation: rejects images exceeding 8192×8192 or 40 megapixels before persistence.
+- GIF support added via its magic bytes (`47 49 46 38`).
+
+**Status:** FIXED
