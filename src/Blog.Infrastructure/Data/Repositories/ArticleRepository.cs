@@ -76,6 +76,15 @@ public class ArticleRepository(BlogDbContext context) : IArticleRepository
     public async Task<(IReadOnlyList<Article> Articles, int TotalCount)> SearchAsync(
         string query, int page, int pageSize, CancellationToken cancellationToken = default)
     {
+        if (await IsFullTextAvailableAsync(cancellationToken))
+            return await SearchFullTextAsync(query, page, pageSize, cancellationToken);
+
+        return await SearchLikeFallbackAsync(query, page, pageSize, cancellationToken);
+    }
+
+    private async Task<(IReadOnlyList<Article> Articles, int TotalCount)> SearchFullTextAsync(
+        string query, int page, int pageSize, CancellationToken cancellationToken)
+    {
         var ftsQuery = BuildFtsQuery(query);
         var offset = (page - 1) * pageSize;
 
@@ -112,23 +121,81 @@ public class ArticleRepository(BlogDbContext context) : IArticleRepository
         return (articles, total);
     }
 
+    private async Task<(IReadOnlyList<Article> Articles, int TotalCount)> SearchLikeFallbackAsync(
+        string query, int page, int pageSize, CancellationToken cancellationToken)
+    {
+        var terms = query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var articlesQuery = context.Articles
+            .Where(a => a.Published)
+            .AsQueryable();
+
+        foreach (var term in terms)
+        {
+            var t = term;
+            articlesQuery = articlesQuery.Where(a =>
+                a.Title.Contains(t) || a.Abstract.Contains(t) || a.Body.Contains(t));
+        }
+
+        var total = await articlesQuery.CountAsync(cancellationToken);
+        var articles = await articlesQuery
+            .OrderByDescending(a => a.DatePublished)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Include(a => a.FeaturedImage)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        return (articles, total);
+    }
+
     public async Task<IReadOnlyList<Article>> GetSuggestionsAsync(
         string query, CancellationToken cancellationToken = default)
     {
-        var ftsQuery = $"\"{query.Trim().Replace("\"", "")}*\"";
+        if (await IsFullTextAvailableAsync(cancellationToken))
+        {
+            var ftsQuery = $"\"{query.Trim().Replace("\"", "")}*\"";
+            return await context.Articles
+                .FromSqlRaw(@"
+                    SELECT TOP 8 ArticleId, Title, Slug,
+                           Abstract, FeaturedImageId, Published,
+                           DatePublished, ReadingTimeMinutes,
+                           CreatedAt, UpdatedAt, Version, Body, BodyHtml
+                    FROM Articles
+                    WHERE Published = 1
+                      AND CONTAINS(Title, {0})
+                    ORDER BY DatePublished DESC",
+                    ftsQuery)
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+        }
+
+        // LIKE-based fallback for environments without full-text search
+        var term = query.Trim();
         return await context.Articles
-            .FromSqlRaw(@"
-                SELECT TOP 8 ArticleId, Title, Slug,
-                       Abstract, FeaturedImageId, Published,
-                       DatePublished, ReadingTimeMinutes,
-                       CreatedAt, UpdatedAt, Version, Body, BodyHtml
-                FROM Articles
-                WHERE Published = 1
-                  AND CONTAINS(Title, {0})
-                ORDER BY DatePublished DESC",
-                ftsQuery)
+            .Where(a => a.Published && a.Title.Contains(term))
+            .OrderByDescending(a => a.DatePublished)
+            .Take(8)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
+    }
+
+    private bool? _fullTextAvailable;
+
+    private async Task<bool> IsFullTextAvailableAsync(CancellationToken cancellationToken)
+    {
+        if (_fullTextAvailable.HasValue) return _fullTextAvailable.Value;
+        try
+        {
+            var result = await context.Database
+                .SqlQueryRaw<int>("SELECT CAST(FULLTEXTSERVICEPROPERTY('IsFullTextInstalled') AS int) AS [Value]")
+                .ToListAsync(cancellationToken);
+            _fullTextAvailable = result.FirstOrDefault() == 1;
+        }
+        catch
+        {
+            _fullTextAvailable = false;
+        }
+        return _fullTextAvailable.Value;
     }
 
     private static string BuildFtsQuery(string raw)
