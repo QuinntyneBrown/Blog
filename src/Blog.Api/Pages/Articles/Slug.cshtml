@@ -1,7 +1,7 @@
 @page "/articles/{slug}"
 @model Blog.Api.Pages.Articles.ArticleDetailModel
 @{
-    ViewBag.Title = $"{Model.Article?.Title} — Quinn Brown";
+    ViewBag.Title = $"{Model.Article?.Title} | Quinn Brown";
     ViewBag.Description = Model.Article?.Abstract;
     ViewBag.ActiveNav = "";
 }
@@ -53,4 +53,5 @@ else
             </a>
         </div>
     </div>
+    </article>
 }

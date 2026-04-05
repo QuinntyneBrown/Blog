@@ -466,3 +466,18 @@ The design specifies: "Validates uploaded files by inspecting content (magic byt
 - GIF support added via its magic bytes (`47 49 46 38`).
 
 **Status:** FIXED
+
+---
+
+## 2026-04-04 — Article detail page missing semantic `<article>` and `<figure>` elements
+
+**Design reference:** `docs/detailed-designs/03-public-article-display/README.md`, Section 7.1 — Semantic Markup and ARIA Landmarks; L2-007 — Semantic HTML
+
+**Description:**
+The design specifies (Section 7.1): "`<article>` elements wrap each ArticleCard in the listing and the full article content on the detail page." L2-007 requires: "Use `<article>`, `<header>`, `<main>`, `<nav>`, `<time datetime="...">`, `<figure>`, `<figcaption>`." The `Slug.cshtml` detail page wrapped the full article content in `<div class="article-detail">` — a non-semantic container with no meaning to assistive technologies or search engine parsers. The featured image used `<div class="article-featured-image">` instead of `<figure>`. Screen readers and structured-data crawlers cannot identify the article boundary or distinguish the featured image as a figure without the correct semantic elements.
+
+**Fix applied:**
+- Wrapped the entire article content (featured image + body) in `<article class="article-detail">`.
+- Changed the featured image container from `<div class="article-featured-image">` to `<figure class="article-featured-image">` when an image is present.
+
+**Status:** FIXED
