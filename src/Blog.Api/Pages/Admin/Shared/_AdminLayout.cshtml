@@ -220,6 +220,52 @@
         .asset-card-info { padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; }
         .asset-filename { font-family: var(--font-mono); font-size: 11px; color: var(--fg-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px; }
 
+        /* Mobile Top Bar */
+        .mobile-top-bar {
+            display: none;
+            height: 64px;
+            padding: 0 20px;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+        .mobile-top-bar-left { display: flex; align-items: center; gap: 12px; }
+        .mobile-top-bar-brand { font-size: 20px; font-weight: 800; letter-spacing: -1px; }
+        .mobile-top-bar-title { font-size: 18px; font-weight: 700; }
+        .mobile-top-bar-right { display: flex; align-items: center; gap: 12px; }
+        .mobile-hamburger {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: transparent;
+            border: none;
+            border-radius: var(--radius);
+            color: var(--fg-secondary);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .mobile-hamburger:hover { background: var(--surface-elevated); color: var(--fg-primary); }
+        .mobile-hamburger svg { width: 20px; height: 20px; }
+        .admin-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
         /* Responsive */
         @@media (max-width: 991px) {
             .sidebar { width: 220px; }
@@ -232,11 +278,14 @@
         }
         @@media (max-width: 767px) {
             .sidebar { display: none; }
+            .mobile-top-bar { display: flex; }
             .editor-layout { flex-direction: column; }
             .editor-sidebar { width: 100%; border-left: none; border-top: 1px solid var(--border); }
             .asset-grid { grid-template-columns: repeat(2, 1fr); }
         }
         @@media (max-width: 575px) {
+            .mobile-top-bar { height: 56px; padding: 0 16px; }
+            .mobile-top-bar-title { font-size: 16px; }
             .toolbar { height: 52px; padding: 0 16px; }
             .toolbar-title { font-size: 16px; }
             .btn span { display: none; }
@@ -246,24 +295,45 @@
     @RenderSection("AdminHead", required: false)
 </head>
 <body>
-    <aside class="sidebar">
+    <!-- Mobile Top Bar (visible at MD/SM/XS breakpoints) -->
+    <div class="mobile-top-bar" data-test="admin-mobile-top-bar">
+        <div class="mobile-top-bar-left">
+            <button class="mobile-hamburger" data-test="admin-hamburger-button" aria-label="Open navigation menu" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
+            <span class="mobile-top-bar-brand" data-test="admin-mobile-brand">QB</span>
+            <span class="mobile-top-bar-title" data-test="admin-mobile-page-title">@pageTitle</span>
+        </div>
+        <div class="mobile-top-bar-right">
+            <div class="admin-avatar" data-test="admin-avatar" title="Admin User">
+                <span>A</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop Sidebar (visible at LG+ breakpoints) -->
+    <aside class="sidebar" data-test="admin-sidebar">
         <div class="sidebar-header">
             <span class="sidebar-logo">QB</span>
             <span class="sidebar-label">Admin</span>
         </div>
         <nav class="sidebar-nav">
-            <a href="/admin/articles" class="sidebar-nav-item @(activeNav == "articles" ? "active" : "")">
+            <a href="/admin/articles" class="sidebar-nav-item @(activeNav == "articles" ? "active" : "")" data-test="sidebar-nav-articles">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 Articles
             </a>
-            <a href="/admin/digital-assets" class="sidebar-nav-item @(activeNav == "assets" ? "active" : "")">
+            <a href="/admin/digital-assets" class="sidebar-nav-item @(activeNav == "assets" ? "active" : "")" data-test="sidebar-nav-media">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                 Media
             </a>
         </nav>
         <div class="sidebar-bottom">
             <form method="post" action="/admin/logout">
-                <button type="submit" class="sidebar-nav-item" style="width:100%; background:none; border:none; cursor:pointer; text-align:left;">
+                <button type="submit" class="sidebar-nav-item" data-test="sidebar-signout-button" style="width:100%; background:none; border:none; cursor:pointer; text-align:left;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                     Sign out
                 </button>
