@@ -1201,3 +1201,17 @@ The design specifies that `TokenService` exposes two methods: `GenerateToken(Use
 **Status:** FIXED
 
 ---
+
+## 2026-04-05 — SiteConfiguration values hardcoded in SeoController instead of read from configuration
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 4.6 — SiteConfiguration
+
+**Description:**
+The design defines a `SiteConfiguration` model (Section 4.6) with configurable fields: `SiteName`, `SiteDescription`, `AuthorName`, `PublisherName`, `PublisherLogoUrl`, `DefaultOgImage`, `TwitterHandle`. The `SeoController` hardcoded `"Quinn Brown"` (6 occurrences as site name and author) and the site description string across RSS, Atom, JSON Feed, and llms.txt endpoints. This meant changing the blog's name or author required editing source code and redeploying instead of updating a configuration value. The design's intent was to make the blog reusable or rebrandable through configuration alone.
+
+**Fix applied:**
+- Added `Site:SiteName`, `Site:SiteDescription`, and `Site:AuthorName` to `appsettings.json`.
+- Added `SiteName`, `SiteDescription`, and `AuthorName` properties to `SeoController` that read from configuration with sensible fallback defaults.
+- Replaced all hardcoded string literals in the controller (llms.txt header/description, RSS channel title/description and `dc:creator`, Atom feed title/subtitle and author names, JSON Feed title/description) with the configuration-backed properties.
+
+**Status:** FIXED
