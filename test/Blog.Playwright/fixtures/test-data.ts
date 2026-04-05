@@ -12,7 +12,18 @@ export function makeArticle(overrides: Partial<{
   };
 }
 
+/** Alias for makeArticle — use this in test specs */
+export const createArticleData = makeArticle;
+
+/** Creates an article with a title that exceeds 200 characters */
+export function createArticleWithLongTitle() {
+  return makeArticle({ title: 'A'.repeat(201) });
+}
+
 export const testUser = {
   email: process.env.ADMIN_EMAIL || 'admin@blog.dev',
   password: process.env.ADMIN_PASSWORD || 'Admin1234!',
 };
+
+/** @deprecated Use testUser */
+export const TEST_ADMIN = testUser;

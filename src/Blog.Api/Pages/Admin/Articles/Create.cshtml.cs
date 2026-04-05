@@ -12,12 +12,12 @@ public class AdminArticleCreateModel(IMediator mediator) : AdminPageModelBase
         if (!IsAuthenticated()) Response.Redirect("/admin/login");
     }
 
-    public async Task<IActionResult> OnPostAsync(string title, string body, [FromForm(Name = "abstract")] string articleAbstract)
+    public async Task<IActionResult> OnPostAsync(string title, string body, [FromForm(Name = "abstract")] string articleAbstract, Guid? featuredImageId)
     {
         if (!IsAuthenticated()) return RedirectToPage("/Admin/Login");
         try
         {
-            var result = await mediator.Send(new CreateArticleCommand(title, body, articleAbstract, null));
+            var result = await mediator.Send(new CreateArticleCommand(title, body, articleAbstract, featuredImageId));
             return RedirectToPage("/Admin/Articles/Edit", new { id = result.ArticleId, success = "Article created." });
         }
         catch (Exception ex)
