@@ -17,6 +17,7 @@ public class GetArticleBySlugHandler(IArticleRepository articles) : IRequestHand
         return new ArticleDto(
             article.ArticleId, article.Title, article.Slug, article.Abstract,
             article.Body, article.BodyHtml, article.FeaturedImageId,
+            article.FeaturedImage != null ? $"/assets/{article.FeaturedImage.StoredFileName}" : null,
             article.Published, article.DatePublished,
             article.ReadingTimeMinutes, article.CreatedAt, article.UpdatedAt, article.Version);
     }
