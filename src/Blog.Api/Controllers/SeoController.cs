@@ -51,6 +51,10 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
         sb.AppendLine($"- RSS: {BaseUrl}/feed.xml");
         sb.AppendLine($"- Atom: {BaseUrl}/atom.xml");
         sb.AppendLine($"- JSON: {BaseUrl}/feed/json");
+        sb.AppendLine();
+        sb.AppendLine("## Discovery");
+        sb.AppendLine($"- Sitemap: {BaseUrl}/sitemap.xml");
+        sb.AppendLine($"- Structured Data: JSON-LD (Schema.org/Article) embedded in each article page");
         return Content(sb.ToString(), "text/plain; charset=utf-8");
     }
 
