@@ -23,7 +23,6 @@ public class AdminDigitalAssetsIndexModel(IMediator mediator) : AdminPageModelBa
     {
         if (!IsAuthenticated()) return RedirectToPage("/Admin/Login");
         var userId = GetCurrentUserId();
-        if (userId == Guid.Empty) return RedirectToPage("/Admin/Login");
         try
         {
             await mediator.Send(new UploadDigitalAssetCommand(file, userId));
