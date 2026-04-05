@@ -1,7 +1,7 @@
 using Blog.Domain.Interfaces;
 using Blog.Api.Common.Exceptions;
-using Blog.Infrastructure.Data;
 using Blog.Api.Services;
+using Blog.Infrastructure.Data;
 using FluentValidation;
 using MediatR;
 using Blog.Api.Features.Articles.Queries;
@@ -24,7 +24,8 @@ public class UpdateArticleCommandHandler(
     IUnitOfWork uow,
     ISlugGenerator slugGenerator,
     IMarkdownConverter markdownConverter,
-    IReadingTimeCalculator readingTimeCalculator) : IRequestHandler<UpdateArticleCommand, ArticleDto>
+    IReadingTimeCalculator readingTimeCalculator,
+    ICacheInvalidator cacheInvalidator) : IRequestHandler<UpdateArticleCommand, ArticleDto>
 {
     public async Task<ArticleDto> Handle(UpdateArticleCommand request, CancellationToken cancellationToken)
     {
@@ -57,6 +58,8 @@ public class UpdateArticleCommandHandler(
 
         uow.Articles.Update(article);
         await uow.SaveChangesAsync(cancellationToken);
+
+        cacheInvalidator.InvalidateArticle(article.Slug);
 
         return new ArticleDto(
             article.ArticleId, article.Title, article.Slug, article.Abstract,

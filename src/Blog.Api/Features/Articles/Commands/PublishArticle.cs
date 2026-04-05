@@ -1,5 +1,6 @@
 using Blog.Domain.Interfaces;
 using Blog.Api.Common.Exceptions;
+using Blog.Api.Services;
 using Blog.Infrastructure.Data;
 using MediatR;
 using Blog.Api.Features.Articles.Queries;
@@ -8,7 +9,10 @@ namespace Blog.Api.Features.Articles.Commands;
 
 public record PublishArticleCommand(Guid Id, bool Published, string? IfMatch) : IRequest<ArticleDto>;
 
-public class PublishArticleCommandHandler(IUnitOfWork uow, ILogger<PublishArticleCommandHandler> logger) : IRequestHandler<PublishArticleCommand, ArticleDto>
+public class PublishArticleCommandHandler(
+    IUnitOfWork uow,
+    ILogger<PublishArticleCommandHandler> logger,
+    ICacheInvalidator cacheInvalidator) : IRequestHandler<PublishArticleCommand, ArticleDto>
 {
     public async Task<ArticleDto> Handle(PublishArticleCommand request, CancellationToken cancellationToken)
     {
@@ -26,6 +30,8 @@ public class PublishArticleCommandHandler(IUnitOfWork uow, ILogger<PublishArticl
         article.UpdatedAt = DateTime.UtcNow;
         uow.Articles.Update(article);
         await uow.SaveChangesAsync(cancellationToken);
+
+        cacheInvalidator.InvalidateArticle(article.Slug);
 
         if (request.Published)
             logger.LogInformation("Business event {EventType} occurred: {@Details}",
