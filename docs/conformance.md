@@ -1675,3 +1675,17 @@ The design's `SiteConfiguration` model (Section 4.6) defines two distinct fields
 - Updated `Pages/Articles/Slug.cshtml` JSON-LD `publisher.name` to read `Configuration["Site:PublisherName"]` with fallback to `Configuration["Site:SiteName"]` (then `"Quinn Brown"`) so existing deployments without the new key degrade gracefully.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Layout default title fallback hardcoded instead of reading from Site:SiteName
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 4.6 — SiteConfiguration
+
+**Description:**
+The design specifies `SiteName` as a configurable value in `SiteConfiguration` (Section 4.6). The layout's fallback for `ViewBag.Title` was the hardcoded string `"Quinn Brown"` instead of reading `Configuration["Site:SiteName"]`. Any page that doesn't set `ViewBag.Title` would use the hardcoded fallback rather than the configured site name, making the default `<title>` tag non-configurable. This is the final remaining hardcoded `SiteName` reference that was not behind `Configuration[]`.
+
+**Fix applied:**
+- Changed the `rawTitle` fallback in `_Layout.cshtml` from `ViewBag.Title ?? "Quinn Brown"` to `ViewBag.Title ?? Configuration["Site:SiteName"] ?? "Quinn Brown"`.
+
+**Status:** FIXED
