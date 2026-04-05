@@ -2100,4 +2100,4 @@ This defeats the abstraction boundary the design establishes. The `BlobAssetStor
 - Implemented `GetAsync` in `BlobAssetStorage`: throws `NotImplementedException` (placeholder, matching the pattern of other unimplemented blob methods).
 - Updated `AssetsController.Serve`: replaced `assetStorage.Exists(variantName)` + `assetStorage.GetFilePath(variantName)` calls with `await assetStorage.GetAsync(variantName, ct)`. When a non-null stream is returned the controller sets cache/ETag/Vary headers and returns a `FileStreamResult` with the correct `Content-Type`. Replaced the final `assetStorage.Exists(fileName)` + `assetStorage.GetFilePath(fileName)` fallback with the same `GetAsync`-based pattern.
 
-**Status:** OPEN
+**Status:** FIXED
