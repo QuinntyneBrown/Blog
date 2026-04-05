@@ -841,7 +841,6 @@
         <a href="/" class="nav-logo">@(Configuration["Site:LogoText"] ?? "QB")</a>
         <ul class="nav-links">
             <li><a href="/articles" class="@(ViewBag.ActiveNav == "articles" ? "active" : "")">Articles</a></li>
-            <li><a href="/about" class="@(ViewBag.ActiveNav == "about" ? "active" : "")">About</a></li>
             <li><a href="/feed" class="@(ViewBag.ActiveNav == "feed" ? "active" : "")">Feed</a></li>
             <li>
                 <a href="/feed.xml" class="rss-link" aria-label="RSS Feed">
@@ -895,7 +894,6 @@
     </nav>
     <div class="mobile-menu" id="mobile-menu">
         <a href="/articles">Articles</a>
-        <a href="/about">About</a>
         <a href="/feed">Feed</a>
         <a href="/feed.xml">RSS Feed</a>
     </div>

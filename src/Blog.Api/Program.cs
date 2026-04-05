@@ -38,7 +38,6 @@ builder.Services.AddDbContextPool<BlogDbContext>(options =>
 builder.Services.AddScoped<IArticleRepository, ArticleRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IDigitalAssetRepository, DigitalAssetRepository>();
-builder.Services.AddScoped<IAboutContentRepository, AboutContentRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Asset storage abstraction — allows swapping to cloud blob storage without changing handlers.

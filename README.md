@@ -88,7 +88,6 @@ Detailed C4 and sequence diagrams for each subsystem are in [`docs/detailed-desi
 
 - Paginated article listing with responsive 3/2/1-column grid
 - Article detail pages optimized for reading (~70ch line width)
-- About page with author biography and optional profile image
 - JSON-LD structured data (`Schema.org Article` / `Blog`)
 - Open Graph and Twitter Card meta tags
 - XML sitemap, RSS 2.0 feed, Atom feed, `robots.txt`, `llms.txt`
@@ -103,7 +102,6 @@ Detailed C4 and sequence diagrams for each subsystem are in [`docs/detailed-desi
 
 - Article CRUD with rich text editor and live slug generation
 - Draft / Published workflow with publish confirmation
-- About page content authoring with Markdown editor and profile image
 - Digital asset management with drag-and-drop upload
 - Image optimization (WebP/AVIF, responsive `srcset`, lazy loading)
 - Sidebar navigation (desktop) and hamburger menu (mobile)
@@ -171,8 +169,6 @@ All write endpoints require a valid JWT bearer token obtained from `/api/auth/lo
 | `PUT` | `/api/articles/{id}` | Required | Update an article |
 | `PATCH` | `/api/articles/{id}/publish` | Required | Publish or unpublish an article |
 | `DELETE` | `/api/articles/{id}` | Required | Delete an article |
-| `GET` | `/api/about` | Required | Get about page content |
-| `PUT` | `/api/about` | Required | Create or update about page content |
 | `POST` | `/api/digital-assets` | Required | Upload an image asset |
 | `GET` | `/api/digital-assets/{id}` | — | Get asset metadata |
 | `GET` | `/health` | — | Liveness health check |
