@@ -1340,3 +1340,17 @@ The design specifies (Section 3.4): non-critical CSS should be loaded asynchrono
 - Added `<noscript><link rel="stylesheet" ...></noscript>` fallback for browsers with JavaScript disabled.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — HtmlSanitizer missing `<br>` and `<hr>` tags; Markdown line breaks and horizontal rules stripped
+
+**Design reference:** `docs/detailed-designs/02-article-management/README.md`, Section 3.4 — MarkdownConverter; `docs/detailed-designs/08-security-hardening/README.md`, Section 3.7 — HtmlSanitizer
+
+**Description:**
+Markdig generates `<br>` for hard line breaks in Markdown (two trailing spaces or backslash at end of line) and `<hr>` for horizontal rules (`---`, `***`, `___`). Both are fundamental Markdown elements. The HtmlSanitizer's allow-list did not include either tag, so they were silently stripped during the Markdown→HTML→sanitize pipeline. An author writing a horizontal rule or using hard line breaks would find them missing from the published article with no error indication. Both `<br>` and `<hr>` are void elements with no attributes or scripting surface — they pose zero XSS risk.
+
+**Fix applied:**
+- Added `"br"` and `"hr"` to the sanitizer's allowed tags list in `MarkdownConverter.BuildSanitizer()`.
+
+**Status:** FIXED

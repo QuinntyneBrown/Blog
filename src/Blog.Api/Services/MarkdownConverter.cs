@@ -24,7 +24,8 @@ public class MarkdownConverter : IMarkdownConverter
         sanitizer.AllowedTags.Clear();
         foreach (var tag in new[]
         {
-            "p", "h1", "h2", "h3", "h4", "h5", "h6",
+            "p", "br", "hr",
+            "h1", "h2", "h3", "h4", "h5", "h6",
             "a", "img",
             "ul", "ol", "li",
             "strong", "em",
