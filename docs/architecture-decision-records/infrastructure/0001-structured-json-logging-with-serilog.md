@@ -43,7 +43,7 @@ We will use **Serilog** with the **Serilog.AspNetCore** integration for structur
 - JSON log entries are more verbose than plain text (mitigated by compression in log shipping).
 
 ### Risks
-- Log aggregation platform choice is deferred (see Feature 09 open questions). Serilog's JSON output works with any platform, so this is not a blocking decision.
+- ~~Log aggregation platform choice is deferred.~~ **Resolved:** Azure Monitor with Application Insights selected. Serilog structured logs flow via `Serilog.Sinks.ApplicationInsights`, with KQL for querying and built-in alerting.
 
 ## Implementation Notes
 

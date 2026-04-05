@@ -113,7 +113,7 @@ The build process generates content-hashed filenames and corresponding `.br`/`.g
 | Aspect | Detail |
 |---|---|
 | Type | Razor tag helper / HTML transform |
-| Critical CSS source | Per-template critical CSS files generated at build time |
+| Critical CSS source | Per-template critical CSS files extracted automatically at build time via a headless browser tool (Critters) |
 | Non-critical loading | `<link rel="preload" as="style" onload="this.rel='stylesheet'">` with `<noscript>` fallback |
 | Cache | Critical CSS fragments cached in memory keyed by template name |
 
@@ -349,6 +349,7 @@ Caching is layered for maximum effectiveness:
 
 ### 7.3 Compression Configuration
 
+- **Critical CSS:** Extracted automatically per Razor template at build time using Critters. The build step renders each template in a headless browser, identifies above-the-fold CSS rules, and writes per-template critical CSS files consumed by `CriticalCssInliner` at runtime.
 - **Static assets:** Pre-compressed at build time with Brotli (level 11, maximum compression) and Gzip. Stored as `.br` and `.gz` files alongside originals.
 - **Dynamic responses:** Compressed on-the-fly by ASP.NET Response Compression middleware. Brotli at level 4 (balancing speed and ratio). Gzip as fallback.
 - **Accept-Encoding negotiation:** Brotli preferred when the client supports it; Gzip otherwise. Uncompressed only if neither is accepted.
@@ -384,6 +385,6 @@ Order matters for correctness and performance:
 |---|---|---|---|
 | OQ-1 | **SSG vs SSR:** Should article pages be statically generated at publish time rather than server-rendered on each request? SSG would eliminate TTFB variability entirely for article pages but adds build complexity and a publish pipeline. | High — could simplify caching and improve P99 TTFB | Open |
 | OQ-2 | **CDN strategy:** Should a CDN (e.g., Cloudflare, Azure Front Door) sit in front of the origin? This would offload static assets and potentially cache HTML at edge PoPs, reducing TTFB for geographically distributed users. | Medium — depends on target audience geography | Open |
-| OQ-3 | **Image processing location:** Should image variants be generated at upload time (eager) or on first request (lazy with caching)? Eager is simpler but increases storage; lazy reduces storage but adds first-request latency. | Low — either approach meets performance targets | Open |
-| OQ-4 | **Critical CSS tooling:** Should critical CSS be extracted automatically (e.g., via a headless browser at build time) or maintained manually per template? Automatic extraction is more maintainable but adds build complexity. | Low — manual is viable given the small number of templates | Open |
+| OQ-3 | ~~**Image processing location**~~ **Resolved: Eager at upload time.** All responsive variants (WebP + AVIF at breakpoints 320, 640, 960, 1280, 1920) are pre-generated during upload via SixLabors.ImageSharp. See Feature 04. | Low — either approach meets performance targets | Resolved |
+| OQ-4 | ~~**Critical CSS tooling**~~ **Resolved: Automated extraction at build time.** Critical CSS is extracted per template using Critters (a headless browser-based tool) during the build pipeline. This eliminates manual maintenance when styles change and ensures above-the-fold CSS stays accurate across template updates. | Low — manual is viable given the small number of templates | Resolved |
 | OQ-5 | **RUM analytics endpoint:** Should Core Web Vitals data be sent to a first-party analytics endpoint or a third-party service? First-party avoids additional third-party connections but requires storage and dashboarding. | Low — does not affect user-facing performance | Open |

@@ -346,7 +346,7 @@ app.MapHealthChecks("/health/ready");  // 5. Detailed readiness endpoint (intern
 
 | # | Question | Impact | Status |
 |---|----------|--------|--------|
-| 1 | Which log aggregation platform should be adopted (Seq, ELK, Datadog, Azure Monitor)? | Determines sink configuration and operational tooling. | Open |
+| 1 | ~~Which log aggregation platform should be adopted?~~ **Resolved: Azure Monitor with Application Insights.** Native Azure integration aligns with the SQL Server / Azure hosting strategy. Serilog logs flow via `Serilog.Sinks.ApplicationInsights`. KQL provides querying, dashboards, and alerting out of the box. | Determines sink configuration and operational tooling. | Resolved |
 | 2 | What alerting strategy should be used for unhealthy status or error rate spikes? | Determines integration with PagerDuty, Opsgenie, or similar. | Open |
 | 3 | Should the health endpoint include a detailed mode for operator diagnostics vs. a simple mode for load balancers? | Affects response schema and potential information exposure. | Resolved: separate `/health` and `/health/ready` endpoints |
 | 4 | What is the log retention policy for production? | Affects storage costs and compliance. | Open |
