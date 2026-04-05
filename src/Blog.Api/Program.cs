@@ -155,7 +155,11 @@ builder.Services.AddControllers().AddJsonOptions(o =>
 {
     o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
 });
-builder.Services.AddRazorPages(options => { })
+builder.Services.AddRazorPages(options =>
+{
+    options.Conventions.AuthorizeFolder("/Admin");
+    options.Conventions.AllowAnonymousToPage("/Admin/Login");
+})
     .AddMvcOptions(options =>
     {
         // Cache profile for public HTML pages: max-age=60, stale-while-revalidate=600

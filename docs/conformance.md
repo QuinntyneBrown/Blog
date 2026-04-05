@@ -1464,3 +1464,18 @@ The design specifies (Section 7.3): "Interactive elements (links, buttons) have 
 - Added a global `:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 2px; }` rule to the layout stylesheet. Uses `:focus-visible` (not `:focus`) so mouse clicks don't show the outline, only keyboard navigation. The accent color provides sufficient contrast against the dark background.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Admin Razor Pages accessible without authentication
+
+**Design reference:** `docs/detailed-designs/02-article-management/README.md`, Section 8 — Security; `docs/detailed-designs/08-security-hardening/README.md`, Section 3.5 — AuthMiddleware
+
+**Description:**
+The design specifies (Design 02, Section 8): "All endpoints require a valid JWT bearer token in the Authorization header. Unauthenticated requests receive a 401 Unauthorized response." Design 08, Section 3.5 says the AuthMiddleware "Returns 401 for missing or invalid tokens on protected endpoints." The API controllers correctly use `[Authorize]` attributes, but the admin Razor Pages under `/Admin/` had no authorization applied — neither `[Authorize]` on page models nor `AuthorizeFolder` in the Razor Pages conventions. This meant the article editor, article list, digital asset management, and settings pages were accessible to any unauthenticated visitor who knew the URL path, bypassing the entire authentication layer the design requires for back-office operations.
+
+**Fix applied:**
+- Added `options.Conventions.AuthorizeFolder("/Admin")` to the Razor Pages configuration in `Program.cs`, requiring authentication for all pages under the `/Admin` path.
+- Added `options.Conventions.AllowAnonymousToPage("/Admin/Login")` to exempt the login page itself.
+
+**Status:** FIXED
