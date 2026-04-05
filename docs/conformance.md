@@ -404,6 +404,17 @@ The design resolves Open Question 4: "Resolved: 1 MB. Enforced via Kestrel's `Ma
 
 ---
 
+## 2026-04-04 — MigrationRunner not implemented as IHostedService; migrations bypassed via ad-hoc startup block
+
+**Design reference:** `docs/detailed-designs/10-data-persistence/README.md`, Section 3.5 — Migration Runner; Open Question 4 (resolved: IHostedService on startup)
+
+**Description:**
+The design resolves Open Question 4 with: "IHostedService on startup. Simplest deployment model — app self-migrates before accepting traffic." Section 3.5 specifies that `MigrationRunner` is a hosted service that calls `GetPendingMigrationsAsync()`, logs each pending migration by name, applies them via `MigrateAsync()`, logs the total duration, and terminates the application on failure. The `MigrationRunner` class at `src/Blog.Infrastructure/Data/MigrationRunner.cs` exists as a plain class with a `RunAsync()` method but is never registered or invoked. Instead, `Program.cs` contains an ad-hoc startup scope that calls `db.Database.MigrateAsync()` directly — bypassing `MigrationRunner` entirely, logging only a generic success message (not individual migration names), and not using the structured per-migration timing the design requires. Because `MigrationRunner` is never registered in DI, any code path that resolves it would fail at runtime, and the migration contract described in the design is not enforced.
+
+**Status:** OPEN
+
+---
+
 ## 2026-04-04 — Missing write-endpoint rate limiting policy (60 req/min per authenticated user)
 
 **Design reference:** `docs/detailed-designs/08-security-hardening/README.md`, Section 3.3 — RateLimitingMiddleware
