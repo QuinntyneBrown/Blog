@@ -69,7 +69,7 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
         {
             urls.Add(new XElement(ns + "url",
                 new XElement(ns + "loc", $"{BaseUrl}/articles/{article.Slug}"),
-                new XElement(ns + "lastmod", (article.DatePublished ?? article.CreatedAt).ToString("yyyy-MM-dd")),
+                new XElement(ns + "lastmod", article.UpdatedAt.ToString("yyyy-MM-dd")),
                 new XElement(ns + "changefreq", "weekly"),
                 new XElement(ns + "priority", "0.8")));
         }

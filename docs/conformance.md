@@ -938,3 +938,17 @@ The previous conformance fix (featured image URLs on public pages) missed the ad
 - Updated `Admin/Articles/Edit.cshtml` to check `!string.IsNullOrEmpty(Model.Article?.FeaturedImageUrl)` and use `@Model.Article.FeaturedImageUrl` as the image `src`, matching the pattern used on the public pages.
 
 **Status:** FIXED
+
+---
+
+## 2026-04-05 — Sitemap lastmod uses DatePublished instead of UpdatedAt
+
+**Design reference:** `docs/detailed-designs/05-seo-and-discoverability/README.md`, Section 3.3 — SitemapGenerator
+
+**Description:**
+The design specifies (Section 3.3): "Each `<url>` entry includes `<lastmod>` (article's last modified date in W3C format)." The implementation used `(article.DatePublished ?? article.CreatedAt)` for the `<lastmod>` value. The "last modified date" is `UpdatedAt`, not `DatePublished` — an article edited after publication would show its original publish date instead of the actual last-modification date. This gives search engine crawlers stale information about content freshness, potentially delaying recrawls of updated articles since the crawler sees an unchanged `<lastmod>` despite content changes.
+
+**Fix applied:**
+- Changed the sitemap `<lastmod>` value from `(article.DatePublished ?? article.CreatedAt).ToString("yyyy-MM-dd")` to `article.UpdatedAt.ToString("yyyy-MM-dd")` in `SeoController.Sitemap()`.
+
+**Status:** FIXED
