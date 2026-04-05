@@ -64,20 +64,17 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Featured Image</label>
-                        <div class="dropzone" style="height:160px" id="image-dropzone">
-                            @if (!string.IsNullOrEmpty(Model.Article?.FeaturedImageUrl))
-                            {
-                                <img src="@Model.Article.FeaturedImageUrl" style="max-height:140px;max-width:100%;object-fit:contain;border-radius:4px" />
-                            }
-                            else
-                            {
-                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                                <div class="dropzone-text">Drop image or click to upload</div>
-                                <div class="dropzone-hint">JPEG, PNG, WebP, AVIF — Max 10 MB</div>
-                            }
+                        <img data-testid="featured-image-preview" id="featured-image-preview" class="featured-img-preview" style="@(string.IsNullOrEmpty(Model.Article?.FeaturedImageUrl) ? "display:none;" : "")margin-bottom:8px" src="@(Model.Article?.FeaturedImageUrl ?? "")" alt="Featured image preview" />
+                        <button type="button" data-testid="remove-featured-image" id="remove-featured-image-btn" class="btn btn-secondary" style="@(string.IsNullOrEmpty(Model.Article?.FeaturedImageUrl) ? "display:none;" : "display:inline-flex;")margin-bottom:8px;font-size:12px;padding:4px 10px" onclick="removeFeaturedImage()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            <span>Remove Image</span>
+                        </button>
+                        <div class="dropzone" style="height:160px;@(!string.IsNullOrEmpty(Model.Article?.FeaturedImageUrl) ? "display:none;" : "")" data-testid="featured-image-button" id="open-image-chooser">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                            <div class="dropzone-text">Choose featured image</div>
+                            <div class="dropzone-hint">JPEG, PNG, WebP, AVIF — Max 10 MB</div>
                         </div>
-                        <input type="file" name="featuredImage" id="featured-image-input" accept="image/*" style="display:none" />
-                        <input type="hidden" name="featuredImageId" value="@Model.Article?.FeaturedImageId" />
+                        <input type="hidden" name="featuredImageId" id="featured-image-id" value="@Model.Article?.FeaturedImageId" />
                     </div>
                     @if (Model.Article != null)
                     {
@@ -121,12 +118,41 @@
     </div>
 }
 
+<div class="modal-overlay modal-hidden" id="image-chooser-modal" role="dialog" aria-label="Choose featured image">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <span class="modal-title">Choose Featured Image</span>
+            <button type="button" class="btn-icon" onclick="closeImageChooser()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="dropzone" style="height:120px" data-testid="dropzone" id="chooser-dropzone">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" stroke-width="1.5"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+                <div class="dropzone-text">Drop image or click to choose</div>
+                <div class="dropzone-hint">JPEG, PNG, WebP, AVIF — Max 10 MB</div>
+            </div>
+            <input type="file" id="chooser-file-input" accept="image/jpeg,image/png,image/webp,image/avif" style="display:none" />
+            <div data-testid="upload-error" id="upload-error" style="display:none;color:var(--destructive);font-size:13px;margin-top:8px"></div>
+            <div id="file-info" style="display:none">
+                <div class="file-info">
+                    <img data-testid="upload-preview" id="upload-preview" alt="Upload preview" />
+                    <div class="file-info-meta">
+                        <div data-testid="file-name" id="file-name" style="font-size:13px;font-weight:500;color:var(--fg-primary)"></div>
+                        <div data-testid="file-size" id="file-size" style="font-size:12px;color:var(--fg-tertiary)"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeImageChooser()">Cancel</button>
+            <button type="button" class="btn btn-primary" id="upload-btn" onclick="uploadFeaturedImage()" disabled>Upload</button>
+        </div>
+    </div>
+</div>
+
 @section AdminScripts {
 <script>
-    document.getElementById('image-dropzone')?.addEventListener('click', () => {
-        document.getElementById('featured-image-input').click();
-    });
-
     function insertMarkdown(before, after) {
         const ta = document.getElementById('body-textarea');
         const start = ta.selectionStart, end = ta.selectionEnd;
@@ -141,5 +167,115 @@
     function showDeleteModal() { deleteModal?.classList.remove('modal-hidden'); }
     function closeDeleteModal() { deleteModal?.classList.add('modal-hidden'); }
     deleteModal?.addEventListener('click', e => { if (e.target === deleteModal) closeDeleteModal(); });
+
+    // Image chooser modal
+    const chooserModal = document.getElementById('image-chooser-modal');
+    const chooserDropzone = document.getElementById('chooser-dropzone');
+    const chooserFileInput = document.getElementById('chooser-file-input');
+    const uploadBtn = document.getElementById('upload-btn');
+    const uploadPreview = document.getElementById('upload-preview');
+    const fileInfo = document.getElementById('file-info');
+    const fileNameEl = document.getElementById('file-name');
+    const fileSizeEl = document.getElementById('file-size');
+    const uploadError = document.getElementById('upload-error');
+    const featuredPreview = document.getElementById('featured-image-preview');
+    const removeBtn = document.getElementById('remove-featured-image-btn');
+    const openChooser = document.getElementById('open-image-chooser');
+    const featuredImageIdInput = document.getElementById('featured-image-id');
+
+    let selectedFile = null;
+
+    openChooser.addEventListener('click', () => {
+        chooserModal.classList.remove('modal-hidden');
+    });
+
+    function closeImageChooser() {
+        chooserModal.classList.add('modal-hidden');
+        resetChooser();
+    }
+
+    function resetChooser() {
+        selectedFile = null;
+        chooserFileInput.value = '';
+        fileInfo.style.display = 'none';
+        uploadError.style.display = 'none';
+        uploadBtn.disabled = true;
+    }
+
+    chooserDropzone.addEventListener('click', () => chooserFileInput.click());
+    chooserDropzone.addEventListener('dragover', e => { e.preventDefault(); chooserDropzone.style.borderColor = 'var(--accent)'; });
+    chooserDropzone.addEventListener('dragleave', () => chooserDropzone.style.borderColor = '');
+    chooserDropzone.addEventListener('drop', e => {
+        e.preventDefault();
+        chooserDropzone.style.borderColor = '';
+        if (e.dataTransfer.files.length > 0) handleFileSelect(e.dataTransfer.files[0]);
+    });
+
+    chooserFileInput.addEventListener('change', () => {
+        if (chooserFileInput.files.length > 0) handleFileSelect(chooserFileInput.files[0]);
+    });
+
+    chooserModal.addEventListener('click', e => { if (e.target === chooserModal) closeImageChooser(); });
+
+    function handleFileSelect(file) {
+        uploadError.style.display = 'none';
+        const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
+        if (!validTypes.includes(file.type)) {
+            uploadError.textContent = 'Invalid file type. Please select JPEG, PNG, WebP, or AVIF.';
+            uploadError.style.display = 'block';
+            return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+            uploadError.textContent = 'File too large. Maximum size is 10 MB.';
+            uploadError.style.display = 'block';
+            return;
+        }
+        selectedFile = file;
+        fileNameEl.textContent = file.name;
+        fileSizeEl.textContent = formatSize(file.size);
+        const reader = new FileReader();
+        reader.onload = e => { uploadPreview.src = e.target.result; };
+        reader.readAsDataURL(file);
+        fileInfo.style.display = 'block';
+        uploadBtn.disabled = false;
+    }
+
+    function formatSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    async function uploadFeaturedImage() {
+        if (!selectedFile) return;
+        uploadBtn.disabled = true;
+        uploadError.style.display = 'none';
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        try {
+            const resp = await fetch('/api/digital-assets', { method: 'POST', body: formData });
+            if (!resp.ok) throw new Error('Upload failed');
+            const data = await resp.json();
+            featuredPreview.src = data.url;
+            featuredPreview.style.display = 'block';
+            removeBtn.style.display = 'inline-flex';
+            openChooser.style.display = 'none';
+            featuredImageIdInput.value = data.digitalAssetId;
+            closeImageChooser();
+            if (typeof showToast === 'function') showToast('success', 'Success', 'Featured image uploaded.');
+        } catch (err) {
+            uploadError.textContent = err.message || 'Upload failed. Please try again.';
+            uploadError.style.display = 'block';
+            uploadBtn.disabled = false;
+        }
+    }
+
+    function removeFeaturedImage() {
+        featuredPreview.src = '';
+        featuredPreview.style.display = 'none';
+        removeBtn.style.display = 'none';
+        openChooser.style.display = 'flex';
+        featuredImageIdInput.value = '';
+    }
 </script>
 }

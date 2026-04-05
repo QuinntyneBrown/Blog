@@ -1,6 +1,6 @@
 import { Page, Locator } from '@playwright/test';
 
-export class AdminArticleEditorPage {
+export class ArticleEditorPage {
   readonly page: Page;
   readonly titleInput: Locator;
   readonly abstractInput: Locator;
@@ -8,6 +8,9 @@ export class AdminArticleEditorPage {
   readonly saveDraftButton: Locator;
   readonly publishButton: Locator;
   readonly statusBadge: Locator;
+  readonly featuredImageButton: Locator;
+  readonly featuredImagePreview: Locator;
+  readonly removeFeaturedImageButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -17,6 +20,13 @@ export class AdminArticleEditorPage {
     this.saveDraftButton = page.locator('button[value="save"]');
     this.publishButton = page.locator('button[value="publish"]');
     this.statusBadge = page.locator('.toolbar-left .badge');
+    this.featuredImageButton = page.locator('[data-testid="featured-image-button"]');
+    this.featuredImagePreview = page.locator('[data-testid="featured-image-preview"]');
+    this.removeFeaturedImageButton = page.locator('[data-testid="remove-featured-image"]');
+  }
+
+  async goto() {
+    await this.page.goto('/admin/articles/create');
   }
 
   async gotoCreate() {
