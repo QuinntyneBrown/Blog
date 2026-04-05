@@ -18,7 +18,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Serilog
 builder.Host.UseSerilog((context, services, config) =>
-    config.ReadFrom.Configuration(context.Configuration).ReadFrom.Services(services));
+    config.ReadFrom.Configuration(context.Configuration).ReadFrom.Services(services)
+        .Enrich.With<Blog.Api.Core.LogSanitizingEnricher>());
 
 // Database
 builder.Services.AddDbContextPool<BlogDbContext>(options =>
