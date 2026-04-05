@@ -66,4 +66,39 @@ public class UploadDigitalAssetCommandHandler(IUnitOfWork uow, IWebHostEnvironme
             asset.ContentType, asset.FileSizeBytes, asset.Width, asset.Height,
             $"/assets/{asset.StoredFileName}", asset.CreatedAt);
     }
+
+    private static async Task<(string? ContentType, string Extension)> DetectContentTypeAsync(IFormFile file)
+    {
+        var buffer = new byte[12];
+        using var stream = file.OpenReadStream();
+        var bytesRead = await stream.ReadAsync(buffer);
+        if (bytesRead < 4)
+            return (null, string.Empty);
+
+        // JPEG: FF D8 FF
+        if (buffer[0] == 0xFF && buffer[1] == 0xD8 && buffer[2] == 0xFF)
+            return ("image/jpeg", ".jpg");
+
+        // PNG: 89 50 4E 47
+        if (buffer[0] == 0x89 && buffer[1] == 0x50 && buffer[2] == 0x4E && buffer[3] == 0x47)
+            return ("image/png", ".png");
+
+        // GIF: 47 49 46 38
+        if (buffer[0] == 0x47 && buffer[1] == 0x49 && buffer[2] == 0x46 && buffer[3] == 0x38)
+            return ("image/gif", ".gif");
+
+        // WebP: RIFF....WEBP (bytes 0-3 = RIFF, bytes 8-11 = WEBP)
+        if (bytesRead >= 12
+            && buffer[0] == 0x52 && buffer[1] == 0x49 && buffer[2] == 0x46 && buffer[3] == 0x46
+            && buffer[8] == 0x57 && buffer[9] == 0x45 && buffer[10] == 0x42 && buffer[11] == 0x50)
+            return ("image/webp", ".webp");
+
+        // AVIF: ISOBMFF with 'ftypavif' (ftyp at bytes 4-7, avif at bytes 8-11)
+        if (bytesRead >= 12
+            && buffer[4] == 0x66 && buffer[5] == 0x74 && buffer[6] == 0x79 && buffer[7] == 0x70
+            && buffer[8] == 0x61 && buffer[9] == 0x76 && buffer[10] == 0x69 && buffer[11] == 0x66)
+            return ("image/avif", ".avif");
+
+        return (null, string.Empty);
+    }
 }
