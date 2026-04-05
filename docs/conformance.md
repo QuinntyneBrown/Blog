@@ -244,3 +244,19 @@ The design specifies that the `/health/ready` endpoint returns a response with `
 The design specifies a dedicated `RequestLoggingMiddleware` class at `src/Blog.Api/Middleware/RequestLoggingMiddleware.cs` that: starts a `Stopwatch` before calling `next(context)`; emits a structured log entry at `Information` for 2xx/3xx responses, `Warning` for 4xx, and `Error` for 5xx; and includes the fields `Method`, `Path`, `StatusCode`, `DurationMs`, `CorrelationId`, and `Timestamp`. No such file exists in the codebase. Instead, `Program.cs` calls `app.UseSerilogRequestLogging()`, but that call is placed **after** `app.MapControllers()` and `app.MapRazorPages()` — in ASP.NET Core 8 the terminal middleware (`MapControllers`) runs before any middleware registered after it in the pipeline, so `UseSerilogRequestLogging` never intercepts requests. Even if its position were corrected, Serilog's built-in request logging uses a uniform `Information` level and does not automatically escalate to `Warning` or `Error` based on status code without explicit configuration that is absent here. The result is that all HTTP requests are logged without the designed level-based severity escalation, and the structured `DurationMs`/`CorrelationId` fields in the design's format are not guaranteed to be present.
 
 **Status:** OPEN
+
+---
+
+## 2026-04-04 — Response compression missing Brotli/Gzip level configuration and SVG MIME type
+
+**Design reference:** `docs/detailed-designs/07-web-performance/README.md`, Section 3.2 — CompressionMiddleware
+
+**Description:**
+The design specifies Brotli at `CompressionLevel.Optimal` (level 4) for dynamic responses and Gzip at `CompressionLevel.Fastest` as a fallback. It also specifies `image/svg+xml` in the list of compressible MIME types. The implementation registered both compression providers but did not configure their compression levels (defaulting to `Fastest` for Brotli — lower compression ratio than designed) and did not add `image/svg+xml` to the MIME type list. This means Brotli responses were less compressed than designed (trading bandwidth savings for speed that was not needed given the design's intent), and SVG images were served uncompressed.
+
+**Fix applied:**
+- Added `Configure<BrotliCompressionProviderOptions>` with `CompressionLevel.Optimal`.
+- Added `Configure<GzipCompressionProviderOptions>` with `CompressionLevel.Fastest`.
+- Added `image/svg+xml` to the response compression MIME types via `ResponseCompressionDefaults.MimeTypes.Concat(["image/svg+xml"])`.
+
+**Status:** FIXED
