@@ -9,6 +9,7 @@ namespace Blog.Api.Middleware;
 public class LoginRateLimitMiddleware(RequestDelegate next, IConfiguration configuration, IHostEnvironment env)
 {
     private readonly int _permitLimit = configuration.GetValue("RateLimiting:LoginPermitLimit", 10);
+    private readonly int _windowSeconds = configuration.GetValue("RateLimiting:LoginWindowSeconds", 60);
     private readonly bool _enabled = !env.IsEnvironment("Testing");
 
     private static readonly ConcurrentDictionary<string, (int Count, DateTime WindowStart)> _counters = new();
@@ -27,7 +28,7 @@ public class LoginRateLimitMiddleware(RequestDelegate next, IConfiguration confi
                 _ => (1, now),
                 (_, existing) =>
                 {
-                    if ((now - existing.WindowStart).TotalMinutes >= 1)
+                    if ((now - existing.WindowStart).TotalSeconds >= _windowSeconds)
                         return (1, now); // Reset window
                     return (existing.Count + 1, existing.WindowStart);
                 });
