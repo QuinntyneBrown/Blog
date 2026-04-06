@@ -48,7 +48,7 @@ public class SubscriptionsController(IMediator mediator, IConfiguration configur
         var listUnsubscribe = form["List-Unsubscribe"].FirstOrDefault();
         var body = $"List-Unsubscribe={listUnsubscribe}";
         await Mediator.Send(new OneClickUnsubscribeCommand(token ?? string.Empty, body), ct);
-        return Ok();
+        return NoContent();
     }
 
     // GET /api/subscribers — paginated subscriber list (auth-guarded, for back office).

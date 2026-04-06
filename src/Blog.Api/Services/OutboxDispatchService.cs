@@ -129,7 +129,8 @@ public class OutboxDispatchService(
         var payload = JsonSerializer.Deserialize<JsonElement>(message.Payload);
         var newsletterId = payload.GetProperty("newsletterId").GetGuid();
         var subscriberId = payload.GetProperty("subscriberId").GetGuid();
-        var email = payload.GetProperty("email").GetString()!;
+        var email = payload.GetProperty("email").GetString()
+            ?? throw new InvalidOperationException($"Outbox message {message.OutboxMessageId} has null 'email' field.");
 
         // Idempotency check (design §3.8)
         var idempotencyKey = ComputeIdempotencyKey(newsletterId, subscriberId);
@@ -146,7 +147,8 @@ public class OutboxDispatchService(
         }
 
         // Generate unsubscribe URL using HMAC token (design §3.10)
-        var tokenService = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<IUnsubscribeTokenService>();
+        using var tokenScope = scopeFactory.CreateScope();
+        var tokenService = tokenScope.ServiceProvider.GetRequiredService<IUnsubscribeTokenService>();
         var unsubscribeToken = tokenService.GenerateToken(subscriberId);
 
         // Send email
@@ -184,8 +186,10 @@ public class OutboxDispatchService(
     {
         var payload = JsonSerializer.Deserialize<JsonElement>(message.Payload);
         var subscriberId = payload.GetProperty("subscriberId").GetGuid();
-        var email = payload.GetProperty("email").GetString()!;
-        var confirmUrl = payload.GetProperty("confirmUrl").GetString()!;
+        var email = payload.GetProperty("email").GetString()
+            ?? throw new InvalidOperationException($"Outbox message {message.OutboxMessageId} has null 'email' field.");
+        var confirmUrl = payload.GetProperty("confirmUrl").GetString()
+            ?? throw new InvalidOperationException($"Outbox message {message.OutboxMessageId} has null 'confirmUrl' field.");
 
         // Check if subscriber still needs confirmation
         var subscriber = await uow.Newsletters.GetSubscriberByIdAsync(subscriberId, cancellationToken);

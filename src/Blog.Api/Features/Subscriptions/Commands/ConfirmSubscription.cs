@@ -23,7 +23,15 @@ public class ConfirmSubscriptionCommandHandler(
     public async Task Handle(ConfirmSubscriptionCommand request, CancellationToken cancellationToken)
     {
         // Compute SHA-256 hash of the raw token
-        var tokenBytes = Convert.FromHexString(request.Token);
+        byte[] tokenBytes;
+        try
+        {
+            tokenBytes = Convert.FromHexString(request.Token);
+        }
+        catch (FormatException)
+        {
+            throw new UnprocessableEntityException("Confirmation token is invalid or has already been used.");
+        }
         var hashBytes = SHA256.HashData(tokenBytes);
         var tokenHash = Convert.ToHexString(hashBytes).ToLowerInvariant();
 

@@ -48,6 +48,7 @@ public class SubscribeCommandHandler(
             {
                 existing.IsActive = true;
                 existing.Confirmed = false;
+                existing.ConfirmedAt = null;
                 existing.ResubscribedAt = now;
                 existing.UpdatedAt = now;
             }
@@ -115,7 +116,8 @@ public class SubscribeCommandHandler(
 
     private async Task WriteConfirmationOutbox(Guid subscriberId, string email, string rawToken, DateTime now, CancellationToken cancellationToken)
     {
-        var siteUrl = configuration["Site:SiteUrl"] ?? string.Empty;
+        var siteUrl = configuration["Site:SiteUrl"]
+            ?? throw new InvalidOperationException("Site:SiteUrl configuration is required to generate confirmation links.");
         var confirmUrl = $"{siteUrl}/newsletter/confirm?token={Uri.EscapeDataString(rawToken)}";
 
         var payload = JsonSerializer.Serialize(new
