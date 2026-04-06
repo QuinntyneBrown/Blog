@@ -44,6 +44,7 @@ builder.Services.AddScoped<IArticleRepository, ArticleRepository>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IDigitalAssetRepository, DigitalAssetRepository>();
+builder.Services.AddScoped<INewsletterRepository, NewsletterRepository>();
 builder.Services.AddScoped<IAboutContentRepository, AboutContentRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -69,6 +70,19 @@ else
     builder.Services.AddSingleton<IEmailRateLimitService, EmailRateLimitService>();
 }
 builder.Services.AddSingleton<ICacheInvalidator, CacheInvalidator>();
+builder.Services.AddSingleton<ISubscribeRateLimitService, SubscribeRateLimitService>();
+
+// Newsletter services
+builder.Services.Configure<Blog.Api.Services.UnsubscribeTokenOptions>(
+    builder.Configuration.GetSection("UnsubscribeToken"));
+builder.Services.AddSingleton<IUnsubscribeTokenService, Blog.Api.Services.HmacUnsubscribeTokenService>();
+builder.Services.Configure<Blog.Api.Services.SendGridOptions>(
+    builder.Configuration.GetSection("SendGrid"));
+builder.Services.AddSingleton<IEmailSender, Blog.Api.Services.SendGridEmailSender>();
+builder.Services.Configure<Blog.Api.Services.OutboxOptions>(
+    builder.Configuration.GetSection("Outbox"));
+builder.Services.AddHostedService<Blog.Api.Services.OutboxDispatchService>();
+builder.Services.AddHostedService<Blog.Api.Services.NewsletterEmailDispatchService>();
 builder.Services.AddSingleton<IETagGenerator, ETagGenerator>();
 builder.Services.AddSingleton<IImageVariantGenerator, ImageVariantGenerator>();
 builder.Services.AddSingleton<ISearchHighlighter, SearchHighlighter>();
@@ -139,6 +153,40 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0
             });
     });
+    // Newsletter subscription rate limiting (Design 14, Section 7)
+    options.AddPolicy("newsletter-subscribe", context =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new SlidingWindowRateLimiterOptions
+            {
+                Window = TimeSpan.FromMinutes(10),
+                SegmentsPerWindow = 10,
+                PermitLimit = 5,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+    options.AddPolicy("newsletter-confirm", context =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new SlidingWindowRateLimiterOptions
+            {
+                Window = TimeSpan.FromMinutes(10),
+                SegmentsPerWindow = 10,
+                PermitLimit = 10,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
+    options.AddPolicy("newsletter-unsubscribe", context =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new SlidingWindowRateLimiterOptions
+            {
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 6,
+                PermitLimit = 30,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
     options.AddPolicy("csp-report", context =>
         RateLimitPartition.GetSlidingWindowLimiter(
             partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",

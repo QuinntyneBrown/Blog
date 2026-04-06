@@ -6,6 +6,7 @@ public interface IUnitOfWork
     IEventRepository Events { get; }
     IUserRepository Users { get; }
     IDigitalAssetRepository DigitalAssets { get; }
+    INewsletterRepository Newsletters { get; }
     IAboutContentRepository AboutContents { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     Task BeginTransactionAsync(CancellationToken cancellationToken = default);

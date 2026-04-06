@@ -49,6 +49,13 @@ public sealed class CacheInvalidator(IMemoryCache cache) : ICacheInvalidator
     }
 
     /// <inheritdoc/>
+    public void InvalidateNewsletterArchive()
+    {
+        cache.Remove("/api/newsletters/archive");
+        for (var page = 1; page <= 5; page++)
+            cache.Remove($"/api/newsletters/archive?page={page}");
+    }
+
     public void InvalidateAbout()
     {
         cache.Remove("/about");

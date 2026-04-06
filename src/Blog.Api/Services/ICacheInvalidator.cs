@@ -17,6 +17,12 @@ public interface ICacheInvalidator
     void InvalidateArticle(string slug);
 
     /// <summary>
+    /// Evicts the response cache entries for the public newsletter archive list pages.
+    /// Called after a newsletter is sent so the new entry is visible.
+    /// </summary>
+    void InvalidateNewsletterArchive();
+
+    /// <summary>
     /// Evicts the response cache entry for the public about page.
     /// </summary>
     void InvalidateAbout();

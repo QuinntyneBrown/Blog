@@ -12,6 +12,7 @@ public class UnitOfWork(BlogDbContext context) : IUnitOfWork
     public IEventRepository Events { get; } = new EventRepository(context);
     public IUserRepository Users { get; } = new UserRepository(context);
     public IDigitalAssetRepository DigitalAssets { get; } = new DigitalAssetRepository(context);
+    public INewsletterRepository Newsletters { get; } = new NewsletterRepository(context);
     public IAboutContentRepository AboutContents { get; } = new AboutContentRepository(context);
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
