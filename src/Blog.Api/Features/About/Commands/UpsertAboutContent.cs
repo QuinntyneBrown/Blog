@@ -3,6 +3,7 @@ using Blog.Api.Features.About.Queries;
 using Blog.Api.Services;
 using Blog.Domain.Entities;
 using Blog.Domain.Interfaces;
+using Blog.Infrastructure.Data;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

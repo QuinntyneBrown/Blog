@@ -52,6 +52,7 @@ public class RestoreAboutContentCommandHandler(
         if (current.Version != request.CurrentVersion)
             throw new ConflictException("The about content has been modified. Please refresh and try again.");
 
+        bool profileImageRestored = true;
         await uow.BeginTransactionAsync(cancellationToken);
         try
         {
@@ -73,7 +74,7 @@ public class RestoreAboutContentCommandHandler(
             current.Body = historyRecord.Body;
             current.BodyHtml = markdownConverter.Convert(historyRecord.Body);
 
-            bool profileImageRestored = true;
+            profileImageRestored = true;
             if (historyRecord.ProfileImageId.HasValue)
             {
                 var asset = await uow.DigitalAssets.GetByIdAsync(historyRecord.ProfileImageId.Value, cancellationToken);
