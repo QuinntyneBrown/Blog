@@ -14,9 +14,12 @@ public class LoginRateLimitMiddleware(RequestDelegate next, IConfiguration confi
 
     public async Task InvokeAsync(HttpContext context)
     {
-        if (context.Request.Path.StartsWithSegments("/api/auth/login")
-            && string.Equals(context.Request.Method, "POST", StringComparison.OrdinalIgnoreCase))
+        var isLoginPost = context.Request.Path.StartsWithSegments("/api/auth/login")
+            && string.Equals(context.Request.Method, "POST", StringComparison.OrdinalIgnoreCase);
+
+        if (isLoginPost)
         {
+            Console.WriteLine($"[RATELIMIT] Login attempt from {context.Connection.RemoteIpAddress}, path={context.Request.Path}");
             var ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
             var now = DateTime.UtcNow;
 
