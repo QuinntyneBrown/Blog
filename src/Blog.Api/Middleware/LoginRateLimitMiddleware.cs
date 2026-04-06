@@ -19,7 +19,6 @@ public class LoginRateLimitMiddleware(RequestDelegate next, IConfiguration confi
 
         if (isLoginPost)
         {
-            Console.WriteLine($"[RATELIMIT] Login attempt from {context.Connection.RemoteIpAddress}, path={context.Request.Path}, count={_counters.GetValueOrDefault(context.Connection.RemoteIpAddress?.ToString() ?? "unknown").Count}, limit={_permitLimit}");
             var ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
             var now = DateTime.UtcNow;
 
@@ -32,10 +31,8 @@ public class LoginRateLimitMiddleware(RequestDelegate next, IConfiguration confi
                     return (existing.Count + 1, existing.WindowStart);
                 });
 
-            Console.WriteLine($"[RATELIMIT] After update: count={entry.Count}, limit={_permitLimit}, will reject={entry.Count > _permitLimit}");
             if (entry.Count > _permitLimit)
             {
-                Console.WriteLine("[RATELIMIT] REJECTING");
                 context.Response.StatusCode = 429;
                 context.Response.Headers.RetryAfter = "60";
                 context.Response.ContentType = "application/problem+json";
