@@ -38,4 +38,10 @@ public sealed class CacheInvalidator(IMemoryCache cache) : ICacheInvalidator
         cache.Remove("/atom.xml");
         cache.Remove("/feed/json");
     }
+
+    /// <inheritdoc/>
+    public void InvalidateAbout()
+    {
+        cache.Remove("/about");
+    }
 }
