@@ -7,7 +7,7 @@ namespace Blog.Api.Middleware;
 /// per-request nonce-based Content-Security-Policy as resolved in design OQ-1
 /// (docs/detailed-designs/08-security-hardening/README.md).
 /// </summary>
-public class SecurityHeadersMiddleware(RequestDelegate next, IHostEnvironment env)
+public class SecurityHeadersMiddleware(RequestDelegate next)
 {
     /// <summary>
     /// Key used to store the per-request CSP nonce in HttpContext.Items so that
