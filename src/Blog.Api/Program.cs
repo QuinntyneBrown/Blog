@@ -310,6 +310,7 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseRouting();
 app.UseCors();
 app.UseSession();
+app.UseMiddleware<Blog.Api.Middleware.LoginRateLimitMiddleware>();
 app.UseRateLimiter();
 // Response caching disabled — incompatible with per-request CSP nonces.
 // Cache-Control headers are still sent for reverse proxies/CDNs.
