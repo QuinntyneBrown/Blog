@@ -26,9 +26,9 @@ public class PaginationTests : IClassFixture<BlogWebApplicationFactory>
 
         var body = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(body);
-        doc.RootElement.GetProperty("page").GetInt32().Should().Be(1);
-        doc.RootElement.GetProperty("pageSize").GetInt32().Should().BeGreaterThan(0);
-        doc.RootElement.GetProperty("totalCount").GetInt32().Should().BeGreaterThan(0);
+        doc.RootElement.GetProperty("data").GetProperty("page").GetInt32().Should().Be(1);
+        doc.RootElement.GetProperty("data").GetProperty("pageSize").GetInt32().Should().BeGreaterThan(0);
+        doc.RootElement.GetProperty("data").GetProperty("totalCount").GetInt32().Should().BeGreaterThan(0);
     }
 
     [Fact]
@@ -41,9 +41,9 @@ public class PaginationTests : IClassFixture<BlogWebApplicationFactory>
 
         var body = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(body);
-        doc.RootElement.GetProperty("page").GetInt32().Should().Be(1);
-        doc.RootElement.GetProperty("pageSize").GetInt32().Should().Be(1);
-        doc.RootElement.GetProperty("items").GetArrayLength().Should().BeLessOrEqualTo(1);
+        doc.RootElement.GetProperty("data").GetProperty("page").GetInt32().Should().Be(1);
+        doc.RootElement.GetProperty("data").GetProperty("pageSize").GetInt32().Should().Be(1);
+        doc.RootElement.GetProperty("data").GetProperty("items").GetArrayLength().Should().BeLessOrEqualTo(1);
     }
 
     [Fact]
@@ -56,7 +56,7 @@ public class PaginationTests : IClassFixture<BlogWebApplicationFactory>
 
         var body = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(body);
-        doc.RootElement.GetProperty("totalPages").GetInt32().Should().BeGreaterThan(0);
+        doc.RootElement.GetProperty("data").GetProperty("totalPages").GetInt32().Should().BeGreaterThan(0);
     }
 
     [Fact]
@@ -69,8 +69,8 @@ public class PaginationTests : IClassFixture<BlogWebApplicationFactory>
 
         var body = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(body);
-        doc.RootElement.GetProperty("page").GetInt32().Should().Be(1);
-        doc.RootElement.GetProperty("items").GetArrayLength().Should().BeGreaterThan(0);
+        doc.RootElement.GetProperty("data").GetProperty("page").GetInt32().Should().Be(1);
+        doc.RootElement.GetProperty("data").GetProperty("items").GetArrayLength().Should().BeGreaterThan(0);
     }
 
     [Fact]
@@ -83,8 +83,8 @@ public class PaginationTests : IClassFixture<BlogWebApplicationFactory>
 
         var body = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(body);
-        doc.RootElement.GetProperty("hasPreviousPage").GetBoolean().Should().BeFalse();
+        doc.RootElement.GetProperty("data").GetProperty("hasPreviousPage").GetBoolean().Should().BeFalse();
         // With 1 published article and pageSize=100, there should be no next page
-        doc.RootElement.GetProperty("hasNextPage").GetBoolean().Should().BeFalse();
+        doc.RootElement.GetProperty("data").GetProperty("hasNextPage").GetBoolean().Should().BeFalse();
     }
 }
