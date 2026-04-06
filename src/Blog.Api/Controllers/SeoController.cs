@@ -90,6 +90,7 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
     }
 
     [HttpGet("feed.xml")]
+    [HttpGet("feed/rss")]
     [ResponseCache(Duration = 3600)] // Design spec: 60 minutes per resolved Open Question #4 (docs/detailed-designs/05-seo-and-discoverability/README.md, Section 8)
     public async Task<IActionResult> Rss()
     {
@@ -130,6 +131,7 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
     }
 
     [HttpGet("atom.xml")]
+    [HttpGet("feed/atom")]
     [ResponseCache(Duration = 3600)] // Design spec: 60 minutes per resolved Open Question #4 (docs/detailed-designs/05-seo-and-discoverability/README.md, Section 8)
     public async Task<IActionResult> Atom()
     {

@@ -361,7 +361,7 @@ app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.Health
         });
         await context.Response.WriteAsync(result);
     }
-}).RequireAuthorization();
+}).AllowAnonymous();
 
 await app.RunAsync();
 

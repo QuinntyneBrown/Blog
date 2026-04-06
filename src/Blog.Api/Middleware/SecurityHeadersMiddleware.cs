@@ -55,11 +55,7 @@ public class SecurityHeadersMiddleware(RequestDelegate next, IHostEnvironment en
             // to the /api/csp-report URL (Design 08, Section 3.3).
             headers["Reporting-Endpoints"] = "csp-endpoint=\"/api/csp-report\"";
 
-            // Strict-Transport-Security — only sent over HTTPS / non-development.
-            if (!env.IsDevelopment())
-            {
-                headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload";
-            }
+            headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload";
 
             headers["X-Content-Type-Options"] = "nosniff";
             headers["X-Frame-Options"] = "DENY";
