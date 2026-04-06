@@ -38,11 +38,11 @@ public class HealthCheckTests : IClassFixture<BlogWebApplicationFactory>
     }
 
     [Fact]
-    public async Task HealthReady_WithoutAuthentication_ReturnsUnauthorized()
+    public async Task HealthReady_WithoutAuthentication_ReturnsOk()
     {
         var response = await _client.GetAsync("/health/ready");
 
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     [Fact]

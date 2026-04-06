@@ -25,7 +25,7 @@ public class UploadAssetTests : IClassFixture<BlogWebApplicationFactory>
         var content = new MultipartFormDataContent();
         content.Add(new ByteArrayContent(new byte[] { 0xFF, 0xD8, 0xFF }), "file", "test.jpg");
 
-        var response = await client.PostAsync("/api/digital-assets", content);
+        var response = await client.PostAsync("/api/digital-assets/upload", content);
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
