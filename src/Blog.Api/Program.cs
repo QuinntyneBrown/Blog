@@ -114,24 +114,6 @@ var loginRateLimit = builder.Configuration.GetValue("RateLimiting:LoginPermitLim
 var writeRateLimit = builder.Configuration.GetValue("RateLimiting:WritePermitLimit", 60);
 builder.Services.AddRateLimiter(options =>
 {
-    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
-    {
-        // Only rate-limit the login endpoint
-        if (context.Request.Path.StartsWithSegments("/api/auth/login") && context.Request.Method == "POST")
-        {
-            var ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-            return RateLimitPartition.GetSlidingWindowLimiter($"login:{ip}",
-                _ => new SlidingWindowRateLimiterOptions
-                {
-                    Window = TimeSpan.FromMinutes(1),
-                    SegmentsPerWindow = 6,
-                    PermitLimit = loginRateLimit,
-                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                    QueueLimit = 0
-                });
-        }
-        return RateLimitPartition.GetNoLimiter("no-limit");
-    });
     options.AddPolicy<string, LoginRateLimiterPolicy>("login-ip");
     options.AddPolicy("write-endpoints", context =>
     {
