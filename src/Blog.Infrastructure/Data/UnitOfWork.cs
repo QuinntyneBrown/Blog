@@ -11,6 +11,7 @@ public class UnitOfWork(BlogDbContext context) : IUnitOfWork
     public IArticleRepository Articles { get; } = new ArticleRepository(context);
     public IUserRepository Users { get; } = new UserRepository(context);
     public IDigitalAssetRepository DigitalAssets { get; } = new DigitalAssetRepository(context);
+    public INewsletterRepository Newsletters { get; } = new NewsletterRepository(context);
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         => context.SaveChangesAsync(cancellationToken);

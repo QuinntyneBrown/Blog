@@ -8,6 +8,10 @@ public class BlogDbContext(DbContextOptions<BlogDbContext> options) : DbContext(
     public DbSet<User> Users => Set<User>();
     public DbSet<Article> Articles => Set<Article>();
     public DbSet<DigitalAsset> DigitalAssets => Set<DigitalAsset>();
+    public DbSet<Newsletter> Newsletters => Set<Newsletter>();
+    public DbSet<NewsletterSubscriber> NewsletterSubscribers => Set<NewsletterSubscriber>();
+    public DbSet<NewsletterSendLog> NewsletterSendLogs => Set<NewsletterSendLog>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,6 +37,8 @@ public class BlogDbContext(DbContextOptions<BlogDbContext> options) : DbContext(
                     entry.Property("UpdatedAt").CurrentValue = now;
                 if (entry.Entity is Article article)
                     article.Version++;
+                else if (entry.Entity is Newsletter newsletter)
+                    newsletter.Version++;
             }
         }
         return base.SaveChangesAsync(cancellationToken);

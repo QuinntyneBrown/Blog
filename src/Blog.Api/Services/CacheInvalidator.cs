@@ -38,4 +38,12 @@ public sealed class CacheInvalidator(IMemoryCache cache) : ICacheInvalidator
         cache.Remove("/atom.xml");
         cache.Remove("/feed/json");
     }
+
+    /// <inheritdoc/>
+    public void InvalidateNewsletterArchive()
+    {
+        cache.Remove("/api/newsletters/archive");
+        for (var page = 1; page <= 5; page++)
+            cache.Remove($"/api/newsletters/archive?page={page}");
+    }
 }
