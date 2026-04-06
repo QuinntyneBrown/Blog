@@ -4,6 +4,7 @@ using Blog.Infrastructure.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -28,18 +29,32 @@ public class BlogWebApplicationFactory : WebApplicationFactory<Program>
                 .ToList();
             foreach (var d in dbDescriptors) services.Remove(d);
 
-            // Remove hosted services that require a real database.
+            // Remove hosted services that require a real database or external infrastructure.
             var hostedServices = services.Where(
                 d => d.ServiceType == typeof(IHostedService) &&
                      d.ImplementationType != null &&
                      (d.ImplementationType == typeof(MigrationRunner) ||
-                      d.ImplementationType == typeof(SeedDataHostedService)))
+                      d.ImplementationType == typeof(SeedDataHostedService) ||
+                      d.ImplementationType == typeof(Blog.Api.Services.OutboxDispatchService) ||
+                      d.ImplementationType == typeof(Blog.Api.Services.NewsletterEmailDispatchService)))
                 .ToList();
             foreach (var hs in hostedServices) services.Remove(hs);
 
             // Add InMemory database.
             services.AddDbContext<BlogDbContext>(options =>
                 options.UseInMemoryDatabase(_dbName));
+
+            // Provide a valid HMAC key for the unsubscribe token service in tests.
+            services.Configure<Blog.Api.Services.UnsubscribeTokenOptions>(opts =>
+                opts.HmacKey = "dGVzdC1obWFjLWtleS0zMi1ieXRlcy1sb25nISEh");
+        });
+
+        builder.ConfigureAppConfiguration((_, config) =>
+        {
+            config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Site:SiteUrl"] = "https://localhost:5001"
+            });
         });
     }
 
