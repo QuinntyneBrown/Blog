@@ -44,25 +44,19 @@ public class EventsController(IMediator mediator, IConfiguration configuration, 
             stats.MaxUpdatedAt.Ticks / TimeSpan.TicksPerSecond * TimeSpan.TicksPerSecond, DateTimeKind.Utc);
         var lastModified = new DateTimeOffset(truncatedUpdatedAt, TimeSpan.Zero);
 
+        Response.Headers.CacheControl = PublicCacheControl;
+        Response.Headers.ETag = etag;
+        Response.Headers[HeaderNames.LastModified] = lastModified.ToString("R");
+
         if (Request.Headers.TryGetValue(HeaderNames.IfNoneMatch, out var ifNoneMatch) && ifNoneMatch == etag)
-        {
-            Response.Headers.CacheControl = PublicCacheControl;
             return StatusCode(304);
-        }
 
         if (Request.Headers.TryGetValue(HeaderNames.IfModifiedSince, out var ifModifiedSince) &&
             DateTimeOffset.TryParse(ifModifiedSince, out var ifModifiedSinceDate) &&
             lastModified <= ifModifiedSinceDate)
-        {
-            Response.Headers.CacheControl = PublicCacheControl;
             return StatusCode(304);
-        }
 
         var result = await Mediator.Send(new GetPublishedEventsQuery(upcomingPage, pastPage, pageSize), ct);
-
-        Response.Headers.CacheControl = PublicCacheControl;
-        Response.Headers.ETag = etag;
-        Response.Headers[HeaderNames.LastModified] = lastModified.ToString("R");
         return Ok(result);
     }
 

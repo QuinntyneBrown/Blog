@@ -42,8 +42,7 @@ public class UpdateEventCommandValidator : AbstractValidator<UpdateEventCommand>
 public class UpdateEventCommandHandler(
     IUnitOfWork uow,
     ISlugGenerator slugGenerator,
-    ICacheInvalidator cacheInvalidator,
-    ILogger<UpdateEventCommandHandler> logger) : IRequestHandler<UpdateEventCommand, EventDto>
+    ICacheInvalidator cacheInvalidator) : IRequestHandler<UpdateEventCommand, EventDto>
 {
     public async Task<EventDto> Handle(UpdateEventCommand request, CancellationToken cancellationToken)
     {
