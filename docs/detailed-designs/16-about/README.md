@@ -76,7 +76,7 @@ The About Page feature provides a publicly visible biography for the site author
 ### 3.5 GetAboutContentHandler
 
 - **Responsibility**: Retrieves the current about content record (singleton). Returns `null` if no record exists.
-- **Returns**: `PublicAboutContentDto?` — the handler projects onto `PublicAboutContentDto` (omitting `body`, `aboutContentId`, `createdAt`, `updatedAt`, and `version`), which is the DTO returned by `GET /api/about`. The back-office editor does not use this handler; it re-uses the upsert response (`AboutContentDto`) which includes `body`, `version`, and all audit fields needed for subsequent edits.
+- **Returns**: `PublicAboutContentDto?` — the handler projects onto `PublicAboutContentDto` (omitting `body`, `aboutContentId`, `profileImageId`, `createdAt`, `updatedAt`, and `version`), which is the DTO returned by `GET /api/about`. The handler still resolves the image URL from `ProfileImageId` internally but only exposes `profileImageUrl` in the public response — `profileImageId` is excluded from the public projection. The back-office editor does not use this handler; it re-uses the upsert response (`AboutContentDto`) which includes `body`, `profileImageId`, `version`, and all audit fields needed for subsequent edits.
 - **Dependencies**: `AboutContentRepository`, `DigitalAssetRepository` (resolves profile image URL from `ProfileImageId`)
 
 ### 3.6 AboutContentRepository
@@ -185,13 +185,16 @@ Key points:
 PublicAboutContentDto  {
     heading:         string,
     bodyHtml:        string,       // Pre-rendered HTML — the only field the public page renders
-    profileImageId:  Guid?,
-    profileImageUrl: string?       // Resolved CDN/storage URL
+    profileImageUrl: string?       // Resolved CDN/storage URL; null when no profile image is set
     // body (raw Markdown) is intentionally excluded — anonymous visitors need only the
     // rendered HTML; exposing raw Markdown to the public serves no purpose and leaks
     // authoring artefacts (syntax characters) into the API surface
 }
+```
 
+**Public DTO surface area**: `PublicAboutContentDto` intentionally omits `profileImageId` — anonymous consumers need only the resolved image URL for rendering, not the internal asset identifier. Exposing the `Guid` PK would leak an internal implementation detail (the `DigitalAssets` table structure) with no rendering value. The back-office `AboutContentDto` retains `profileImageId` because the editor needs it to pre-populate the image selector and to submit updates. No public SEO or social-card generation requires the internal ID — Open Graph `og:image` tags use the resolved `profileImageUrl`.
+
+```
 AboutContentDto  {
     aboutContentId:  Guid,
     heading:         string,
@@ -219,7 +222,7 @@ AboutContentHistoryDto  {
 }
 ```
 
-**Public vs back-office DTO split**: `GET /api/about` (anonymous) returns `PublicAboutContentDto` — it omits `body` (raw Markdown), `aboutContentId`, `createdAt`, `updatedAt`, and `version`, none of which the public page needs. `PUT /api/about` (authenticated) returns the full `AboutContentDto` so the back-office editor can display the current Markdown source and version for the next optimistic concurrency check. `GET /api/about/history` returns `AboutContentHistoryDto` (authenticated only) which retains `body` for the restore preview UI.
+**Public vs back-office DTO split**: `GET /api/about` (anonymous) returns `PublicAboutContentDto` — it omits `body` (raw Markdown), `aboutContentId`, `profileImageId`, `createdAt`, `updatedAt`, and `version`, none of which the public page needs. `PUT /api/about` (authenticated) returns the full `AboutContentDto` so the back-office editor can display the current Markdown source and version for the next optimistic concurrency check. `GET /api/about/history` returns `AboutContentHistoryDto` (authenticated only) which retains `body` for the restore preview UI.
 
 ---
 
