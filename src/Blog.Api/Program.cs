@@ -349,3 +349,44 @@ await app.RunAsync();
 
 // Make the auto-generated Program class accessible to integration tests.
 public partial class Program { }
+
+/// <summary>
+/// Concrete rate-limiter policy for login endpoints — avoids lambda-based AddPolicy so
+/// the middleware correctly resolves the partitioned limiter from endpoint metadata.
+/// </summary>
+internal sealed class LoginRateLimiterPolicy : IRateLimiterPolicy<string>
+{
+    private readonly int _permitLimit;
+
+    public LoginRateLimiterPolicy(IConfiguration configuration)
+    {
+        _permitLimit = configuration.GetValue("RateLimiting:LoginPermitLimit", 10);
+    }
+
+    public Func<OnRejectedContext, CancellationToken, ValueTask>? OnRejected => async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = 429;
+        if (context.Lease.TryGetMetadata(System.Threading.RateLimiting.MetadataName.RetryAfter, out var retryAfter))
+            context.HttpContext.Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString();
+        else
+            context.HttpContext.Response.Headers.RetryAfter = "60";
+        context.HttpContext.Response.ContentType = "application/problem+json";
+        await context.HttpContext.Response.WriteAsync(
+            "{\"type\":\"https://tools.ietf.org/html/rfc6585#section-4\",\"title\":\"Too Many Requests\",\"status\":429,\"detail\":\"Rate limit exceeded. Please try again later.\"}",
+            cancellationToken);
+    };
+
+    public RateLimitPartition<string> GetPartition(HttpContext httpContext)
+    {
+        var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetSlidingWindowLimiter(partitionKey,
+            _ => new SlidingWindowRateLimiterOptions
+            {
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 6,
+                PermitLimit = _permitLimit,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            });
+    }
+}
