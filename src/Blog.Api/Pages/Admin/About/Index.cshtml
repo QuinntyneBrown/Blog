@@ -1,0 +1,252 @@
+@page "/admin/about"
+@model Blog.Api.Pages.Admin.About.AdminAboutIndexModel
+@{
+    ViewBag.AdminTitle = "About Page";
+    ViewBag.AdminNav = "about";
+    Layout = "/Pages/Admin/Shared/_AdminLayout.cshtml";
+}
+
+<div class="toolbar" data-testid="toolbar">
+    <div class="toolbar-left">
+        <h1 class="toolbar-title" style="font-size:18px" data-testid="toolbar-title">About Page</h1>
+    </div>
+    <div class="toolbar-right">
+        <button type="submit" form="about-form" class="btn btn-primary" data-testid="save-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            <span>Save</span>
+        </button>
+    </div>
+</div>
+
+<form id="about-form" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="version" value="@(Model.About?.Version ?? 0)" />
+    <div class="editor-layout">
+        <div class="editor-main">
+            <div class="form-group">
+                <label class="form-label">Heading</label>
+                <input class="form-input" type="text" name="heading" value="@Model.About?.Heading" placeholder="About page heading..." required maxlength="256" data-testid="heading-input" />
+            </div>
+            <div class="form-group" style="flex:1;display:flex;flex-direction:column">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                    <label class="form-label" style="margin:0">Body (Markdown)</label>
+                    <div style="display:flex;gap:4px">
+                        <button type="button" class="btn-icon" title="Bold" onclick="insertMarkdown('**', '**')"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg></button>
+                        <button type="button" class="btn-icon" title="Italic" onclick="insertMarkdown('_', '_')"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg></button>
+                        <button type="button" class="btn-icon" title="Heading" onclick="insertMarkdown('\n## ', '')"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16"/><path d="M4 18V6"/><path d="M20 18V6"/></svg></button>
+                        <button type="button" class="btn-icon" title="Code" onclick="insertMarkdown('`', '`')"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></button>
+                    </div>
+                </div>
+                <textarea class="form-textarea" id="body-textarea" name="body" style="flex:1;min-height:400px;font-family:var(--font-mono);font-size:14px;line-height:1.7" placeholder="Write your about page content in Markdown..." required data-testid="body-textarea">@Model.About?.Body</textarea>
+            </div>
+        </div>
+        <aside class="editor-sidebar">
+            <div>
+                <div class="editor-sidebar-label">Settings</div>
+                <div style="display:flex;flex-direction:column;gap:16px">
+                    <div class="form-group">
+                        <label class="form-label">Profile Image</label>
+                        <img data-testid="profile-image-preview" id="profile-image-preview" class="featured-img-preview" style="@(string.IsNullOrEmpty(Model.About?.ProfileImageUrl) ? "display:none;" : "")margin-bottom:8px" src="@(Model.About?.ProfileImageUrl ?? "")" alt="Profile image preview" />
+                        <button type="button" data-testid="remove-profile-image" id="remove-profile-image-btn" class="btn btn-secondary" style="@(string.IsNullOrEmpty(Model.About?.ProfileImageUrl) ? "display:none;" : "display:inline-flex;")margin-bottom:8px;font-size:12px;padding:4px 10px" onclick="removeProfileImage()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            <span>Remove Image</span>
+                        </button>
+                        <div class="dropzone" style="height:160px;@(!string.IsNullOrEmpty(Model.About?.ProfileImageUrl) ? "display:none;" : "")" data-testid="profile-image-button" id="open-image-chooser">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <div class="dropzone-text">Drop image or click</div>
+                            <div class="dropzone-hint">Max 10 MB</div>
+                        </div>
+                        <input type="hidden" name="profileImageId" id="profile-image-id" value="@Model.About?.ProfileImageId" />
+                    </div>
+                    @if (Model.About != null)
+                    {
+                        <div style="padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px">
+                            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--fg-tertiary)">Version</span><span style="color:var(--fg-primary);font-family:var(--font-mono)" data-testid="version">@Model.About.Version</span></div>
+                            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--fg-tertiary)">Last Saved</span><span style="color:var(--fg-primary);font-family:var(--font-mono)" data-testid="updated-at">@Model.About.UpdatedAt.ToString("MMM d, yyyy")</span></div>
+                            <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:var(--fg-tertiary)">Created</span><span style="color:var(--fg-primary);font-family:var(--font-mono)" data-testid="created-at">@Model.About.CreatedAt.ToString("MMM d, yyyy")</span></div>
+                        </div>
+                    }
+                </div>
+            </div>
+            @if (Model.History.Count > 0)
+            {
+                <div style="margin-top:24px">
+                    <div class="editor-sidebar-label">Revision History</div>
+                    <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+                        @foreach (var h in Model.History)
+                        {
+                            <div style="background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;display:flex;flex-direction:column;gap:6px">
+                                <div style="display:flex;justify-content:space-between;align-items:center">
+                                    <span style="font-size:13px;font-weight:500;color:var(--fg-primary)">v@(h.Version)</span>
+                                    <span style="font-size:11px;color:var(--fg-tertiary);font-family:var(--font-mono)">@h.ArchivedAt.ToString("MMM d, yyyy HH:mm")</span>
+                                </div>
+                                <div style="font-size:12px;color:var(--fg-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">@h.Heading</div>
+                                <form method="post" asp-page-handler="Restore" style="margin-top:4px">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="historyId" value="@h.AboutContentHistoryId" />
+                                    <input type="hidden" name="currentVersion" value="@Model.About?.Version" />
+                                    <button type="submit" class="btn btn-secondary" style="font-size:11px;padding:4px 10px" data-testid="restore-btn-@h.Version">Restore</button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </aside>
+    </div>
+</form>
+
+<div class="modal-overlay modal-hidden" id="image-chooser-modal" role="dialog" aria-label="Choose profile image">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <span class="modal-title">Choose Profile Image</span>
+            <button type="button" class="btn-icon" onclick="closeImageChooser()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="dropzone" style="height:120px" data-testid="dropzone" id="chooser-dropzone">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--fg-tertiary)" stroke-width="1.5"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+                <div class="dropzone-text">Drop image or click to choose</div>
+                <div class="dropzone-hint">JPEG, PNG, WebP, AVIF — Max 10 MB</div>
+            </div>
+            <input type="file" id="chooser-file-input" accept="image/jpeg,image/png,image/webp,image/avif" style="display:none" />
+            <div data-testid="upload-error" id="upload-error" style="display:none;color:var(--destructive);font-size:13px;margin-top:8px"></div>
+            <div id="file-info" style="display:none">
+                <div class="file-info">
+                    <img data-testid="upload-preview" id="upload-preview" alt="Upload preview" />
+                    <div class="file-info-meta">
+                        <div data-testid="file-name" id="file-name" style="font-size:13px;font-weight:500;color:var(--fg-primary)"></div>
+                        <div data-testid="file-size" id="file-size" style="font-size:12px;color:var(--fg-tertiary)"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeImageChooser()">Cancel</button>
+            <button type="button" class="btn btn-primary" id="upload-btn" onclick="uploadProfileImage()" disabled>Upload</button>
+        </div>
+    </div>
+</div>
+
+@section AdminScripts {
+<script>
+    function insertMarkdown(before, after) {
+        const ta = document.getElementById('body-textarea');
+        const start = ta.selectionStart, end = ta.selectionEnd;
+        const selected = ta.value.substring(start, end);
+        ta.value = ta.value.substring(0, start) + before + selected + after + ta.value.substring(end);
+        ta.focus();
+        ta.selectionStart = start + before.length;
+        ta.selectionEnd = end + before.length;
+    }
+
+    // Image chooser
+    const chooserModal = document.getElementById('image-chooser-modal');
+    const chooserDropzone = document.getElementById('chooser-dropzone');
+    const chooserFileInput = document.getElementById('chooser-file-input');
+    const uploadBtn = document.getElementById('upload-btn');
+    const uploadPreview = document.getElementById('upload-preview');
+    const fileInfo = document.getElementById('file-info');
+    const fileNameEl = document.getElementById('file-name');
+    const fileSizeEl = document.getElementById('file-size');
+    const uploadError = document.getElementById('upload-error');
+    const profilePreview = document.getElementById('profile-image-preview');
+    const removeBtn = document.getElementById('remove-profile-image-btn');
+    const openChooser = document.getElementById('open-image-chooser');
+    const profileImageIdInput = document.getElementById('profile-image-id');
+
+    let selectedFile = null;
+
+    openChooser.addEventListener('click', () => chooserModal.classList.remove('modal-hidden'));
+
+    function closeImageChooser() {
+        chooserModal.classList.add('modal-hidden');
+        resetChooser();
+    }
+
+    function resetChooser() {
+        selectedFile = null;
+        chooserFileInput.value = '';
+        fileInfo.style.display = 'none';
+        uploadError.style.display = 'none';
+        uploadBtn.disabled = true;
+    }
+
+    chooserDropzone.addEventListener('click', () => chooserFileInput.click());
+    chooserDropzone.addEventListener('dragover', e => { e.preventDefault(); chooserDropzone.style.borderColor = 'var(--accent)'; });
+    chooserDropzone.addEventListener('dragleave', () => chooserDropzone.style.borderColor = '');
+    chooserDropzone.addEventListener('drop', e => {
+        e.preventDefault();
+        chooserDropzone.style.borderColor = '';
+        if (e.dataTransfer.files.length > 0) handleFileSelect(e.dataTransfer.files[0]);
+    });
+
+    chooserFileInput.addEventListener('change', () => {
+        if (chooserFileInput.files.length > 0) handleFileSelect(chooserFileInput.files[0]);
+    });
+
+    chooserModal.addEventListener('click', e => { if (e.target === chooserModal) closeImageChooser(); });
+
+    function handleFileSelect(file) {
+        uploadError.style.display = 'none';
+        const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
+        if (!validTypes.includes(file.type)) {
+            uploadError.textContent = 'Invalid file type. Please select JPEG, PNG, WebP, or AVIF.';
+            uploadError.style.display = 'block';
+            return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+            uploadError.textContent = 'File too large. Maximum size is 10 MB.';
+            uploadError.style.display = 'block';
+            return;
+        }
+        selectedFile = file;
+        fileNameEl.textContent = file.name;
+        fileSizeEl.textContent = formatSize(file.size);
+        const reader = new FileReader();
+        reader.onload = e => { uploadPreview.src = e.target.result; };
+        reader.readAsDataURL(file);
+        fileInfo.style.display = 'block';
+        uploadBtn.disabled = false;
+    }
+
+    function formatSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    async function uploadProfileImage() {
+        if (!selectedFile) return;
+        uploadBtn.disabled = true;
+        uploadError.style.display = 'none';
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        try {
+            const resp = await fetch('/api/digital-assets', { method: 'POST', body: formData });
+            if (!resp.ok) throw new Error('Upload failed');
+            const data = await resp.json();
+            profilePreview.src = data.url;
+            profilePreview.style.display = 'block';
+            removeBtn.style.display = 'inline-flex';
+            openChooser.style.display = 'none';
+            profileImageIdInput.value = data.digitalAssetId;
+            closeImageChooser();
+            if (typeof showToast === 'function') showToast('success', 'Success', 'Profile image uploaded.');
+        } catch (err) {
+            uploadError.textContent = err.message || 'Upload failed. Please try again.';
+            uploadError.style.display = 'block';
+            uploadBtn.disabled = false;
+        }
+    }
+
+    function removeProfileImage() {
+        profilePreview.src = '';
+        profilePreview.style.display = 'none';
+        removeBtn.style.display = 'none';
+        openChooser.style.display = 'flex';
+        profileImageIdInput.value = '';
+    }
+</script>
+}

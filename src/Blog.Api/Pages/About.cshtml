@@ -1,0 +1,78 @@
+@page "/about"
+@model Blog.Api.Pages.AboutModel
+@inject IConfiguration Configuration
+@{
+    var siteName = Configuration["Site:SiteName"] ?? "Quinn Brown";
+    var siteUrl = Configuration["Site:SiteUrl"]?.TrimEnd('/') ?? "";
+    var authorName = Configuration["Site:AuthorName"] ?? "Quinn Brown";
+    ViewBag.ActiveNav = "about";
+
+    if (Model.About != null)
+    {
+        ViewBag.Title = $"{Model.About.Heading} | {siteName}";
+        var plainText = System.Text.RegularExpressions.Regex.Replace(Model.About.BodyHtml ?? "", "<[^>]+>", " ");
+        plainText = System.Text.RegularExpressions.Regex.Replace(plainText, @"\s+", " ").Trim();
+        if (plainText.Length > 160) plainText = plainText[..157] + "...";
+        ViewBag.Description = plainText;
+        ViewBag.CanonicalUrl = $"{siteUrl}/about";
+        ViewBag.OgType = "profile";
+        if (!string.IsNullOrEmpty(Model.About.ProfileImageUrl))
+            ViewBag.OgImage = $"{siteUrl}{Model.About.ProfileImageUrl}";
+    }
+    else
+    {
+        ViewBag.Title = $"About | {siteName}";
+        ViewBag.Description = $"About {authorName}";
+        ViewBag.CanonicalUrl = $"{siteUrl}/about";
+        ViewBag.OgType = "profile";
+    }
+}
+
+@if (Model.About == null)
+{
+    <div class="about-empty">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" style="color:var(--foreground-tertiary, #71717A)">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <h1 class="about-empty-title">About</h1>
+        <p class="about-empty-desc">Content coming soon.</p>
+    </div>
+}
+else
+{
+    <article class="about-page">
+        @if (!string.IsNullOrEmpty(Model.About.ProfileImageUrl))
+        {
+            <div class="about-profile-image">
+                <img src="@Model.About.ProfileImageUrl" alt="@Model.About.Heading" loading="eager" />
+            </div>
+        }
+        <div class="about-content">
+            <h1 class="about-heading">@Model.About.Heading</h1>
+            <div class="about-body">
+                @Html.Raw(Model.About.BodyHtml)
+            </div>
+        </div>
+    </article>
+}
+
+@section Head {
+    @if (Model.About != null)
+    {
+        var publisherLogoUrl = Configuration["Site:PublisherLogoUrl"] ?? $"{siteUrl}/images/logo.png";
+        <script type="application/ld+json">
+        {
+            "@@context": "https://schema.org",
+            "@@type": "ProfilePage",
+            "mainEntity": {
+                "@@type": "Person",
+                "name": "@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(Model.About.Heading))"@if (!string.IsNullOrEmpty(Model.About.ProfileImageUrl)){<text>,
+                "image": "@Html.Raw($"{siteUrl}{Model.About.ProfileImageUrl}")"</text>}
+            },
+            "url": "@siteUrl/about"
+        }
+        </script>
+    }
+    <link rel="canonical" href="@(Configuration["Site:SiteUrl"]?.TrimEnd('/'))/about" />
+}

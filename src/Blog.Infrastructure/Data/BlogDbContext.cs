@@ -8,6 +8,8 @@ public class BlogDbContext(DbContextOptions<BlogDbContext> options) : DbContext(
     public DbSet<User> Users => Set<User>();
     public DbSet<Article> Articles => Set<Article>();
     public DbSet<DigitalAsset> DigitalAssets => Set<DigitalAsset>();
+    public DbSet<AboutContent> AboutContents => Set<AboutContent>();
+    public DbSet<AboutContentHistory> AboutContentHistories => Set<AboutContentHistory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

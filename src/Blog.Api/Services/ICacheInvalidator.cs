@@ -15,4 +15,9 @@ public interface ICacheInvalidator
     /// and for the home and article listing pages (which show article metadata).
     /// </summary>
     void InvalidateArticle(string slug);
+
+    /// <summary>
+    /// Evicts the response cache entry for the public about page.
+    /// </summary>
+    void InvalidateAbout();
 }
