@@ -56,9 +56,9 @@ public class ArticleListingPageTests : IClassFixture<BlogWebApplicationFactory>
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var body = await response.Content.ReadAsStringAsync();
         using var doc = System.Text.Json.JsonDocument.Parse(body);
-        doc.RootElement.GetProperty("items").GetArrayLength().Should().BeGreaterThan(0);
-        doc.RootElement.GetProperty("page").GetInt32().Should().Be(1);
-        doc.RootElement.GetProperty("totalCount").GetInt32().Should().BeGreaterThan(0);
+        doc.RootElement.GetProperty("data").GetProperty("items").GetArrayLength().Should().BeGreaterThan(0);
+        doc.RootElement.GetProperty("data").GetProperty("page").GetInt32().Should().Be(1);
+        doc.RootElement.GetProperty("data").GetProperty("totalCount").GetInt32().Should().BeGreaterThan(0);
     }
 
     [Fact]
@@ -69,7 +69,7 @@ public class ArticleListingPageTests : IClassFixture<BlogWebApplicationFactory>
 
         var body = await response.Content.ReadAsStringAsync();
         using var doc = System.Text.Json.JsonDocument.Parse(body);
-        var items = doc.RootElement.GetProperty("items");
+        var items = doc.RootElement.GetProperty("data").GetProperty("items");
         foreach (var item in items.EnumerateArray())
         {
             item.GetProperty("published").GetBoolean().Should().BeTrue();

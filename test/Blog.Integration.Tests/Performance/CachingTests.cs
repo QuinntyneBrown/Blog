@@ -25,7 +25,7 @@ public class CachingTests : IClassFixture<BlogWebApplicationFactory>
         listResponse.EnsureSuccessStatusCode();
         var listBody = await listResponse.Content.ReadAsStringAsync();
         using var listDoc = System.Text.Json.JsonDocument.Parse(listBody);
-        var articleId = listDoc.RootElement.GetProperty("items")[0].GetProperty("articleId").GetString();
+        var articleId = listDoc.RootElement.GetProperty("data").GetProperty("items")[0].GetProperty("articleId").GetString();
 
         var response = await client.GetAsync($"/api/articles/{articleId}");
         response.EnsureSuccessStatusCode();

@@ -64,7 +64,7 @@ public class ArticleDetailPageTests : IClassFixture<BlogWebApplicationFactory>
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var body = await response.Content.ReadAsStringAsync();
         using var doc = System.Text.Json.JsonDocument.Parse(body);
-        doc.RootElement.GetProperty("title").GetString().Should().Be("Hello World");
-        doc.RootElement.GetProperty("slug").GetString().Should().Be("hello-world");
+        doc.RootElement.GetProperty("data").GetProperty("title").GetString().Should().Be("Hello World");
+        doc.RootElement.GetProperty("data").GetProperty("slug").GetString().Should().Be("hello-world");
     }
 }
