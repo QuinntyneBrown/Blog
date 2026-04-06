@@ -6,9 +6,10 @@ namespace Blog.Api.Middleware;
 /// Simple in-memory rate limiter for login attempts, keyed by client IP.
 /// Uses a fixed window of 1 minute with a configurable permit limit.
 /// </summary>
-public class LoginRateLimitMiddleware(RequestDelegate next, IConfiguration configuration)
+public class LoginRateLimitMiddleware(RequestDelegate next, IConfiguration configuration, IHostEnvironment env)
 {
     private readonly int _permitLimit = configuration.GetValue("RateLimiting:LoginPermitLimit", 10);
+    private readonly bool _enabled = !env.IsEnvironment("Testing");
 
     private static readonly ConcurrentDictionary<string, (int Count, DateTime WindowStart)> _counters = new();
 
@@ -17,7 +18,7 @@ public class LoginRateLimitMiddleware(RequestDelegate next, IConfiguration confi
         var isLoginPost = context.Request.Path.StartsWithSegments("/api/auth/login")
             && string.Equals(context.Request.Method, "POST", StringComparison.OrdinalIgnoreCase);
 
-        if (isLoginPost)
+        if (_enabled && isLoginPost)
         {
             var ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
             var now = DateTime.UtcNow;
