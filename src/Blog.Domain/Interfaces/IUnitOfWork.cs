@@ -3,6 +3,7 @@ namespace Blog.Domain.Interfaces;
 public interface IUnitOfWork
 {
     IArticleRepository Articles { get; }
+    IEventRepository Events { get; }
     IUserRepository Users { get; }
     IDigitalAssetRepository DigitalAssets { get; }
     IAboutContentRepository AboutContents { get; }
