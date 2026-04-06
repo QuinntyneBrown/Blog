@@ -19,7 +19,7 @@ public class PublicNewslettersController(IMediator mediator, IConfiguration conf
 
         var result = await Mediator.Send(new GetNewsletterArchiveQuery(page, pageSize), ct);
 
-        // Conditional GET support
+        // Conditional GET support (design §6)
         if (result.TotalCount > 0)
         {
             var latestDateSent = await newsletters.GetLatestDateSentAsync(ct);
@@ -28,10 +28,18 @@ public class PublicNewslettersController(IMediator mediator, IConfiguration conf
                 var lastModified = new DateTimeOffset(latestDateSent.Value, TimeSpan.Zero);
                 Response.Headers.LastModified = lastModified.ToString("R");
                 var epoch = latestDateSent.Value.Ticks / TimeSpan.TicksPerSecond;
-                Response.Headers.ETag = $"W/\"archive:{result.TotalCount}:{epoch}\"";
+                var etag = $"W/\"archive:{result.TotalCount}:{epoch}\"";
+                Response.Headers.ETag = etag;
 
-                if (Request.Headers.IfNoneMatch.Count > 0 &&
-                    Request.Headers.IfNoneMatch.ToString() == $"W/\"archive:{result.TotalCount}:{epoch}\"")
+                // If-None-Match takes precedence over If-Modified-Since (RFC 7232 §6)
+                if (Request.Headers.IfNoneMatch.Count > 0)
+                {
+                    if (Request.Headers.IfNoneMatch.ToString() == etag)
+                        return StatusCode(304);
+                }
+                else if (Request.Headers.IfModifiedSince.Count > 0 &&
+                         DateTimeOffset.TryParse(Request.Headers.IfModifiedSince.ToString(), out var ifModifiedSince) &&
+                         lastModified <= ifModifiedSince)
                 {
                     return StatusCode(304);
                 }
@@ -47,15 +55,23 @@ public class PublicNewslettersController(IMediator mediator, IConfiguration conf
     {
         var result = await Mediator.Send(new GetNewsletterBySlugQuery(slug), ct);
 
-        // Conditional GET support
+        // Conditional GET support (design §6)
         if (result.DateSent.HasValue)
         {
             var lastModified = new DateTimeOffset(result.DateSent.Value, TimeSpan.Zero);
             Response.Headers.LastModified = lastModified.ToString("R");
-            Response.Headers.ETag = $"W/\"{result.Slug}\"";
+            var etag = $"W/\"{result.Slug}\"";
+            Response.Headers.ETag = etag;
 
-            if (Request.Headers.IfNoneMatch.Count > 0 &&
-                Request.Headers.IfNoneMatch.ToString() == $"W/\"{result.Slug}\"")
+            // If-None-Match takes precedence over If-Modified-Since (RFC 7232 §6)
+            if (Request.Headers.IfNoneMatch.Count > 0)
+            {
+                if (Request.Headers.IfNoneMatch.ToString() == etag)
+                    return StatusCode(304);
+            }
+            else if (Request.Headers.IfModifiedSince.Count > 0 &&
+                     DateTimeOffset.TryParse(Request.Headers.IfModifiedSince.ToString(), out var ifModifiedSince) &&
+                     lastModified <= ifModifiedSince)
             {
                 return StatusCode(304);
             }

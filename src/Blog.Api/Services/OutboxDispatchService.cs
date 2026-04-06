@@ -74,6 +74,13 @@ public class OutboxDispatchService(
 
                     logger.LogError("Business event {EventType} occurred: {@Details}",
                         "outbox.dead_lettered", new { message.OutboxMessageId, message.MessageType, message.RetryCount, Error = ex.Message });
+
+                    // Emit newsletter-specific dead-letter event (design §3.8 / §7)
+                    if (message.MessageType == "NewsletterDelivery")
+                    {
+                        logger.LogError("Business event {EventType} occurred: {@Details}",
+                            "newsletter.send_failed", new { message.OutboxMessageId, Error = ex.Message });
+                    }
                 }
                 else
                 {
@@ -83,6 +90,13 @@ public class OutboxDispatchService(
 
                     logger.LogWarning("Business event {EventType} occurred: {@Details}",
                         "outbox.retry", new { message.OutboxMessageId, message.MessageType, message.RetryCount, NextRetryAt = message.NextRetryAt });
+
+                    // Emit newsletter-specific transient failure event at Warning (design §7)
+                    if (message.MessageType == "NewsletterDelivery")
+                    {
+                        logger.LogWarning("Business event {EventType} occurred: {@Details}",
+                            "newsletter.send_failed", new { message.OutboxMessageId, Error = ex.Message });
+                    }
                 }
 
                 uow.Newsletters.UpdateOutboxMessage(message);
@@ -91,7 +105,7 @@ public class OutboxDispatchService(
         }
     }
 
-    private static async Task DispatchMessageAsync(OutboxMessage message, IUnitOfWork uow, IEmailSender emailSender, CancellationToken cancellationToken)
+    private async Task DispatchMessageAsync(OutboxMessage message, IUnitOfWork uow, IEmailSender emailSender, CancellationToken cancellationToken)
     {
         switch (message.MessageType)
         {
@@ -100,15 +114,70 @@ public class OutboxDispatchService(
                 break;
 
             case "NewsletterDelivery":
-                // Newsletter delivery messages would be enqueued to Azure Service Bus.
-                // For initial implementation, log the dispatch intent.
-                // The NewsletterEmailDispatchService will handle actual email sending
-                // once Service Bus infrastructure is provisioned.
+                // Design §3.9: route to Azure Service Bus. Until Service Bus infrastructure
+                // is provisioned, dispatch directly using the same idempotency logic from §3.8.
+                await DispatchNewsletterDeliveryAsync(message, uow, emailSender, cancellationToken);
                 break;
 
             default:
                 throw new InvalidOperationException($"Unknown outbox message type: {message.MessageType}");
         }
+    }
+
+    private async Task DispatchNewsletterDeliveryAsync(OutboxMessage message, IUnitOfWork uow, IEmailSender emailSender, CancellationToken cancellationToken)
+    {
+        var payload = JsonSerializer.Deserialize<JsonElement>(message.Payload);
+        var newsletterId = payload.GetProperty("newsletterId").GetGuid();
+        var subscriberId = payload.GetProperty("subscriberId").GetGuid();
+        var email = payload.GetProperty("email").GetString()!;
+
+        // Idempotency check (design §3.8)
+        var idempotencyKey = ComputeIdempotencyKey(newsletterId, subscriberId);
+        if (await uow.Newsletters.SendLogExistsAsync(newsletterId, idempotencyKey, cancellationToken))
+            return; // Already sent
+
+        // Load newsletter
+        var newsletter = await uow.Newsletters.GetByIdAsync(newsletterId, cancellationToken);
+        if (newsletter == null)
+        {
+            logger.LogError("Business event {EventType} occurred: {@Details}",
+                "newsletter.send_failed", new { NewsletterId = newsletterId, SubscriberId = subscriberId, Reason = "NewsletterNotFound" });
+            throw new InvalidOperationException($"Newsletter {newsletterId} not found — dead-letter this message.");
+        }
+
+        // Generate unsubscribe URL using HMAC token (design §3.10)
+        var tokenService = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<IUnsubscribeTokenService>();
+        var unsubscribeToken = tokenService.GenerateToken(subscriberId);
+
+        // Send email
+        await emailSender.SendNewsletterEmailAsync(email, newsletter.Subject, newsletter.BodyHtml, unsubscribeToken, cancellationToken);
+
+        // Record send log — must complete before message is marked done (design §3.8)
+        var sendLog = new Domain.Entities.NewsletterSendLog
+        {
+            NewsletterSendLogId = Guid.NewGuid(),
+            NewsletterId = newsletterId,
+            SubscriberId = subscriberId,
+            RecipientIdempotencyKey = idempotencyKey,
+            SentAt = DateTime.UtcNow
+        };
+
+        try
+        {
+            await uow.Newsletters.AddSendLogAsync(sendLog, cancellationToken);
+            await uow.SaveChangesAsync(cancellationToken);
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+        {
+            // Unique constraint violation — peer instance already processed
+        }
+    }
+
+    private static string ComputeIdempotencyKey(Guid newsletterId, Guid subscriberId)
+    {
+        var input = $"{newsletterId}:{subscriberId}";
+        var hash = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(input));
+        return Convert.ToHexString(hash).ToLowerInvariant();
     }
 
     private static async Task DispatchConfirmationEmailAsync(OutboxMessage message, IUnitOfWork uow, IEmailSender emailSender, CancellationToken cancellationToken)
@@ -126,8 +195,10 @@ public class OutboxDispatchService(
         if (subscriber.ConfirmationTokenHash == null)
             return; // Already confirmed
 
-        if (subscriber.TokenExpiresAt != null && subscriber.TokenExpiresAt < DateTime.UtcNow)
-            return; // Token expired — don't send confusing email
+        // Expired-token guard (design §3.9.6): treat null TokenExpiresAt as expired
+        // (defensive against malformed rows where Confirmed=false with TokenExpiresAt=null)
+        if (subscriber.TokenExpiresAt == null || subscriber.TokenExpiresAt < DateTime.UtcNow)
+            return; // Token expired or already used — don't send confusing email
 
         await emailSender.SendConfirmationEmailAsync(email, confirmUrl, cancellationToken);
     }

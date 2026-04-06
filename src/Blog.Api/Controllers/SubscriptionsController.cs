@@ -50,14 +50,13 @@ public class SubscriptionsController(IMediator mediator, IConfiguration configur
         await Mediator.Send(new OneClickUnsubscribeCommand(token ?? string.Empty, body), ct);
         return Ok();
     }
-}
 
-[Route("api/subscribers")]
-public class SubscriberManagementController(IMediator mediator, IConfiguration configuration) : ApiControllerBase(mediator, configuration)
-{
-    [HttpGet]
+    // GET /api/subscribers — paginated subscriber list (auth-guarded, for back office).
+    // The route lives on SubscriptionsController per design §3.2 because the subscriber
+    // lifecycle (subscribe, confirm, unsubscribe, list) is cohesive within this controller.
+    [HttpGet("/api/subscribers")]
     [Authorize]
-    public async Task<IActionResult> GetAll(
+    public async Task<IActionResult> GetSubscribers(
         [FromQuery] int page = 1, [FromQuery] int pageSize = 20,
         [FromQuery] string? status = null, CancellationToken ct = default)
     {

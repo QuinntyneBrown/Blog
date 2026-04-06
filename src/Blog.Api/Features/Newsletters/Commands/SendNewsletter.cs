@@ -25,6 +25,11 @@ public class SendNewsletterCommandHandler(
         if (newsletter.Status == NewsletterStatus.Sent)
             throw new ConflictException("Newsletter has already been sent.");
 
+        // Guard: must have ≥1 confirmed active subscriber (design §5.2)
+        var confirmedCount = await uow.Newsletters.GetSubscribersCountAsync("confirmed", cancellationToken);
+        if (confirmedCount == 0)
+            throw new UnprocessableEntityException("Cannot send newsletter: no confirmed active subscribers.");
+
         var now = DateTime.UtcNow;
 
         // Generate slug

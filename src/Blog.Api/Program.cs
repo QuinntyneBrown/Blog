@@ -68,6 +68,7 @@ else
     builder.Services.AddSingleton<IEmailRateLimitService, EmailRateLimitService>();
 }
 builder.Services.AddSingleton<ICacheInvalidator, CacheInvalidator>();
+builder.Services.AddSingleton<ISubscribeRateLimitService, SubscribeRateLimitService>();
 
 // Newsletter services
 builder.Services.Configure<Blog.Api.Services.UnsubscribeTokenOptions>(

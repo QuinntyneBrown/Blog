@@ -1,3 +1,5 @@
+using Blog.Api.Common.Exceptions;
+using Blog.Api.Services;
 using Blog.Domain.Entities;
 using Blog.Domain.Interfaces;
 using FluentValidation;
@@ -21,11 +23,16 @@ public class SubscribeCommandValidator : AbstractValidator<SubscribeCommand>
 public class SubscribeCommandHandler(
     IUnitOfWork uow,
     IConfiguration configuration,
+    ISubscribeRateLimitService subscribeRateLimit,
     ILogger<SubscribeCommandHandler> logger) : IRequestHandler<SubscribeCommand>
 {
     public async Task Handle(SubscribeCommand request, CancellationToken cancellationToken)
     {
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+
+        // Per-email rate limit: 2 req/1hr per normalized email (design §7)
+        if (!subscribeRateLimit.TryAcquire(normalizedEmail, out var retryAfterSeconds))
+            throw new RateLimitExceededException("Too many subscription requests for this email.", retryAfterSeconds);
         var now = DateTime.UtcNow;
 
         var existing = await uow.Newsletters.GetSubscriberByEmailAsync(normalizedEmail, cancellationToken);
@@ -65,7 +72,7 @@ public class SubscribeCommandHandler(
             }
 
             logger.LogInformation("Business event {EventType} occurred: {@Details}",
-                "subscriber.subscribed", new { SubscriberId = existing.SubscriberId });
+                "subscriber.subscribed", new { SubscriberId = existing.SubscriberId, EmailHash = HashEmail(normalizedEmail) });
             return;
         }
 
@@ -97,7 +104,13 @@ public class SubscribeCommandHandler(
         }
 
         logger.LogInformation("Business event {EventType} occurred: {@Details}",
-            "subscriber.subscribed", new { subscriber.SubscriberId });
+            "subscriber.subscribed", new { subscriber.SubscriberId, EmailHash = HashEmail(normalizedEmail) });
+    }
+
+    private static string HashEmail(string email)
+    {
+        var hash = SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(email));
+        return Convert.ToHexString(hash)[..16].ToLowerInvariant();
     }
 
     private async Task WriteConfirmationOutbox(Guid subscriberId, string email, string rawToken, DateTime now, CancellationToken cancellationToken)
