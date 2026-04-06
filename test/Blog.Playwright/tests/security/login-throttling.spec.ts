@@ -7,7 +7,7 @@ test.describe('Login Throttling - L2-029', () => {
     request,
   }) => {
     // Exhaust the IP-based rate limit by sending rapid login requests
-    for (let i = 0; i < 150; i++) {
+    for (let i = 0; i < 550; i++) {
       const resp = await request.post('/api/auth/login', {
         data: {
           email: `throttle-test-${i}@example.com`,

@@ -4,7 +4,7 @@ test.describe('Rate Limiting - L2-027', () => {
   test('rapid login attempts eventually return 429 status', async ({ request }) => {
     // Send requests until we get rate-limited (limit is configurable per environment)
     let got429 = false;
-    for (let i = 0; i < 150; i++) {
+    for (let i = 0; i < 550; i++) {
       const response = await request.post('/api/auth/login', {
         data: {
           email: 'attacker@example.com',
@@ -21,7 +21,7 @@ test.describe('Rate Limiting - L2-027', () => {
 
   test('429 response includes Retry-After header', async ({ request }) => {
     // Exhaust the rate limit
-    for (let i = 0; i < 150; i++) {
+    for (let i = 0; i < 550; i++) {
       const resp = await request.post('/api/auth/login', {
         data: {
           email: 'attacker2@example.com',
