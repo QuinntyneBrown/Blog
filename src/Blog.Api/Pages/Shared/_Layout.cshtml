@@ -739,7 +739,7 @@
         .about-page { width: 100%; }
         .about-hero { display: flex; align-items: center; gap: 80px; padding: 80px; background: var(--surface-secondary, #0A0A0A); }
         .about-hero-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
-        .about-tag { font-family: var(--font-body, Inter, sans-serif); font-size: 13px; font-weight: 600; letter-spacing: 2px; color: var(--accent-primary); text-transform: uppercase; }
+        .about-tag { font-family: var(--font-body, Inter, sans-serif); font-size: 13px; font-weight: 600; letter-spacing: 2px; color: var(--accent-primary); }
         .about-heading { font-size: 48px; font-weight: 700; margin: 0; }
         .about-subtitle { font-size: 20px; color: var(--foreground-secondary); margin: 0; }
         .about-social { display: flex; gap: 16px; align-items: center; }
@@ -813,7 +813,7 @@
         /* Newsletter page */
         .newsletter-page { width: 100%; }
         .newsletter-hero { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 80px; background: var(--surface-secondary, #0A0A0A); text-align: center; }
-        .newsletter-tag { font-size: 13px; font-weight: 600; letter-spacing: 2px; color: var(--accent-primary); text-transform: uppercase; }
+        .newsletter-tag { font-size: 13px; font-weight: 600; letter-spacing: 2px; color: var(--accent-primary); }
         .newsletter-title { font-size: 48px; font-weight: 700; margin: 0; }
         .newsletter-desc { font-size: 18px; color: var(--foreground-secondary); line-height: 1.6; max-width: 600px; margin: 0; }
         .newsletter-signup { padding-top: 32px; }
@@ -830,64 +830,68 @@
             .newsletter-archive-title { font-size: 24px; }
         }
         @@media (max-width: 991px) {
-            .newsletter-hero { padding: 48px 32px; }
+            .newsletter-hero { padding: 48px 32px; gap: 14px; }
             .newsletter-title { font-size: 32px; }
             .newsletter-desc { font-size: 15px; }
-            .newsletter-archive { padding: 40px 32px; gap: 20px; }
+            .newsletter-archive { padding: 40px 32px; gap: 16px; }
             .newsletter-archive-title { font-size: 22px; }
         }
         @@media (max-width: 767px) {
             .newsletter-hero { padding: 40px 24px; gap: 12px; }
             .newsletter-title { font-size: 28px; }
             .newsletter-desc { font-size: 14px; }
-            .newsletter-archive { padding: 32px 24px; gap: 16px; }
+            .newsletter-archive { padding: 32px 24px; gap: 14px; }
             .newsletter-archive-title { font-size: 20px; }
         }
         @@media (max-width: 575px) {
             .newsletter-hero { padding: 32px 16px; gap: 10px; }
             .newsletter-title { font-size: 24px; }
             .newsletter-desc { font-size: 13px; }
-            .newsletter-archive { padding: 28px 16px; gap: 14px; }
+            .newsletter-archive { padding: 28px 16px; gap: 12px; }
             .newsletter-archive-title { font-size: 18px; }
         }
 
         /* Events page */
         .events-page { width: 100%; }
         .events-hero { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 80px; background: var(--surface-secondary, #0A0A0A); text-align: center; }
-        .events-tag { font-size: 13px; font-weight: 600; letter-spacing: 2px; color: var(--accent-primary); text-transform: uppercase; }
+        .events-tag { font-size: 13px; font-weight: 600; letter-spacing: 2px; color: var(--accent-primary); }
         .events-title { font-size: 48px; font-weight: 700; margin: 0; }
         .events-desc { font-size: 18px; color: var(--foreground-secondary); line-height: 1.6; max-width: 640px; margin: 0; }
         .events-section { padding: 64px 80px 40px; display: flex; flex-direction: column; gap: 24px; }
-        .events-section + .events-section { padding-top: 0; }
+        .events-section + .events-section { padding: 40px 80px 64px; }
         .events-section-header { display: flex; align-items: center; gap: 12px; }
         .events-section-title { font-size: 24px; font-weight: 700; margin: 0; }
         .events-empty { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 48px 24px; text-align: center; color: var(--foreground-secondary); font-size: 14px; background: var(--surface-card, #111); border-radius: 12px; border: 1px solid var(--border-subtle); }
         @@media (max-width: 1199px) {
-            .events-hero { padding: 64px 48px; }
+            .events-hero { padding: 64px 48px; gap: 14px; }
             .events-title { font-size: 38px; }
             .events-desc { font-size: 16px; }
-            .events-section { padding: 48px 48px 24px; }
+            .events-section { padding: 48px 48px 32px; gap: 20px; }
+            .events-section + .events-section { padding: 32px 48px 48px; }
             .events-section-title { font-size: 22px; }
         }
         @@media (max-width: 991px) {
-            .events-hero { padding: 48px 32px; }
+            .events-hero { padding: 48px 32px; gap: 12px; }
             .events-title { font-size: 32px; }
             .events-desc { font-size: 15px; }
-            .events-section { padding: 40px 32px 20px; }
+            .events-section { padding: 40px 32px 24px; gap: 16px; }
+            .events-section + .events-section { padding: 24px 32px 48px; }
             .events-section-title { font-size: 20px; }
         }
         @@media (max-width: 767px) {
             .events-hero { padding: 40px 24px; gap: 12px; }
             .events-title { font-size: 28px; }
             .events-desc { font-size: 14px; }
-            .events-section { padding: 32px 24px 16px; }
+            .events-section { padding: 32px 24px 16px; gap: 14px; }
+            .events-section + .events-section { padding: 16px 24px 40px; }
             .events-section-title { font-size: 18px; }
         }
         @@media (max-width: 575px) {
             .events-hero { padding: 32px 16px; gap: 10px; }
             .events-title { font-size: 24px; }
             .events-desc { font-size: 13px; }
-            .events-section { padding: 28px 16px 14px; }
+            .events-section { padding: 28px 16px 14px; gap: 12px; }
+            .events-section + .events-section { padding: 14px 16px 40px; }
             .events-section-title { font-size: 16px; }
         }
 
