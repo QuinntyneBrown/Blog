@@ -1,0 +1,42 @@
+@page "/newsletter"
+@inject IConfiguration Configuration
+@{
+    var siteName = Configuration["Site:SiteName"] ?? "Quinn Brown";
+    var siteUrl = Configuration["Site:SiteUrl"]?.TrimEnd('/') ?? "";
+    ViewBag.Title = $"Newsletter | {siteName}";
+    ViewBag.Description = "Thoughtful writing on software, architecture, and the craft of building things. Delivered occasionally.";
+    ViewBag.ActiveNav = "newsletter";
+    ViewBag.CanonicalUrl = $"{siteUrl}/newsletter";
+    Layout = "_Layout";
+}
+
+<div class="newsletter-page">
+    <section class="newsletter-hero">
+        <span class="newsletter-tag">Newsletter</span>
+        <h1 class="newsletter-title">Stay in the loop</h1>
+        <p class="newsletter-desc">Thoughtful writing on software, architecture, and the craft of building things. Delivered occasionally.</p>
+        <div class="newsletter-signup">
+            <div class="newsletter-form-note">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <span>Newsletter coming soon — check back for updates.</span>
+            </div>
+        </div>
+    </section>
+    <section class="newsletter-archive">
+        <div class="newsletter-archive-header">
+            <h2 class="newsletter-archive-title">Past Issues</h2>
+        </div>
+        <div class="newsletter-empty-archive">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--foreground-tertiary)">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+            </svg>
+            <p>No issues yet. Subscribe to be notified when the first one drops.</p>
+        </div>
+    </section>
+</div>
+
+@section Head {
+    <link rel="canonical" href="@(Configuration["Site:SiteUrl"]?.TrimEnd('/'))/newsletter" />
+}

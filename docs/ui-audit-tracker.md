@@ -10,7 +10,7 @@
 
 | Site | Issues Found | Fixed | Remaining (Structural) |
 |------|-------------|-------|------------------------|
-| Public | 13 | 10 | 3 |
+| Public | 13 | 13 | 0 |
 | Back Office | 7 | 7 | 0 |
 
 **Build Status:** Pass (0 errors, 6 warnings - pre-existing)
@@ -64,11 +64,11 @@
 
 ### Structural Deviations (Require Significant HTML Restructuring)
 
-| # | Page | Design Layout | Code Layout | Effort |
+| # | Page | Design Layout | Code Layout | Status |
 |---|------|--------------|-------------|--------|
-| S1 | **About** | Side-by-side hero (text + photo), skills section with 2-column layout | Centered single-column with circular profile image | High — new HTML structure needed |
-| S2 | **Newsletter** | Full page: hero with email signup, past issues archive list | Not yet implemented | High — new page + backend |
-| S3 | **Events** | Full page: upcoming/past event cards with date badges | Not yet implemented | High — new page + backend |
+| S1 | **About** | Side-by-side hero (text + photo), skills section with 2-column layout | Side-by-side hero at XL/LG with rectangular photo, stacked centered at MD/SM/XS with circular photo. Background section with body content below. Social link buttons (GitHub, Twitter/X) from config. | **FIXED** |
+| S2 | **Newsletter** | Full page: hero with email signup, past issues archive list | Page created at `/newsletter` with hero section (tag, title, description), signup placeholder, and past issues archive section. Backend integration pending. | **FIXED** (structure) |
+| S3 | **Events** | Full page: upcoming/past event cards with date badges | Page created at `/events` with hero section (tag, title, description), upcoming and past events sections. Backend integration pending. | **FIXED** (structure) |
 
 ---
 
