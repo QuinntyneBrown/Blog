@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Blog.Api.Features.About.Commands;
 
-public record UpsertAboutContentCommand(string Heading, string Body, Guid? ProfileImageId, int Version) : IRequest<AboutContentDto>;
+public record UpsertAboutContentCommand(string Heading, string Body, Guid? ProfileImageId, int Version, Guid UserId) : IRequest<AboutContentDto>;
 
 public class UpsertAboutContentCommandValidator : AbstractValidator<UpsertAboutContentCommand>
 {
@@ -27,6 +27,7 @@ public class UpsertAboutContentCommandValidator : AbstractValidator<UpsertAboutC
 
 public class UpsertAboutContentCommandHandler(
     IUnitOfWork uow,
+    BlogDbContext dbContext,
     IMarkdownConverter markdownConverter,
     ICacheInvalidator cacheInvalidator,
     ILogger<UpsertAboutContentCommandHandler> logger) : IRequestHandler<UpsertAboutContentCommand, AboutContentDto>
@@ -37,6 +38,8 @@ public class UpsertAboutContentCommandHandler(
         {
             var asset = await uow.DigitalAssets.GetByIdAsync(request.ProfileImageId.Value, cancellationToken)
                 ?? throw new NotFoundException($"Digital asset '{request.ProfileImageId.Value}' was not found.");
+            if (asset.CreatedBy != request.UserId)
+                throw new ForbiddenException("The selected image does not belong to the current user.");
         }
 
         var bodyHtml = markdownConverter.Convert(request.Body);
@@ -66,7 +69,9 @@ public class UpsertAboutContentCommandHandler(
             }
             catch (DbUpdateException)
             {
-                // First-insert concurrency: another request inserted first. Retry as update.
+                // First-insert concurrency: another request inserted first.
+                // Clear the change tracker to remove the failed Added entity before retrying.
+                dbContext.ChangeTracker.Clear();
                 return await RetryAsUpdate(request, bodyHtml, cancellationToken);
             }
 

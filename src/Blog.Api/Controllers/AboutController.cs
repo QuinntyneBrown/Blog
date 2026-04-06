@@ -1,7 +1,10 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Blog.Api.Common.Models;
 using Blog.Api.Features.About.Commands;
 using Blog.Api.Features.About.Queries;
 using Blog.Api.Services;
+using Blog.Domain.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,29 +12,51 @@ using Microsoft.AspNetCore.RateLimiting;
 
 namespace Blog.Api.Controllers;
 
-public class AboutController(IMediator mediator, IConfiguration configuration, IETagGenerator eTagGenerator) : ApiControllerBase(mediator, configuration)
+public class AboutController(
+    IMediator mediator,
+    IConfiguration configuration,
+    IETagGenerator eTagGenerator,
+    IAboutContentRepository aboutContents) : ApiControllerBase(mediator, configuration)
 {
     [HttpGet]
     public async Task<IActionResult> Get(CancellationToken ct)
     {
-        var about = await Mediator.Send(new GetAboutContentQuery(), ct);
-        if (about == null)
+        var entity = await aboutContents.GetCurrentAsync(ct);
+        if (entity == null)
         {
             Response.Headers.CacheControl = "no-store";
             return Ok(null as object);
         }
 
-        // We need the version for ETag — re-fetch from repo via a separate internal mechanism
-        // For simplicity, the controller works with the public DTO only; ETag is set at the Razor page level
+        var etag = eTagGenerator.GenerateAbout(entity.Version);
+        var ifNoneMatch = Request.Headers.IfNoneMatch.FirstOrDefault();
+        if (eTagGenerator.IsMatch(etag, ifNoneMatch))
+            return StatusCode(304);
+
+        var ifModifiedSince = Request.Headers.IfModifiedSince.FirstOrDefault();
+        if (!string.IsNullOrEmpty(ifModifiedSince)
+            && DateTimeOffset.TryParse(ifModifiedSince, out var clientDate)
+            && entity.UpdatedAt.ToUniversalTime() <= clientDate.UtcDateTime)
+        {
+            return StatusCode(304);
+        }
+
+        var imageUrl = entity.ProfileImage != null ? $"/assets/{entity.ProfileImage.StoredFileName}" : null;
+        var dto = new PublicAboutContentDto(entity.Heading, entity.BodyHtml, imageUrl);
+
+        Response.Headers.ETag = etag;
+        Response.Headers.Append("Last-Modified", entity.UpdatedAt.ToUniversalTime().ToString("R"));
         Response.Headers.Append("Cache-Control", "public, max-age=60, stale-while-revalidate=600");
-        return Ok(about);
+        return Ok(dto);
     }
 
     [HttpPut]
     [Authorize]
     [EnableRateLimiting("write-endpoints")]
-    public async Task<IActionResult> Upsert([FromBody] UpsertAboutContentCommand command, CancellationToken ct)
+    public async Task<IActionResult> Upsert([FromBody] UpsertAboutContentBody body, CancellationToken ct)
     {
+        var userId = GetCurrentUserId();
+        var command = new UpsertAboutContentCommand(body.Heading, body.Body, body.ProfileImageId, body.Version, userId);
         var result = await Mediator.Send(command, ct);
         Response.Headers.ETag = eTagGenerator.GenerateAbout(result.Version);
         return Ok(result);
@@ -55,6 +80,14 @@ public class AboutController(IMediator mediator, IConfiguration configuration, I
         Response.Headers.ETag = eTagGenerator.GenerateAbout(result.Version);
         return Ok(result);
     }
+
+    private Guid GetCurrentUserId()
+    {
+        return Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+            ?? throw new UnauthorizedAccessException());
+    }
 }
 
+public record UpsertAboutContentBody(string Heading, string Body, Guid? ProfileImageId, int Version);
 public record RestoreAboutContentBody(int CurrentVersion);

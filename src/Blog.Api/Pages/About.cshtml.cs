@@ -28,6 +28,14 @@ public class AboutModel(IETagGenerator eTagGenerator, IAboutContentRepository ab
             if (eTagGenerator.IsMatch(etag, ifNoneMatch))
                 return StatusCode(304);
 
+            var ifModifiedSince = Request.Headers.IfModifiedSince.FirstOrDefault();
+            if (!string.IsNullOrEmpty(ifModifiedSince)
+                && DateTimeOffset.TryParse(ifModifiedSince, out var clientDate)
+                && entity.UpdatedAt.ToUniversalTime() <= clientDate.UtcDateTime)
+            {
+                return StatusCode(304);
+            }
+
             var imageUrl = entity.ProfileImage != null ? $"/assets/{entity.ProfileImage.StoredFileName}" : null;
             About = new PublicAboutContentDto(entity.Heading, entity.BodyHtml, imageUrl);
 

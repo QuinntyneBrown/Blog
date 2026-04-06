@@ -1,7 +1,5 @@
-using Blog.Api.Common.Exceptions;
 using Blog.Api.Features.About.Commands;
 using Blog.Api.Features.About.Queries;
-using Blog.Domain.Entities;
 using Blog.Domain.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -40,7 +38,8 @@ public class AdminAboutIndexModel(IMediator mediator, IAboutContentRepository ab
         if (!IsAuthenticated()) return RedirectToPage("/Admin/Login");
         try
         {
-            await mediator.Send(new UpsertAboutContentCommand(heading, body, profileImageId, version));
+            var userId = GetCurrentUserId();
+            await mediator.Send(new UpsertAboutContentCommand(heading, body, profileImageId, version, userId));
             return RedirectToPage("/Admin/About/Index", new { success = "About page saved." });
         }
         catch (Exception ex)

@@ -9,6 +9,7 @@ public class AboutContentConfiguration : IEntityTypeConfiguration<AboutContent>
     public void Configure(EntityTypeBuilder<AboutContent> builder)
     {
         builder.HasKey(a => a.AboutContentId);
+        builder.Property(a => a.AboutContentId).ValueGeneratedNever();
         builder.Property(a => a.Heading).IsRequired().HasMaxLength(256);
         builder.Property(a => a.Body).IsRequired();
         builder.Property(a => a.BodyHtml).IsRequired();

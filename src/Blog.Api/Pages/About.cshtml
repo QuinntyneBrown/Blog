@@ -10,7 +10,8 @@
     if (Model.About != null)
     {
         ViewBag.Title = $"{Model.About.Heading} | {siteName}";
-        var plainText = System.Text.RegularExpressions.Regex.Replace(Model.About.BodyHtml ?? "", "<[^>]+>", " ").Trim();
+        var plainText = System.Text.RegularExpressions.Regex.Replace(Model.About.BodyHtml ?? "", "<[^>]+>", " ");
+        plainText = System.Text.RegularExpressions.Regex.Replace(plainText, @"\s+", " ").Trim();
         if (plainText.Length > 160) plainText = plainText[..157] + "...";
         ViewBag.Description = plainText;
         ViewBag.CanonicalUrl = $"{siteUrl}/about";
