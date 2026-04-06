@@ -35,7 +35,7 @@ public class PublishArticleTests : IClassFixture<BlogWebApplicationFactory>
         createResponse.EnsureSuccessStatusCode();
         var createBody = await createResponse.Content.ReadAsStringAsync();
         using var createDoc = JsonDocument.Parse(createBody);
-        var articleId = createDoc.RootElement.GetProperty("articleId").GetString();
+        var articleId = createDoc.RootElement.GetProperty("data").GetProperty("articleId").GetString();
         var etag = createResponse.Headers.ETag?.Tag;
 
         // Publish it
@@ -49,8 +49,8 @@ public class PublishArticleTests : IClassFixture<BlogWebApplicationFactory>
         publishResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         var publishBody = await publishResponse.Content.ReadAsStringAsync();
         using var publishDoc = JsonDocument.Parse(publishBody);
-        publishDoc.RootElement.GetProperty("published").GetBoolean().Should().BeTrue();
-        publishDoc.RootElement.GetProperty("datePublished").GetString().Should().NotBeNullOrWhiteSpace();
+        publishDoc.RootElement.GetProperty("data").GetProperty("published").GetBoolean().Should().BeTrue();
+        publishDoc.RootElement.GetProperty("data").GetProperty("datePublished").GetString().Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]
@@ -69,7 +69,7 @@ public class PublishArticleTests : IClassFixture<BlogWebApplicationFactory>
         createResponse.EnsureSuccessStatusCode();
         var createBody = await createResponse.Content.ReadAsStringAsync();
         using var createDoc = JsonDocument.Parse(createBody);
-        var articleId = createDoc.RootElement.GetProperty("articleId").GetString();
+        var articleId = createDoc.RootElement.GetProperty("data").GetProperty("articleId").GetString();
         var etag = createResponse.Headers.ETag?.Tag;
 
         // Publish
@@ -93,7 +93,7 @@ public class PublishArticleTests : IClassFixture<BlogWebApplicationFactory>
         unpublishResp.StatusCode.Should().Be(HttpStatusCode.OK);
         var unpubBody = await unpublishResp.Content.ReadAsStringAsync();
         using var unpubDoc = JsonDocument.Parse(unpubBody);
-        unpubDoc.RootElement.GetProperty("published").GetBoolean().Should().BeFalse();
+        unpubDoc.RootElement.GetProperty("data").GetProperty("published").GetBoolean().Should().BeFalse();
     }
 
     [Fact]
@@ -124,7 +124,7 @@ public class PublishArticleTests : IClassFixture<BlogWebApplicationFactory>
         createResponse.EnsureSuccessStatusCode();
         var createBody = await createResponse.Content.ReadAsStringAsync();
         using var createDoc = JsonDocument.Parse(createBody);
-        var articleId = createDoc.RootElement.GetProperty("articleId").GetString();
+        var articleId = createDoc.RootElement.GetProperty("data").GetProperty("articleId").GetString();
 
         // Publish with stale ETag
         var publishReq = new HttpRequestMessage(HttpMethod.Patch, $"/api/articles/{articleId}/publish")
