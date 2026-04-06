@@ -43,8 +43,22 @@ public sealed class SubscribeRateLimitService : ISubscribeRateLimitService
             }
 
             queue.Enqueue(now);
-            return true;
         }
+
+        // Periodically prune empty entries to prevent unbounded dictionary growth
+        if (_attempts.Count > 1000)
+        {
+            foreach (var kvp in _attempts)
+            {
+                lock (kvp.Value)
+                {
+                    if (kvp.Value.Count == 0)
+                        _attempts.TryRemove(kvp.Key, out _);
+                }
+            }
+        }
+
+        return true;
     }
 
     private static string HashEmail(string email)
