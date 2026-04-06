@@ -16,6 +16,9 @@ public class NewsletterSubscriberConfiguration : IEntityTypeConfiguration<Newsle
         builder.Property(s => s.IsActive).HasDefaultValue(true);
 
         builder.HasIndex(s => s.Email).IsUnique().HasDatabaseName("IX_NewsletterSubscriber_Email");
+        builder.HasIndex(s => s.ConfirmationTokenHash)
+            .HasFilter("[ConfirmationTokenHash] IS NOT NULL")
+            .HasDatabaseName("IX_NewsletterSubscriber_ConfirmationTokenHash");
         builder.HasIndex(s => s.IsActive).HasDatabaseName("IX_NewsletterSubscriber_IsActive");
     }
 }

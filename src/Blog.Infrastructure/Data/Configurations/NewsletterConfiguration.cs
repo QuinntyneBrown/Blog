@@ -20,7 +20,7 @@ public class NewsletterConfiguration : IEntityTypeConfiguration<Newsletter>
         builder.HasIndex(n => n.Slug)
             .IsUnique()
             .HasFilter("[Slug] IS NOT NULL")
-            .HasDatabaseName("UQ_Newsletter_Slug");
+            .HasDatabaseName("IX_Newsletter_Slug");
         builder.HasIndex(n => n.Status).HasDatabaseName("IX_Newsletter_Status");
         builder.HasIndex(n => n.CreatedAt).HasDatabaseName("IX_Newsletter_CreatedAt");
     }
