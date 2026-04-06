@@ -114,25 +114,7 @@ var loginRateLimit = builder.Configuration.GetValue("RateLimiting:LoginPermitLim
 var writeRateLimit = builder.Configuration.GetValue("RateLimiting:WritePermitLimit", 60);
 builder.Services.AddRateLimiter(options =>
 {
-    options.AddPolicy("login-ip", context =>
-    {
-        var partitionKey = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-        var redis = context.RequestServices.GetService<IConnectionMultiplexer>();
-        if (redis != null)
-        {
-            return RateLimitPartition.Get(partitionKey, key =>
-                new RedisRateLimiter(redis, $"ratelimit:login-ip:{key}", loginRateLimit, TimeSpan.FromMinutes(1)));
-        }
-        return RateLimitPartition.GetSlidingWindowLimiter(partitionKey,
-            _ => new SlidingWindowRateLimiterOptions
-            {
-                Window = TimeSpan.FromMinutes(1),
-                SegmentsPerWindow = 6,
-                PermitLimit = loginRateLimit,
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                QueueLimit = 0
-            });
-    });
+    options.AddPolicy<string, LoginRateLimiterPolicy>("login-ip");
     options.AddPolicy("write-endpoints", context =>
     {
         var partitionKey = context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
