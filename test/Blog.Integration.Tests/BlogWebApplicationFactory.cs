@@ -46,7 +46,7 @@ public class BlogWebApplicationFactory : WebApplicationFactory<Program>
 
             // Provide a valid HMAC key for the unsubscribe token service in tests.
             services.Configure<Blog.Api.Services.UnsubscribeTokenOptions>(opts =>
-                opts.HmacKey = "dGVzdC1obWFjLWtleS0zMi1ieXRlcy1sb25nISEh");
+                opts.HmacKey = "dGVzdC1obWFjLWtleS0zMi1ieXRlcy1sb25nISEhISE=");
         });
 
         builder.ConfigureAppConfiguration((_, config) =>
