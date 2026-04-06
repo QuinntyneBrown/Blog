@@ -26,33 +26,16 @@ public class UpdateEventCommandValidator : AbstractValidator<UpdateEventCommand>
         RuleFor(x => x.Description).NotEmpty().MaximumLength(4000);
         RuleFor(x => x.StartDate).NotEmpty();
         RuleFor(x => x.TimeZoneId).NotEmpty().MaximumLength(64)
-            .Must(BeAValidTimeZone).WithMessage("'{PropertyValue}' is not a valid IANA time zone identifier.");
+            .Must(CreateEventCommandValidator.BeAValidTimeZone).WithMessage("'{PropertyValue}' is not a valid IANA time zone identifier.");
         RuleFor(x => x.Location).NotEmpty().MaximumLength(512);
         RuleFor(x => x.EndDate).Must((cmd, endDate) => endDate == null || endDate >= cmd.StartDate)
             .WithMessage("EndDate must be greater than or equal to StartDate.");
-        RuleFor(x => x.ExternalUrl).MaximumLength(2048)
-            .Must(BeAValidHttpsUrl).When(x => !string.IsNullOrEmpty(x.ExternalUrl))
+        RuleFor(x => x.ExternalUrl)
+            .Must(url => url == null || url.Length > 0).WithMessage("ExternalUrl must not be an empty string.")
+            .MaximumLength(2048)
+            .Must(CreateEventCommandValidator.BeAValidHttpsUrl).When(x => !string.IsNullOrEmpty(x.ExternalUrl))
             .WithMessage("ExternalUrl must be a well-formed absolute HTTPS URL.");
         RuleFor(x => x.Version).GreaterThan(0);
-    }
-
-    private static bool BeAValidTimeZone(string timeZoneId)
-    {
-        try
-        {
-            TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
-            return true;
-        }
-        catch (TimeZoneNotFoundException)
-        {
-            return false;
-        }
-    }
-
-    private static bool BeAValidHttpsUrl(string? url)
-    {
-        if (string.IsNullOrEmpty(url)) return true;
-        return Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps;
     }
 }
 

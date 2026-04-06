@@ -40,7 +40,9 @@ public class EventsController(IMediator mediator, IConfiguration configuration, 
     {
         var stats = await eventRepository.GetPublishedStatsAsync(ct);
         var etag = $"W/\"pub:{stats.MaxVersion}:{stats.Count}\"";
-        var lastModified = new DateTimeOffset(stats.MaxUpdatedAt, TimeSpan.Zero);
+        var truncatedUpdatedAt = new DateTime(
+            stats.MaxUpdatedAt.Ticks / TimeSpan.TicksPerSecond * TimeSpan.TicksPerSecond, DateTimeKind.Utc);
+        var lastModified = new DateTimeOffset(truncatedUpdatedAt, TimeSpan.Zero);
 
         if (Request.Headers.TryGetValue(HeaderNames.IfNoneMatch, out var ifNoneMatch) && ifNoneMatch == etag)
         {
