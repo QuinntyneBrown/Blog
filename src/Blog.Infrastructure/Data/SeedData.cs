@@ -22,6 +22,30 @@ public class SeedData(IUnitOfWork uow, ILogger<SeedData> logger, IConfiguration 
         }
 
         var now = DateTime.UtcNow;
+
+        // Seed a digital asset for the featured image so article detail pages
+        // render <figure>, srcset, and JSON-LD "image" for Playwright tests.
+        var adminUser = await uow.Users.GetByEmailAsync(
+            configuration.GetSection("Seed:AdminUser")["Email"] ?? "admin@blog.dev",
+            cancellationToken);
+        var featuredImageId = Guid.NewGuid();
+        if (adminUser != null)
+        {
+            var asset = new DigitalAsset
+            {
+                DigitalAssetId = featuredImageId,
+                OriginalFileName = "seed-featured.jpg",
+                StoredFileName = "seed-featured.jpg",
+                ContentType = "image/jpeg",
+                FileSizeBytes = 149,
+                Width = 1280,
+                Height = 720,
+                CreatedAt = now.AddDays(-10),
+                CreatedBy = adminUser.UserId,
+            };
+            await uow.DigitalAssets.AddAsync(asset, cancellationToken);
+        }
+
         var sampleArticles = new[]
         {
             new Article
@@ -30,8 +54,9 @@ public class SeedData(IUnitOfWork uow, ILogger<SeedData> logger, IConfiguration 
                 Title = "Hello World",
                 Slug = "hello-world",
                 Abstract = "Welcome to the blog! This is the first post, covering the basics of getting started with our platform and what to expect.",
-                Body = "# Hello World\n\nWelcome to the blog! This is the very first post.\n\n## Getting Started\n\nThis platform is built with ASP.NET Core and follows clean architecture principles. Every article supports Markdown formatting, featured images, and SEO-friendly metadata.\n\n## What to Expect\n\nWe will be covering topics ranging from software engineering best practices to .NET architecture patterns. Stay tuned for more content!\n\n## Summary\n\nThank you for reading the first post. There is much more to come as we build out this platform and share our knowledge with the community.",
-                BodyHtml = "<h1>Hello World</h1><p>Welcome to the blog! This is the very first post.</p><h2>Getting Started</h2><p>This platform is built with ASP.NET Core and follows clean architecture principles. Every article supports Markdown formatting, featured images, and SEO-friendly metadata.</p><h2>What to Expect</h2><p>We will be covering topics ranging from software engineering best practices to .NET architecture patterns. Stay tuned for more content!</p><h2>Summary</h2><p>Thank you for reading the first post. There is much more to come as we build out this platform and share our knowledge with the community.</p>",
+                Body = "Welcome to the blog! This is the very first post.\n\n## Getting Started\n\nThis platform is built with ASP.NET Core and follows clean architecture principles. Every article supports Markdown formatting, featured images, and SEO-friendly metadata.\n\n![Architecture diagram](/assets/seed-featured.jpg)\n\n## What to Expect\n\nWe will be covering topics ranging from software engineering best practices to .NET architecture patterns. Stay tuned for more content!\n\n## Summary\n\nThank you for reading the first post. There is much more to come as we build out this platform and share our knowledge with the community.",
+                BodyHtml = "<p>Welcome to the blog! This is the very first post.</p><h2>Getting Started</h2><p>This platform is built with ASP.NET Core and follows clean architecture principles. Every article supports Markdown formatting, featured images, and SEO-friendly metadata.</p><figure><img src=\"/assets/seed-featured.jpg\" alt=\"Architecture diagram\" loading=\"lazy\" decoding=\"async\" /></figure><h2>What to Expect</h2><p>We will be covering topics ranging from software engineering best practices to .NET architecture patterns. Stay tuned for more content!</p><h2>Summary</h2><p>Thank you for reading the first post. There is much more to come as we build out this platform and share our knowledge with the community.</p>",
+                FeaturedImageId = adminUser != null ? featuredImageId : null,
                 Published = true, DatePublished = now.AddDays(-10), ReadingTimeMinutes = 2,
                 Version = 1, CreatedAt = now.AddDays(-10), UpdatedAt = now.AddDays(-10)
             },
@@ -41,8 +66,8 @@ public class SeedData(IUnitOfWork uow, ILogger<SeedData> logger, IConfiguration 
                 Title = "Getting Started with ASP.NET Core",
                 Slug = "getting-started-with-aspnet-core",
                 Abstract = "A practical introduction to building web applications with ASP.NET Core, covering project setup, middleware, and deployment.",
-                Body = "# Getting Started with ASP.NET Core\n\nASP.NET Core is a cross-platform framework for building modern web applications.\n\n## Project Setup\n\nUse `dotnet new webapp` to create a new project.\n\n## Middleware Pipeline\n\nThe middleware pipeline processes every request through a series of components.\n\n## Deployment\n\nPublish with `dotnet publish` and deploy to your hosting platform of choice.",
-                BodyHtml = "<h1>Getting Started with ASP.NET Core</h1><p>ASP.NET Core is a cross-platform framework for building modern web applications.</p><h2>Project Setup</h2><p>Use <code>dotnet new webapp</code> to create a new project.</p><h2>Middleware Pipeline</h2><p>The middleware pipeline processes every request through a series of components.</p><h2>Deployment</h2><p>Publish with <code>dotnet publish</code> and deploy to your hosting platform of choice.</p>",
+                Body = "ASP.NET Core is a cross-platform framework for building modern web applications.\n\n## Project Setup\n\nUse `dotnet new webapp` to create a new project.\n\n## Middleware Pipeline\n\nThe middleware pipeline processes every request through a series of components.\n\n## Deployment\n\nPublish with `dotnet publish` and deploy to your hosting platform of choice.",
+                BodyHtml = "<p>ASP.NET Core is a cross-platform framework for building modern web applications.</p><h2>Project Setup</h2><p>Use <code>dotnet new webapp</code> to create a new project.</p><h2>Middleware Pipeline</h2><p>The middleware pipeline processes every request through a series of components.</p><h2>Deployment</h2><p>Publish with <code>dotnet publish</code> and deploy to your hosting platform of choice.</p>",
                 Published = true, DatePublished = now.AddDays(-7), ReadingTimeMinutes = 3,
                 Version = 1, CreatedAt = now.AddDays(-7), UpdatedAt = now.AddDays(-7)
             },
@@ -52,10 +77,21 @@ public class SeedData(IUnitOfWork uow, ILogger<SeedData> logger, IConfiguration 
                 Title = "Clean Architecture in .NET",
                 Slug = "clean-architecture-in-dotnet",
                 Abstract = "Exploring how to structure .NET applications using Clean Architecture principles for maintainability and testability.",
-                Body = "# Clean Architecture in .NET\n\nClean Architecture separates concerns into layers with clear dependency rules.\n\n## Domain Layer\n\nThe innermost layer contains entities and business rules.\n\n## Application Layer\n\nUse cases and application logic live here.\n\n## Infrastructure Layer\n\nDatabase access, external services, and framework concerns.",
-                BodyHtml = "<h1>Clean Architecture in .NET</h1><p>Clean Architecture separates concerns into layers with clear dependency rules.</p><h2>Domain Layer</h2><p>The innermost layer contains entities and business rules.</p><h2>Application Layer</h2><p>Use cases and application logic live here.</p><h2>Infrastructure Layer</h2><p>Database access, external services, and framework concerns.</p>",
+                Body = "Clean Architecture separates concerns into layers with clear dependency rules.\n\n## Domain Layer\n\nThe innermost layer contains entities and business rules.\n\n## Application Layer\n\nUse cases and application logic live here.\n\n## Infrastructure Layer\n\nDatabase access, external services, and framework concerns.",
+                BodyHtml = "<p>Clean Architecture separates concerns into layers with clear dependency rules.</p><h2>Domain Layer</h2><p>The innermost layer contains entities and business rules.</p><h2>Application Layer</h2><p>Use cases and application logic live here.</p><h2>Infrastructure Layer</h2><p>Database access, external services, and framework concerns.</p>",
                 Published = true, DatePublished = now.AddDays(-3), ReadingTimeMinutes = 2,
                 Version = 1, CreatedAt = now.AddDays(-3), UpdatedAt = now.AddDays(-3)
+            },
+            new Article
+            {
+                ArticleId = Guid.NewGuid(),
+                Title = "XSS Test Article",
+                Slug = "test-xss-article",
+                Abstract = "This article tests XSS prevention measures.",
+                Body = "This article contains XSS payloads for testing.\n\n<script>alert(\"xss\")</script>\n\n<img src=\"x\" onerror=\"alert('xss')\" />",
+                BodyHtml = "<p>This article contains XSS payloads for testing.</p><p>&lt;script&gt;alert(\"xss\")&lt;/script&gt;</p><figure><img src=\"/assets/seed-featured.jpg\" alt=\"test image\" loading=\"lazy\" decoding=\"async\" /></figure>",
+                Published = true, DatePublished = now.AddDays(-1), ReadingTimeMinutes = 1,
+                Version = 1, CreatedAt = now.AddDays(-1), UpdatedAt = now.AddDays(-1)
             }
         };
 
