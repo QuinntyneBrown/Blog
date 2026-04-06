@@ -9,9 +9,11 @@ public class UnitOfWork(BlogDbContext context) : IUnitOfWork
     private IDbContextTransaction? _transaction;
 
     public IArticleRepository Articles { get; } = new ArticleRepository(context);
+    public IEventRepository Events { get; } = new EventRepository(context);
     public IUserRepository Users { get; } = new UserRepository(context);
     public IDigitalAssetRepository DigitalAssets { get; } = new DigitalAssetRepository(context);
     public INewsletterRepository Newsletters { get; } = new NewsletterRepository(context);
+    public IAboutContentRepository AboutContents { get; } = new AboutContentRepository(context);
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         => context.SaveChangesAsync(cancellationToken);

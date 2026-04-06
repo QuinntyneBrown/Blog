@@ -41,9 +41,11 @@ builder.Services.AddDbContextPool<BlogDbContext>(options =>
 
 // Repositories & UnitOfWork
 builder.Services.AddScoped<IArticleRepository, ArticleRepository>();
+builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IDigitalAssetRepository, DigitalAssetRepository>();
 builder.Services.AddScoped<INewsletterRepository, NewsletterRepository>();
+builder.Services.AddScoped<IAboutContentRepository, AboutContentRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Asset storage abstraction — allows swapping to cloud blob storage without changing handlers.
@@ -128,25 +130,7 @@ var loginRateLimit = builder.Configuration.GetValue("RateLimiting:LoginPermitLim
 var writeRateLimit = builder.Configuration.GetValue("RateLimiting:WritePermitLimit", 60);
 builder.Services.AddRateLimiter(options =>
 {
-    options.AddPolicy("login-ip", context =>
-    {
-        var partitionKey = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-        var redis = context.RequestServices.GetService<IConnectionMultiplexer>();
-        if (redis != null)
-        {
-            return RateLimitPartition.Get(partitionKey, key =>
-                new RedisRateLimiter(redis, $"ratelimit:login-ip:{key}", loginRateLimit, TimeSpan.FromMinutes(1)));
-        }
-        return RateLimitPartition.GetSlidingWindowLimiter(partitionKey,
-            _ => new SlidingWindowRateLimiterOptions
-            {
-                Window = TimeSpan.FromMinutes(1),
-                SegmentsPerWindow = 6,
-                PermitLimit = loginRateLimit,
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                QueueLimit = 0
-            });
-    });
+    options.AddPolicy<string, LoginRateLimiterPolicy>("login-ip");
     options.AddPolicy("write-endpoints", context =>
     {
         var partitionKey = context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
@@ -376,6 +360,7 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseRouting();
 app.UseCors();
 app.UseSession();
+app.UseMiddleware<Blog.Api.Middleware.LoginRateLimitMiddleware>();
 app.UseRateLimiter();
 // Response caching disabled — incompatible with per-request CSP nonces.
 // Cache-Control headers are still sent for reverse proxies/CDNs.
@@ -409,9 +394,50 @@ app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.Health
         });
         await context.Response.WriteAsync(result);
     }
-}).RequireAuthorization();
+}).AllowAnonymous();
 
 await app.RunAsync();
 
 // Make the auto-generated Program class accessible to integration tests.
 public partial class Program { }
+
+/// <summary>
+/// Concrete rate-limiter policy for login endpoints — avoids lambda-based AddPolicy so
+/// the middleware correctly resolves the partitioned limiter from endpoint metadata.
+/// </summary>
+internal sealed class LoginRateLimiterPolicy : IRateLimiterPolicy<string>
+{
+    private readonly int _permitLimit;
+
+    public LoginRateLimiterPolicy(IConfiguration configuration)
+    {
+        _permitLimit = configuration.GetValue("RateLimiting:LoginPermitLimit", 10);
+    }
+
+    public Func<OnRejectedContext, CancellationToken, ValueTask>? OnRejected => async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = 429;
+        if (context.Lease.TryGetMetadata(System.Threading.RateLimiting.MetadataName.RetryAfter, out var retryAfter))
+            context.HttpContext.Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString();
+        else
+            context.HttpContext.Response.Headers.RetryAfter = "60";
+        context.HttpContext.Response.ContentType = "application/problem+json";
+        await context.HttpContext.Response.WriteAsync(
+            "{\"type\":\"https://tools.ietf.org/html/rfc6585#section-4\",\"title\":\"Too Many Requests\",\"status\":429,\"detail\":\"Rate limit exceeded. Please try again later.\"}",
+            cancellationToken);
+    };
+
+    public RateLimitPartition<string> GetPartition(HttpContext httpContext)
+    {
+        var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetSlidingWindowLimiter(partitionKey,
+            _ => new SlidingWindowRateLimiterOptions
+            {
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 6,
+                PermitLimit = _permitLimit,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            });
+    }
+}

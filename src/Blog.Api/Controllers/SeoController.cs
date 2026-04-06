@@ -90,12 +90,14 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
     }
 
     [HttpGet("feed.xml")]
+    [HttpGet("feed/rss")]
     [ResponseCache(Duration = 3600)] // Design spec: 60 minutes per resolved Open Question #4 (docs/detailed-designs/05-seo-and-discoverability/README.md, Section 8)
     public async Task<IActionResult> Rss()
     {
         var result = await mediator.Send(new GetPublishedArticlesQuery(1, 20));
         XNamespace dc = "http://purl.org/dc/elements/1.1/";
         XNamespace content = "http://purl.org/rss/1.0/modules/content/";
+        XNamespace atom = "http://www.w3.org/2005/Atom";
         var items = result.Items.Select(a =>
             new XElement("item",
                 new XElement("title", a.Title),
@@ -111,8 +113,7 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
             new XElement("description", SiteDescription),
             new XElement("language", "en-us"),
             new XElement("lastBuildDate", DateTime.UtcNow.ToString("R")),
-            new XElement("atom:link",
-                new XAttribute(XNamespace.Xmlns + "atom", "http://www.w3.org/2005/Atom"),
+            new XElement(atom + "link",
                 new XAttribute("href", $"{BaseUrl}/feed.xml"),
                 new XAttribute("rel", "self"),
                 new XAttribute("type", "application/rss+xml")));
@@ -124,12 +125,14 @@ public class SeoController(IMediator mediator, IConfiguration configuration) : C
                 new XAttribute("version", "2.0"),
                 new XAttribute(XNamespace.Xmlns + "dc", dc),
                 new XAttribute(XNamespace.Xmlns + "content", content),
+                new XAttribute(XNamespace.Xmlns + "atom", atom),
                 channel));
 
         return Content(doc.ToString(), "application/rss+xml; charset=utf-8");
     }
 
     [HttpGet("atom.xml")]
+    [HttpGet("feed/atom")]
     [ResponseCache(Duration = 3600)] // Design spec: 60 minutes per resolved Open Question #4 (docs/detailed-designs/05-seo-and-discoverability/README.md, Section 8)
     public async Task<IActionResult> Atom()
     {

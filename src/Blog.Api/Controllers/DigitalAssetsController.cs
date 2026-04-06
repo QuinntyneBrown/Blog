@@ -31,7 +31,7 @@ public class DigitalAssetsController(IMediator mediator, IConfiguration configur
         return Ok(result);
     }
 
-    [HttpPost]
+    [HttpPost("upload")]
     [Authorize]
     [RequestSizeLimit(10 * 1024 * 1024)]
     [RequestFormLimits(MultipartBodyLengthLimit = 10 * 1024 * 1024)]

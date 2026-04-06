@@ -16,6 +16,10 @@ public class ETagGenerator : IETagGenerator
         => $"W/\"article-{articleId}-v{version}\"";
 
     /// <inheritdoc />
+    public string GenerateAbout(int version)
+        => $"W/\"about:{version}\"";
+
+    /// <inheritdoc />
     public bool IsMatch(string etag, string? ifNoneMatch)
     {
         if (string.IsNullOrEmpty(ifNoneMatch))

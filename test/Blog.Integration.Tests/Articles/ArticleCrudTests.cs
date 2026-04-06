@@ -36,8 +36,8 @@ public class ArticleCrudTests : IClassFixture<BlogWebApplicationFactory>
 
         var createBody = await createResponse.Content.ReadAsStringAsync();
         using var createDoc = JsonDocument.Parse(createBody);
-        var articleId = createDoc.RootElement.GetProperty("articleId").GetString();
-        var version = createDoc.RootElement.GetProperty("version").GetInt32();
+        var articleId = createDoc.RootElement.GetProperty("data").GetProperty("articleId").GetString();
+        var version = createDoc.RootElement.GetProperty("data").GetProperty("version").GetInt32();
         articleId.Should().NotBeNullOrWhiteSpace();
 
         // Read
@@ -105,7 +105,7 @@ public class ArticleCrudTests : IClassFixture<BlogWebApplicationFactory>
         createResponse.EnsureSuccessStatusCode();
         var createBody = await createResponse.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(createBody);
-        var articleId = doc.RootElement.GetProperty("articleId").GetString();
+        var articleId = doc.RootElement.GetProperty("data").GetProperty("articleId").GetString();
 
         // Try to update with a stale ETag
         var updatePayload = new

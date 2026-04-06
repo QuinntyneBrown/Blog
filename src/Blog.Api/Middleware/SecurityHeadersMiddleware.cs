@@ -7,7 +7,7 @@ namespace Blog.Api.Middleware;
 /// per-request nonce-based Content-Security-Policy as resolved in design OQ-1
 /// (docs/detailed-designs/08-security-hardening/README.md).
 /// </summary>
-public class SecurityHeadersMiddleware(RequestDelegate next, IHostEnvironment env)
+public class SecurityHeadersMiddleware(RequestDelegate next)
 {
     /// <summary>
     /// Key used to store the per-request CSP nonce in HttpContext.Items so that
@@ -55,11 +55,7 @@ public class SecurityHeadersMiddleware(RequestDelegate next, IHostEnvironment en
             // to the /api/csp-report URL (Design 08, Section 3.3).
             headers["Reporting-Endpoints"] = "csp-endpoint=\"/api/csp-report\"";
 
-            // Strict-Transport-Security — only sent over HTTPS / non-development.
-            if (!env.IsDevelopment())
-            {
-                headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload";
-            }
+            headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload";
 
             headers["X-Content-Type-Options"] = "nosniff";
             headers["X-Frame-Options"] = "DENY";

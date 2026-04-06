@@ -12,6 +12,9 @@ public class BlogDbContext(DbContextOptions<BlogDbContext> options) : DbContext(
     public DbSet<NewsletterSubscriber> NewsletterSubscribers => Set<NewsletterSubscriber>();
     public DbSet<NewsletterSendLog> NewsletterSendLogs => Set<NewsletterSendLog>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<AboutContent> AboutContents => Set<AboutContent>();
+    public DbSet<AboutContentHistory> AboutContentHistories => Set<AboutContentHistory>();
+    public DbSet<Event> Events => Set<Event>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -39,6 +42,8 @@ public class BlogDbContext(DbContextOptions<BlogDbContext> options) : DbContext(
                     article.Version++;
                 else if (entry.Entity is Newsletter newsletter)
                     newsletter.Version++;
+                if (entry.Entity is Event ev)
+                    ev.Version++;
             }
         }
         return base.SaveChangesAsync(cancellationToken);

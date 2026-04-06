@@ -30,6 +30,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             BadRequestException bre => (400, "Bad Request", bre.Message, (Dictionary<string, string[]>?)null),
             UnauthorizedException ue => (401, "Unauthorized", ue.Message, (Dictionary<string, string[]>?)null),
             UnauthorizedAccessException => (401, "Unauthorized", "Authentication is required.", (Dictionary<string, string[]>?)null),
+            ForbiddenException fe => (403, "Forbidden", fe.Message, (Dictionary<string, string[]>?)null),
             NotFoundException nfe => (404, "Not Found", nfe.Message, (Dictionary<string, string[]>?)null),
             ConflictException ce => (409, "Conflict", ce.Message, (Dictionary<string, string[]>?)null),
             UnprocessableEntityException ue422 => (422, "Unprocessable Entity", ue422.Message, (Dictionary<string, string[]>?)null),
@@ -63,6 +64,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
     {
         400 => "https://tools.ietf.org/html/rfc7231#section-6.5.1",
         401 => "https://tools.ietf.org/html/rfc7235#section-3.1",
+        403 => "https://tools.ietf.org/html/rfc7231#section-6.5.3",
         404 => "https://tools.ietf.org/html/rfc7231#section-6.5.4",
         409 => "https://tools.ietf.org/html/rfc7231#section-6.5.8",
         422 => "https://tools.ietf.org/html/rfc4918#section-11.2",

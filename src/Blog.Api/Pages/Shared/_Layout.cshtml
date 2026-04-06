@@ -730,6 +730,32 @@
         @@media (max-width: 767px) { .feed-page { padding: 40px 24px; } .feed-card { flex-direction: column; align-items: flex-start; } }
         @@media (max-width: 575px) { .feed-page { padding: 32px 16px; } }
 
+        /* About page */
+        .about-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 500px; gap: 16px; padding: 48px; text-align: center; }
+        .about-empty-title { font-size: 28px; font-weight: 700; }
+        .about-empty-desc { font-size: 16px; color: var(--foreground-secondary); }
+        .about-page { max-width: 800px; margin: 0 auto; padding: 48px 24px; }
+        .about-profile-image { display: flex; justify-content: center; margin-bottom: 32px; }
+        .about-profile-image img { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-subtle); }
+        .about-heading { font-size: 36px; font-weight: 800; letter-spacing: -1px; margin-bottom: 24px; }
+        .about-body { font-size: 16px; line-height: 1.8; color: var(--foreground-secondary); }
+        .about-body h2 { font-size: 24px; font-weight: 700; color: var(--foreground-primary); margin: 32px 0 16px; }
+        .about-body h3 { font-size: 20px; font-weight: 600; color: var(--foreground-primary); margin: 24px 0 12px; }
+        .about-body p { margin: 0 0 16px; }
+        .about-body a { color: var(--accent, #3B82F6); text-decoration: underline; }
+        .about-body ul, .about-body ol { margin: 0 0 16px; padding-left: 24px; }
+        .about-body li { margin-bottom: 8px; }
+        .about-body blockquote { border-left: 3px solid var(--border-subtle); padding-left: 16px; margin: 16px 0; color: var(--foreground-tertiary, #71717A); font-style: italic; }
+        .about-body code { font-family: var(--font-mono); font-size: 14px; background: var(--surface-card); padding: 2px 6px; border-radius: 4px; }
+        .about-body pre { background: var(--surface-card); padding: 16px; border-radius: 8px; overflow-x: auto; margin: 16px 0; }
+        .about-body pre code { background: none; padding: 0; }
+        .about-body img { max-width: 100%; height: auto; border-radius: 8px; margin: 16px 0; }
+        @@media (max-width: 575px) {
+            .about-page { padding: 32px 16px; }
+            .about-heading { font-size: 28px; }
+            .about-profile-image img { width: 120px; height: 120px; }
+        }
+
         /* 404 */
         .not-found { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 600px; gap: 24px; padding: 48px; text-align: center; }
         .not-found-number { font-size: 120px; font-weight: 800; letter-spacing: -4px; color: var(--border-subtle); line-height: 1; }
@@ -843,6 +869,7 @@
         <a href="/" class="nav-logo">@(Configuration["Site:LogoText"] ?? "QB")</a>
         <ul class="nav-links">
             <li><a href="/articles" class="@(ViewBag.ActiveNav == "articles" ? "active" : "")">Articles</a></li>
+            <li><a href="/about" class="@(ViewBag.ActiveNav == "about" ? "active" : "")">About</a></li>
             <li><a href="/feed" class="@(ViewBag.ActiveNav == "feed" ? "active" : "")">Feed</a></li>
             <li>
                 <a href="/feed.xml" class="rss-link" aria-label="RSS Feed">
@@ -896,6 +923,7 @@
     </nav>
     <div class="mobile-menu" id="mobile-menu">
         <a href="/articles">Articles</a>
+        <a href="/about">About</a>
         <a href="/feed">Feed</a>
         <a href="/feed.xml">RSS Feed</a>
     </div>

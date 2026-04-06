@@ -44,7 +44,16 @@ public class UploadDigitalAssetCommandHandler(
         // Resolve the physical path via IAssetStorage so ImageSharp can load the saved file.
         var filePath = assetStorage.GetFilePath(storedFileName);
 
-        using var image = await Image.LoadAsync(filePath, cancellationToken);
+        Image image;
+        try
+        {
+            image = await Image.LoadAsync(filePath, cancellationToken);
+        }
+        catch (Exception)
+        {
+            throw new BadRequestException("The file could not be processed as a valid image.");
+        }
+        using var _ = image;
         var width = image.Width;
         var height = image.Height;
 

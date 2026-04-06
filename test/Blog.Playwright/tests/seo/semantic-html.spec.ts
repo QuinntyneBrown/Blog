@@ -55,7 +55,7 @@ test.describe('L2-007: Semantic HTML', () => {
   test('page has <nav> element', async ({ page }) => {
     await page.goto(articleUrl);
 
-    const nav = page.locator('nav');
+    const nav = page.locator('nav').first();
     await expect(nav).toBeVisible();
   });
 

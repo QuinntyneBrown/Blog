@@ -15,6 +15,15 @@ namespace Blog.Api.Services;
 public sealed class CacheInvalidator(IMemoryCache cache) : ICacheInvalidator
 {
     /// <inheritdoc/>
+    public void InvalidateEvent(string slug)
+    {
+        cache.Remove($"/events/{slug}");
+        cache.Remove("/events");
+        for (var page = 1; page <= 5; page++)
+            cache.Remove($"/events?page={page}");
+    }
+
+    /// <inheritdoc/>
     public void InvalidateArticle(string slug)
     {
         // Evict the article detail page.
@@ -45,5 +54,10 @@ public sealed class CacheInvalidator(IMemoryCache cache) : ICacheInvalidator
         cache.Remove("/api/newsletters/archive");
         for (var page = 1; page <= 5; page++)
             cache.Remove($"/api/newsletters/archive?page={page}");
+    }
+
+    public void InvalidateAbout()
+    {
+        cache.Remove("/about");
     }
 }
