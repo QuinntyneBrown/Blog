@@ -41,6 +41,7 @@ builder.Services.AddDbContextPool<BlogDbContext>(options =>
 
 // Repositories & UnitOfWork
 builder.Services.AddScoped<IArticleRepository, ArticleRepository>();
+builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IDigitalAssetRepository, DigitalAssetRepository>();
 builder.Services.AddScoped<IAboutContentRepository, AboutContentRepository>();

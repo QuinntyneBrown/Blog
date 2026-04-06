@@ -20,4 +20,10 @@ public interface ICacheInvalidator
     /// Evicts the response cache entry for the public about page.
     /// </summary>
     void InvalidateAbout();
+
+    /// <summary>
+    /// Evicts response cache entries for event-related pages, including the event detail
+    /// page at the given slug and the public events listing page.
+    /// </summary>
+    void InvalidateEvent(string slug);
 }
