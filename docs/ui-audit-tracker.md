@@ -10,7 +10,7 @@
 
 | Site | Issues Found | Fixed | Remaining (Structural) |
 |------|-------------|-------|------------------------|
-| Public | 13 | 13 | 0 |
+| Public | 24 | 24 | 0 |
 | Back Office | 7 | 7 | 0 |
 
 **Build Status:** Pass (0 errors, 6 warnings - pre-existing)
@@ -69,6 +69,23 @@
 | S1 | **About** | Side-by-side hero (text + photo), skills section with 2-column layout | Side-by-side hero at XL/LG with rectangular photo, stacked centered at MD/SM/XS with circular photo. Background section with body content below. Social link buttons (GitHub, Twitter/X) from config. | **FIXED** |
 | S2 | **Newsletter** | Full page: hero with email signup, past issues archive list | Page created at `/newsletter` with hero section (tag, title, description), signup placeholder, and past issues archive section. Backend integration pending. | **FIXED** (structure) |
 | S3 | **Events** | Full page: upcoming/past event cards with date badges | Page created at `/events` with hero section (tag, title, description), upcoming and past events sections. Backend integration pending. | **FIXED** (structure) |
+
+### Iteration 2 Fixes (New Pages)
+
+| # | File | Issue | Design | Code (Before) | Status |
+|---|------|-------|--------|---------------|--------|
+| P11 | `_Layout.cshtml` | `.about-tag` had `text-transform: uppercase` | Mixed case "About" | "ABOUT" (uppercase) | **FIXED** |
+| P12 | `_Layout.cshtml` | `.newsletter-tag` had `text-transform: uppercase` | Mixed case "Newsletter" | "NEWSLETTER" (uppercase) | **FIXED** |
+| P13 | `_Layout.cshtml` | `.events-tag` had `text-transform: uppercase` | Mixed case "Events" | "EVENTS" (uppercase) | **FIXED** |
+| P14 | `_Layout.cshtml` | Events past section padding (XL) | [40, 80, 64, 80] | padding-top: 0 only | **FIXED** |
+| P15 | `_Layout.cshtml` | Events hero gap at LG (1199px) | 14px | 16px (default) | **FIXED** |
+| P16 | `_Layout.cshtml` | Events hero gap at MD (991px) | 12px | 16px (default) | **FIXED** |
+| P17 | `_Layout.cshtml` | Events section gap at LG/MD/SM/XS | 20/16/14/12px | 24px (default, no override) | **FIXED** |
+| P18 | `_Layout.cshtml` | Events past section padding at LG/MD/SM/XS | Per design breakpoints | Not differentiated | **FIXED** |
+| P19 | `_Layout.cshtml` | Newsletter hero gap at MD (991px) | 14px | 16px (default) | **FIXED** |
+| P20 | `_Layout.cshtml` | Newsletter archive gap at MD (991px) | 16px | 20px | **FIXED** |
+| P21 | `_Layout.cshtml` | Newsletter archive gap at SM (767px) | 14px | 16px | **FIXED** |
+| P22 | `_Layout.cshtml` | Newsletter archive gap at XS (575px) | 12px | 14px | **FIXED** |
 
 ---
 
