@@ -1,5 +1,6 @@
 using Blog.Api.Common.Models;
 using Blog.Domain.Interfaces;
+using FluentValidation;
 using MediatR;
 
 namespace Blog.Api.Features.Events.Queries;
@@ -14,6 +15,15 @@ public record EventListDto(
     bool Published);
 
 public record GetEventsQuery(int Page = 1, int PageSize = 20) : IRequest<PagedResponse<EventListDto>>;
+
+public class GetEventsQueryValidator : AbstractValidator<GetEventsQuery>
+{
+    public GetEventsQueryValidator()
+    {
+        RuleFor(x => x.Page).GreaterThanOrEqualTo(1);
+        RuleFor(x => x.PageSize).GreaterThanOrEqualTo(1).LessThanOrEqualTo(50);
+    }
+}
 
 public class GetEventsHandler(IEventRepository events) : IRequestHandler<GetEventsQuery, PagedResponse<EventListDto>>
 {

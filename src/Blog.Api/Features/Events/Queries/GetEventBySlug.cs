@@ -4,17 +4,19 @@ using MediatR;
 
 namespace Blog.Api.Features.Events.Queries;
 
-public record GetEventBySlugQuery(string Slug) : IRequest<PublicEventDto>;
+public record PublicEventWithCacheInfo(PublicEventDto Event, int Version, DateTime UpdatedAt);
 
-public class GetEventBySlugHandler(IEventRepository events) : IRequestHandler<GetEventBySlugQuery, PublicEventDto>
+public record GetEventBySlugQuery(string Slug) : IRequest<PublicEventWithCacheInfo>;
+
+public class GetEventBySlugHandler(IEventRepository events) : IRequestHandler<GetEventBySlugQuery, PublicEventWithCacheInfo>
 {
-    public async Task<PublicEventDto> Handle(GetEventBySlugQuery request, CancellationToken cancellationToken)
+    public async Task<PublicEventWithCacheInfo> Handle(GetEventBySlugQuery request, CancellationToken cancellationToken)
     {
         var ev = await events.GetBySlugAsync(request.Slug, cancellationToken);
 
         if (ev == null || !ev.Published)
             throw new NotFoundException($"Event with slug '{request.Slug}' was not found.");
 
-        return PublicEventDto.FromEntity(ev);
+        return new PublicEventWithCacheInfo(PublicEventDto.FromEntity(ev), ev.Version, ev.UpdatedAt);
     }
 }

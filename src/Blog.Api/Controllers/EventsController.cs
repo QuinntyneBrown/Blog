@@ -1,15 +1,19 @@
 using Blog.Api.Common.Models;
 using Blog.Api.Features.Events.Commands;
 using Blog.Api.Features.Events.Queries;
+using Blog.Domain.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Net.Http.Headers;
 
 namespace Blog.Api.Controllers;
 
-public class EventsController(IMediator mediator, IConfiguration configuration) : ApiControllerBase(mediator, configuration)
+public class EventsController(IMediator mediator, IConfiguration configuration, IEventRepository eventRepository) : ApiControllerBase(mediator, configuration)
 {
+    private const string PublicCacheControl = "public, max-age=60, stale-while-revalidate=300";
+
     [HttpGet]
     [Authorize]
     public async Task<IActionResult> GetAll([FromQuery] PaginationParameters paging, CancellationToken ct)
@@ -34,7 +38,29 @@ public class EventsController(IMediator mediator, IConfiguration configuration) 
         [FromQuery] int pageSize = 20,
         CancellationToken ct = default)
     {
+        var stats = await eventRepository.GetPublishedStatsAsync(ct);
+        var etag = $"W/\"pub:{stats.MaxVersion}:{stats.Count}\"";
+        var lastModified = new DateTimeOffset(stats.MaxUpdatedAt, TimeSpan.Zero);
+
+        if (Request.Headers.TryGetValue(HeaderNames.IfNoneMatch, out var ifNoneMatch) && ifNoneMatch == etag)
+        {
+            Response.Headers.CacheControl = PublicCacheControl;
+            return StatusCode(304);
+        }
+
+        if (Request.Headers.TryGetValue(HeaderNames.IfModifiedSince, out var ifModifiedSince) &&
+            DateTimeOffset.TryParse(ifModifiedSince, out var ifModifiedSinceDate) &&
+            lastModified <= ifModifiedSinceDate)
+        {
+            Response.Headers.CacheControl = PublicCacheControl;
+            return StatusCode(304);
+        }
+
         var result = await Mediator.Send(new GetPublishedEventsQuery(upcomingPage, pastPage, pageSize), ct);
+
+        Response.Headers.CacheControl = PublicCacheControl;
+        Response.Headers.ETag = etag;
+        Response.Headers[HeaderNames.LastModified] = lastModified.ToString("R");
         return Ok(result);
     }
 
@@ -42,7 +68,25 @@ public class EventsController(IMediator mediator, IConfiguration configuration) 
     public async Task<IActionResult> GetBySlug(string slug, CancellationToken ct)
     {
         var result = await Mediator.Send(new GetEventBySlugQuery(slug), ct);
-        return Ok(result);
+
+        var etag = $"W/\"{result.Event.Slug}:{result.Version}\"";
+        var lastModified = new DateTimeOffset(
+            new DateTime(result.UpdatedAt.Ticks / TimeSpan.TicksPerSecond * TimeSpan.TicksPerSecond, DateTimeKind.Utc),
+            TimeSpan.Zero);
+
+        Response.Headers.CacheControl = PublicCacheControl;
+        Response.Headers.ETag = etag;
+        Response.Headers[HeaderNames.LastModified] = lastModified.ToString("R");
+
+        if (Request.Headers.TryGetValue(HeaderNames.IfNoneMatch, out var ifNoneMatch) && ifNoneMatch == etag)
+            return StatusCode(304);
+
+        if (Request.Headers.TryGetValue(HeaderNames.IfModifiedSince, out var ifModifiedSince) &&
+            DateTimeOffset.TryParse(ifModifiedSince, out var ifModifiedSinceDate) &&
+            lastModified <= ifModifiedSinceDate)
+            return StatusCode(304);
+
+        return Ok(result.Event);
     }
 
     [HttpPost]

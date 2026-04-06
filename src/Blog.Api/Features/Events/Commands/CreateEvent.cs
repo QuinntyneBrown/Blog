@@ -61,10 +61,11 @@ public class CreateEventCommandHandler(
 {
     public async Task<EventDto> Handle(CreateEventCommand request, CancellationToken cancellationToken)
     {
+        var eventId = Guid.NewGuid();
         var slug = slugGenerator.Generate(request.Title);
 
         if (string.IsNullOrWhiteSpace(slug))
-            slug = Guid.NewGuid().ToString("N");
+            slug = eventId.ToString("N");
 
         if (await uow.Events.SlugExistsAsync(slug, cancellationToken: cancellationToken))
             throw new ConflictException($"An event with slug '{slug}' already exists.");
@@ -79,7 +80,7 @@ public class CreateEventCommandHandler(
 
         var ev = new Event
         {
-            EventId = Guid.NewGuid(),
+            EventId = eventId,
             Title = request.Title,
             Slug = slug,
             Description = request.Description,

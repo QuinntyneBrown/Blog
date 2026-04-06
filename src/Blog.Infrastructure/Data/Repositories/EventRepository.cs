@@ -50,6 +50,24 @@ public class EventRepository(BlogDbContext context) : IEventRepository
     public async Task<bool> SlugExistsAsync(string slug, Guid? excludeEventId = null, CancellationToken cancellationToken = default)
         => await context.Events.AnyAsync(e => e.Slug == slug && (excludeEventId == null || e.EventId != excludeEventId), cancellationToken);
 
+    public async Task<(int MaxVersion, int Count, DateTime MaxUpdatedAt)> GetPublishedStatsAsync(CancellationToken cancellationToken = default)
+    {
+        var stats = await context.Events
+            .Where(e => e.Published)
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                MaxVersion = g.Max(e => e.Version),
+                Count = g.Count(),
+                MaxUpdatedAt = g.Max(e => e.UpdatedAt)
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return stats != null
+            ? (stats.MaxVersion, stats.Count, stats.MaxUpdatedAt)
+            : (0, 0, DateTime.UtcNow);
+    }
+
     public async Task AddAsync(Event ev, CancellationToken cancellationToken = default)
         => await context.Events.AddAsync(ev, cancellationToken);
 

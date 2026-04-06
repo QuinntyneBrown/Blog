@@ -13,6 +13,7 @@ public interface IEventRepository
     Task<IReadOnlyList<Event>> GetPastAsync(int page, int pageSize, CancellationToken cancellationToken = default);
     Task<int> GetTotalPastCountAsync(CancellationToken cancellationToken = default);
     Task<bool> SlugExistsAsync(string slug, Guid? excludeEventId = null, CancellationToken cancellationToken = default);
+    Task<(int MaxVersion, int Count, DateTime MaxUpdatedAt)> GetPublishedStatsAsync(CancellationToken cancellationToken = default);
     Task AddAsync(Event ev, CancellationToken cancellationToken = default);
     void Update(Event ev);
     void Remove(Event ev);
