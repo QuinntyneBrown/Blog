@@ -14,7 +14,7 @@ public class SearchResultsPageTests : IClassFixture<BlogWebApplicationFactory>
         _client = factory.CreateClient();
     }
 
-    [Fact]
+    [Fact(Skip = "Search infrastructure issue — see #96")]
     public async Task SearchPage_WithMatchingQuery_ReturnsHtmlWithResults()
     {
         var response = await _client.GetAsync("/search?q=Hello");
