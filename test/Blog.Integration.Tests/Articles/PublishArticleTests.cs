@@ -19,7 +19,7 @@ public class PublishArticleTests : IClassFixture<BlogWebApplicationFactory>
     private static StringContent JsonBody(object payload) =>
         new(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
 
-    [Fact(Skip = "ETag .Tag vs .ToString() mismatch — see #96")]
+    [Fact]
     public async Task PublishArticle_ValidRequest_SetsPublishedTrue()
     {
         var client = await _factory.CreateAuthenticatedClientAsync();
@@ -36,7 +36,7 @@ public class PublishArticleTests : IClassFixture<BlogWebApplicationFactory>
         var createBody = await createResponse.Content.ReadAsStringAsync();
         using var createDoc = JsonDocument.Parse(createBody);
         var articleId = createDoc.RootElement.GetProperty("data").GetProperty("articleId").GetString();
-        var etag = createResponse.Headers.ETag?.Tag;
+        var etag = createResponse.Headers.ETag?.ToString();
 
         // Publish it
         var publishRequest = new HttpRequestMessage(HttpMethod.Patch, $"/api/articles/{articleId}/publish")
@@ -53,7 +53,7 @@ public class PublishArticleTests : IClassFixture<BlogWebApplicationFactory>
         publishDoc.RootElement.GetProperty("data").GetProperty("datePublished").GetString().Should().NotBeNullOrWhiteSpace();
     }
 
-    [Fact(Skip = "ETag .Tag vs .ToString() mismatch — see #96")]
+    [Fact]
     public async Task UnpublishArticle_ValidRequest_SetsPublishedFalse()
     {
         var client = await _factory.CreateAuthenticatedClientAsync();
@@ -70,7 +70,7 @@ public class PublishArticleTests : IClassFixture<BlogWebApplicationFactory>
         var createBody = await createResponse.Content.ReadAsStringAsync();
         using var createDoc = JsonDocument.Parse(createBody);
         var articleId = createDoc.RootElement.GetProperty("data").GetProperty("articleId").GetString();
-        var etag = createResponse.Headers.ETag?.Tag;
+        var etag = createResponse.Headers.ETag?.ToString();
 
         // Publish
         var publishReq = new HttpRequestMessage(HttpMethod.Patch, $"/api/articles/{articleId}/publish")
@@ -80,7 +80,7 @@ public class PublishArticleTests : IClassFixture<BlogWebApplicationFactory>
         publishReq.Headers.IfMatch.ParseAdd(etag!);
         var publishResp = await client.SendAsync(publishReq);
         publishResp.EnsureSuccessStatusCode();
-        var pubEtag = publishResp.Headers.ETag?.Tag;
+        var pubEtag = publishResp.Headers.ETag?.ToString();
 
         // Unpublish
         var unpublishReq = new HttpRequestMessage(HttpMethod.Patch, $"/api/articles/{articleId}/publish")

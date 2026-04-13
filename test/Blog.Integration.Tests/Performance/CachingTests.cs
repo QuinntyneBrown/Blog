@@ -16,7 +16,7 @@ public class CachingTests : IClassFixture<BlogWebApplicationFactory>
         _client = factory.CreateClient();
     }
 
-    [Fact(Skip = "ETag .Tag vs .ToString() mismatch — see #96")]
+    [Fact]
     public async Task GetArticleById_ReturnsETagHeader()
     {
         var client = await _factory.CreateAuthenticatedClientAsync();
@@ -31,7 +31,7 @@ public class CachingTests : IClassFixture<BlogWebApplicationFactory>
         response.EnsureSuccessStatusCode();
 
         response.Headers.ETag.Should().NotBeNull();
-        response.Headers.ETag!.Tag.Should().StartWith("W/\"article-");
+        response.Headers.ETag!.ToString().Should().StartWith("W/\"article-");
     }
 
     [Fact]

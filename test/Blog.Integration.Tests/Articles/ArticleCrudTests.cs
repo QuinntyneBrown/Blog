@@ -19,7 +19,7 @@ public class ArticleCrudTests : IClassFixture<BlogWebApplicationFactory>
     private static StringContent JsonBody(object payload) =>
         new(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
 
-    [Fact(Skip = "ETag .Tag vs .ToString() mismatch — see #96")]
+    [Fact]
     public async Task FullCrudCycle_CreateReadUpdateDelete_ReturnsCorrectCodes()
     {
         var client = await _factory.CreateAuthenticatedClientAsync();
@@ -43,7 +43,7 @@ public class ArticleCrudTests : IClassFixture<BlogWebApplicationFactory>
         // Read
         var getResponse = await client.GetAsync($"/api/articles/{articleId}");
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        var etag = getResponse.Headers.ETag?.Tag;
+        var etag = getResponse.Headers.ETag?.ToString();
         etag.Should().NotBeNullOrWhiteSpace();
 
         // Update
@@ -62,7 +62,7 @@ public class ArticleCrudTests : IClassFixture<BlogWebApplicationFactory>
         updateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // Delete
-        var deleteEtag = updateResponse.Headers.ETag?.Tag;
+        var deleteEtag = updateResponse.Headers.ETag?.ToString();
         var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, $"/api/articles/{articleId}");
         deleteRequest.Headers.IfMatch.ParseAdd(deleteEtag!);
         var deleteResponse = await client.SendAsync(deleteRequest);
