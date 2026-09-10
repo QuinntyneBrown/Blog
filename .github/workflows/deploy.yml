@@ -4,7 +4,7 @@ on:
   workflow_run:
     workflows: [CI]
     types: [completed]
-    branches: [master]
+    branches: [main]
   workflow_dispatch:
     inputs:
       environment:
@@ -24,7 +24,7 @@ env:
 
 jobs:
   # ──────────────────────────────────────────
-  # Deploy to Staging — runs after CI passes on master
+  # Deploy to Staging — runs after CI passes on main
   # ──────────────────────────────────────────
   deploy-staging:
     name: Deploy → Staging
